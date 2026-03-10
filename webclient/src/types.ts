@@ -146,6 +146,7 @@ export interface AnimatedTrickState {
   baseCards: PlayedCardView[];
   plays: AnimatedPlayStep[];
   visiblePlayCount: number;
+  enteringPlayIndex: number | null;
   phase: "placing" | "highlight" | "collecting";
   winnerSeat: Seat | null;
   winnerPlayerId: string | null;

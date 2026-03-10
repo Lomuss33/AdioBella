@@ -8,6 +8,7 @@ import {
   buildAnimatedTrickTimeline,
   CARD_SELECTION_DELAY_MS,
   HUMAN_HOLD_AFTER_LAND_MS,
+  PLAY_MOUNT_BUFFER_MS,
   POST_COLLECT_SETTLE_MS,
   POINTS_FINAL_PULSE_MS
 } from "./lib/trickAnimation";
@@ -54,6 +55,7 @@ function App() {
   const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
   const animationTimeoutsRef = useRef<number[]>([]);
+  const animationRunIdRef = useRef(0);
   const animatedTrickRef = useRef<AnimatedTrickState | null>(null);
   const deferredSessionRef = useRef<SessionResponse | null>(null);
   const deferredRefreshSessionIdRef = useRef<string | null>(null);
@@ -159,14 +161,20 @@ function App() {
   }
 
   function clearAnimationTimeline() {
+    animationRunIdRef.current += 1;
     for (const timeoutId of animationTimeoutsRef.current) {
       window.clearTimeout(timeoutId);
     }
     animationTimeoutsRef.current = [];
   }
 
-  function queueAnimation(ms: number, callback: () => void) {
-    const timeoutId = window.setTimeout(callback, ms);
+  function queueAnimation(runId: number, ms: number, callback: () => void) {
+    const timeoutId = window.setTimeout(() => {
+      if (animationRunIdRef.current !== runId) {
+        return;
+      }
+      callback();
+    }, ms);
     animationTimeoutsRef.current.push(timeoutId);
   }
 
@@ -261,29 +269,40 @@ function App() {
 
   function startTrickAnimation(trickAnimation: AnimatedTrickState) {
     clearAnimationTimeline();
+    const runId = animationRunIdRef.current;
     clearScheduledRefresh();
-    const initialVisiblePlayCount = trickAnimation.plays.length > 0 ? 1 : 0;
     setAnimatedTrick({
       ...trickAnimation,
-      visiblePlayCount: initialVisiblePlayCount
+      visiblePlayCount: 0,
+      enteringPlayIndex: null
     });
     setSelectedHandIndex(null);
 
     for (const [index, step] of trickAnimation.plays.entries()) {
-      if (index > 0) {
-        queueAnimation(step.startAtMs, () => {
-          setAnimatedTrick((current) =>
-            current
-              ? {
-                  ...current,
-                  visiblePlayCount: Math.max(current.visiblePlayCount, index + 1)
-                }
-              : current
-          );
-        });
-      }
+      queueAnimation(runId, step.startAtMs, () => {
+        setAnimatedTrick((current) =>
+          current
+            ? {
+                ...current,
+                visiblePlayCount: Math.max(current.visiblePlayCount, index + 1),
+                enteringPlayIndex: index
+              }
+            : current
+        );
+      });
 
-      queueAnimation(step.startAtMs + step.durationMs, () => {
+      queueAnimation(runId, step.startAtMs + PLAY_MOUNT_BUFFER_MS, () => {
+        setAnimatedTrick((current) =>
+          current && current.enteringPlayIndex === index
+            ? {
+                ...current,
+                enteringPlayIndex: null
+              }
+            : current
+        );
+      });
+
+      queueAnimation(runId, step.startAtMs + step.durationMs, () => {
         setAnimatedTrick((current) =>
           current
             ? {
@@ -299,7 +318,7 @@ function App() {
     const lastPlay = trickAnimation.plays[trickAnimation.plays.length - 1];
     const finishWithoutWinAt = lastPlay.startAtMs + lastPlay.durationMs + HUMAN_HOLD_AFTER_LAND_MS;
     if (!trickAnimation.resolution) {
-      queueAnimation(finishWithoutWinAt + POST_COLLECT_SETTLE_MS, () => {
+      queueAnimation(runId, finishWithoutWinAt + POST_COLLECT_SETTLE_MS, () => {
         setAnimatedTrick(null);
         clearAnimationTimeline();
         runNextAnimationSegment();
@@ -308,12 +327,13 @@ function App() {
     }
 
     const resolution = trickAnimation.resolution;
-    queueAnimation(resolution.countUpStartMs, () => {
+    queueAnimation(runId, resolution.countUpStartMs, () => {
       setAnimatedTrick((current) =>
         current
           ? {
               ...current,
               phase: "highlight",
+              enteringPlayIndex: null,
               winnerSeat: resolution.winnerSeat,
               winnerPlayerId: resolution.winnerPlayerId,
               pointsVisible: true,
@@ -324,15 +344,15 @@ function App() {
       );
     });
 
-    queueAnimation(resolution.countUpStartMs + POINTS_FINAL_PULSE_MS, () => {
+    queueAnimation(runId, resolution.countUpStartMs + POINTS_FINAL_PULSE_MS, () => {
       setAnimatedTrick((current) => (current ? { ...current, pointsPulse: false } : current));
     });
 
-    queueAnimation(resolution.collectStartMs, () => {
+    queueAnimation(runId, resolution.collectStartMs, () => {
       setAnimatedTrick((current) => (current ? { ...current, phase: "collecting" } : current));
     });
 
-    queueAnimation(resolution.collectStartMs + resolution.collectDurationMs + POST_COLLECT_SETTLE_MS, () => {
+    queueAnimation(runId, resolution.collectStartMs + resolution.collectDurationMs + POST_COLLECT_SETTLE_MS, () => {
       setAnimatedTrick(null);
       clearAnimationTimeline();
       runNextAnimationSegment();

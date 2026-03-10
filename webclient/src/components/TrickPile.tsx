@@ -30,6 +30,7 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
         >
           {renderedCards.map((playedCard, index) => {
             const isAnimatedPlay = animatedTrick ? index >= animatedTrick.baseCards.length : false;
+            const animatedPlayIndex = animatedTrick ? index - animatedTrick.baseCards.length : -1;
             const key = cardKey(playedCard);
             return (
               <div
@@ -38,11 +39,16 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
                   "trick-card-stack",
                   `trick-seat-${playedCard.seat.toLowerCase()}`,
                   isAnimatedPlay ? "animated-play" : "",
+                  isAnimatedPlay && animatedTrick?.enteringPlayIndex === animatedPlayIndex ? "play-enter" : "",
                   animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing" ? "winning-stack" : ""
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style={isAnimatedPlay ? { animationDuration: `${animatedTrick?.plays[index - (animatedTrick?.baseCards.length ?? 0)]?.durationMs ?? 220}ms` } : undefined}
+                style={
+                  isAnimatedPlay
+                    ? { ["--card-entry-duration" as string]: `${animatedTrick?.plays[animatedPlayIndex]?.durationMs ?? 220}ms` }
+                    : undefined
+                }
               >
                 <PlayingCard
                   card={playedCard.card}

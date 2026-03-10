@@ -1,24 +1,51 @@
 # Projekt Belot
 
-Belot is a single-player web implementation of the card game Belot. The game logic lives in a Java engine, the server is Spring Boot, and the browser UI is React.
+Check out the deployed page: https://lomuss33.github.io/AdioBella/
 
-## What The Project Is Now
+Projekt Belot is a single-player web implementation of Belot. The project keeps the original Java engine and Spring Boot server for local full-stack development, and it also includes a browser-only GitHub Pages build so the game can be played online for free.
 
-- `engine`: pure Java match engine and view DTOs
-- `server`: Spring Boot session API and SSE event stream
-- `webclient`: React frontend with a table view and terminal log
+## What You Get
 
-The current version supports one human player against three AI players in the browser.
+- One human player against three AI players
+- A React table UI with a terminal-style event log
+- Match setup before the first deal
+- Difficulty selection
+- Match length selection: first to 1, 3, or 5 wins
+- Game length selection: short 501 or long 1001
+- Table theme selection
+- Free static deployment through GitHub Pages
+
+## Live And Local Modes
+
+There are two ways to run the project:
+
+- GitHub Pages mode: a static browser build with local in-browser game/session handling
+- Local full-stack mode: Java engine + Spring Boot API + React frontend
+
+Use the deployed page if you just want to play:
+
+```text
+https://lomuss33.github.io/AdioBella/
+```
+
+Use the local full application if you want to develop or test the original backend-backed version.
+
+## Tech Stack
+
+- `engine`: Java match engine and shared game view models
+- `server`: Spring Boot session API and event stream
+- `webclient`: React + TypeScript frontend
+- `GitHub Pages`: static deployment target for the browser-only build
 
 ## Requirements
 
 - Java 21+
 - Node.js 20+ and npm
-- Windows PowerShell or another shell that can run Gradle and npm
+- A shell that can run Gradle and npm
 
 ## Quick Start
 
-Run the full application:
+Run the local full application:
 
 ```bash
 ./gradlew runGame
@@ -29,8 +56,6 @@ Then open:
 ```text
 http://localhost:8080
 ```
-
-## Run On A Custom Port
 
 If `8080` is already in use:
 
@@ -44,7 +69,30 @@ Then open:
 http://localhost:28081
 ```
 
-## Development Commands
+## Frontend Commands
+
+Run the frontend tests:
+
+```bash
+cd webclient
+npm test
+```
+
+Build the normal frontend bundle:
+
+```bash
+cd webclient
+npm run build
+```
+
+Build the GitHub Pages bundle:
+
+```bash
+cd webclient
+npm run build:pages
+```
+
+## Gradle Commands
 
 Build everything:
 
@@ -52,64 +100,93 @@ Build everything:
 ./gradlew build
 ```
 
-Run engine tests:
+Run all tests:
+
+```bash
+./gradlew test
+```
+
+Run only the engine tests:
 
 ```bash
 ./gradlew :engine:test
 ```
 
-Run server tests:
+Run only the server tests:
 
 ```bash
 ./gradlew :server:test
 ```
 
-Run frontend tests:
+## GitHub Pages Deployment
 
-```bash
-cd webclient
-npm test
-```
+The repository includes a GitHub Actions workflow that builds `webclient` and publishes the static output to GitHub Pages.
+
+Important details:
+
+- Pages build command: `npm run build:pages`
+- Published output: `webclient/dist`
+- GitHub Actions workflow: `.github/workflows/deploy-pages.yml`
+- Current Pages base path: `/AdioBella/`
+
+To redeploy:
+
+1. Push changes to `main`.
+2. Open the repository `Actions` tab.
+3. Run or wait for `Deploy Belot to GitHub Pages`.
+4. Open the live site after the workflow finishes successfully.
+
+## How The Online Version Works
+
+GitHub Pages cannot run the Spring Boot server. Because of that, the online build uses a browser runtime inside `webclient` so the game can run without backend requests. The local Gradle flow still keeps the original backend-backed application available for development.
 
 ## Project Layout
 
 ```text
 engine/
-  src/main/java/com/belot/engine/api
+  src/main/java/com/belot/engine
 server/
   src/main/java/com/belot/server
 webclient/
   src/
+  public/
+.github/
+  workflows/
+docs/
+  screenshots/
 ```
 
-## Card Placeholders
+## Gameplay Notes
 
-The UI uses local placeholder SVG assets for now.
+- The first screen lets you set team names and player names
+- You can choose AI difficulty before the match starts
+- You can pick match length and game length before the first deal
+- Trump selection appears as an in-game action overlay
+- The bottom terminal log shows recent game events and prompts
+
+## Art Assets
+
+The current UI still uses placeholder assets for cards and suits:
 
 - card face placeholder: `webclient/src/assets/cards/face-placeholder.svg`
-- hidden card back: `webclient/src/assets/cards/back.svg`
+- card back: `webclient/src/assets/cards/back.svg`
 - suit placeholders: `webclient/src/assets/suits/*.svg`
 
-Visible cards always keep a short lowercase label under the card image:
-
-- `10c`
-- `ad`
-- `7s`
-
-Trump choice buttons use lowercase suit names under the suit image:
-
-- `hearts`
-- `clubs`
-- `diamonds`
-- `spades`
-
-These assets are temporary and can be replaced later without changing the backend API.
+These can be replaced later without changing the public game flow.
 
 ## Troubleshooting
 
+### GitHub Pages Shows A Blank Screen
+
+Make sure the GitHub Actions Pages deployment finished successfully and that the site is being served from the correct repository path:
+
+```text
+https://lomuss33.github.io/AdioBella/
+```
+
 ### Port Already In Use
 
-Check which process owns a port:
+Check which process owns the port:
 
 ```powershell
 netstat -ano | findstr :8080
@@ -127,19 +204,23 @@ Stop it if needed:
 Stop-Process -Id <PID> -Force
 ```
 
-Or simply run on another port with `-PserverPort=...`.
+Or run the app on another port with `-PserverPort=...`.
 
-### Stale Browser Session
+### Stale Local Session
 
-The frontend keeps the active session id in browser storage. If a session becomes invalid, refresh the page or clear local storage for the site.
+The local full-stack frontend can store the active session id in browser storage. If a session becomes invalid, refresh the page or clear local storage for the local site.
 
 ### Frontend Build Artifacts
 
-The React app is built automatically by Gradle before the server starts. You do not need to copy files manually.
+When you run `./gradlew runGame`, Gradle builds the frontend automatically before the server starts. You do not need to copy files manually.
 
 ## Current Limitations
 
 - single-player only
 - in-memory sessions only
 - placeholder card and suit art
-- no persistence between server restarts
+- no persistence between restarts
+
+## Start Screen
+
+![Projekt Belot start screen](docs/screenshots/start-screen-fullscreen.png)

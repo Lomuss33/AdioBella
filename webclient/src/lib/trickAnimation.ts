@@ -10,10 +10,11 @@ import type {
 } from "../types";
 
 export const CARD_SELECTION_DELAY_MS = 140;
+export const PLAY_MOUNT_BUFFER_MS = 32;
 export const HUMAN_LAUNCH_DURATION_MS = 260;
 export const HUMAN_HOLD_AFTER_LAND_MS = 220;
-export const BOT_DROP_DURATION_MS = 220;
-export const BOT_DROP_STAGGER_MS = 180;
+export const BOT_DROP_DURATION_MS = 210;
+export const BOT_DROP_STAGGER_MS = 150;
 export const WINNER_HIGHLIGHT_HOLD_MS = 650;
 export const POINTS_FINAL_PULSE_MS = 260;
 export const COLLECT_DURATION_MS = 520;
@@ -91,6 +92,7 @@ function buildAnimatedTrickSegment(
     baseCards,
     plays,
     visiblePlayCount: 0,
+    enteringPlayIndex: null,
     phase: "placing" as const,
     winnerSeat: null,
     winnerPlayerId: null,

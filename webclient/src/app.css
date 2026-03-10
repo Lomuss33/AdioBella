@@ -1551,6 +1551,7 @@ button {
     grid-auto-rows: 136px;
     gap: 8px;
     min-height: 0;
+    grid-row: 1;
   }
 
   .match-data-card {
@@ -1686,6 +1687,7 @@ button {
     width: min(100%, var(--table-center-width));
     justify-self: center;
     margin-inline: auto;
+    grid-row: 3;
   }
 
   .seat-west {
@@ -1727,11 +1729,11 @@ button {
   }
 
   .compact-mobile-player-row-enemy {
-    order: 2;
+    grid-row: 2;
   }
 
   .compact-mobile-player-row-team {
-    order: 4;
+    grid-row: 4;
   }
 
   .compact-mobile-player-row {
@@ -1748,6 +1750,18 @@ button {
     padding: 4px 6px 5px;
     gap: 2px;
     justify-self: stretch;
+  }
+
+  .compact-mobile-player-row .seat-west,
+  .compact-mobile-player-row .seat-east,
+  .compact-mobile-player-row .seat-north,
+  .compact-mobile-player-row .seat-south {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: stretch;
+    align-self: stretch;
+    margin: 0;
+    width: 100%;
   }
 
   .compact-mobile-player-row .seat-main-copy {
@@ -1829,6 +1843,10 @@ button {
   .score-bar {
     position: static;
     justify-self: stretch;
+  }
+
+  .table-bottom-row {
+    grid-row: 5;
   }
 }
 

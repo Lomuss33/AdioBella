@@ -82,16 +82,16 @@ function TableLayout({
         </div>
         <div className="compact-mobile-player-row compact-mobile-player-row-team">
           <SeatPanel
-            player={playersBySeat.SOUTH}
-            winnerGlow={highlightedSeat === "SOUTH"}
-            showDealer={dealerSeat === "SOUTH"}
-            showTrumpCaller={declarerSeat === "SOUTH"}
-          />
-          <SeatPanel
             player={playersBySeat.NORTH}
             winnerGlow={highlightedSeat === "NORTH"}
             showDealer={dealerSeat === "NORTH"}
             showTrumpCaller={declarerSeat === "NORTH"}
+          />
+          <SeatPanel
+            player={playersBySeat.SOUTH}
+            winnerGlow={highlightedSeat === "SOUTH"}
+            showDealer={dealerSeat === "SOUTH"}
+            showTrumpCaller={declarerSeat === "SOUTH"}
           />
         </div>
         <div className="table-bottom-row">

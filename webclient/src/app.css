@@ -1,10 +1,10 @@
 :root {
   --edge-buffer: 0.32rem;
-  --side-panel-width: 134px;
-  --north-panel-width: 162px;
-  --match-data-width: 180px;
-  --game-data-width: 194px;
-  --table-center-width: 420px;
+  --side-panel-width: 126px;
+  --north-panel-width: 154px;
+  --match-data-width: 172px;
+  --game-data-width: 186px;
+  --table-center-width: 500px;
   --trick-center-x: 50%;
   --page-glow: rgba(213, 182, 101, 0.22);
   --page-top: #10231b;
@@ -13,7 +13,7 @@
   --felt-edge: rgba(9, 31, 20, 0.98);
   color: #f6edd8;
   font-family: "Trebuchet MS", "Gill Sans", sans-serif;
-  font-size: 12.75px;
+  font-size: 12.5px;
 }
 
 :root[data-table-theme="GREEN"] {
@@ -82,7 +82,7 @@ button {
 
 .table-stage {
   position: relative;
-  width: min(100%, 928px);
+  width: min(100%, 1000px);
   margin-inline: auto;
   display: grid;
   align-content: start;
@@ -92,7 +92,7 @@ button {
 .after-table {
   display: grid;
   gap: 0;
-  width: min(100%, 928px);
+  width: min(100%, 1000px);
   margin-inline: auto;
   margin-top: -1px;
   scroll-snap-align: start;
@@ -206,9 +206,9 @@ button {
 .seat-panel {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  gap: 5px;
-  padding: 7px 9px;
-  min-width: 108px;
+  gap: 3px;
+  padding: 5px 7px;
+  min-width: 96px;
   border-radius: 14px;
   background: rgba(4, 12, 9, 0.42);
   border: 1px solid rgba(246, 237, 216, 0.12);
@@ -216,13 +216,13 @@ button {
 }
 
 .seat-panel strong {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   line-height: 1.15;
 }
 
 .seat-panel small {
   line-height: 1.1;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
 }
 
 .seat-main-copy {
@@ -291,7 +291,7 @@ button {
   align-items: start;
   gap: 8px;
   width: 100%;
-  min-height: 72px;
+  min-height: 64px;
 }
 
 .table-middle-row {
@@ -408,7 +408,7 @@ button {
 .table-top-row .seat-panel,
 .table-top-row .match-data-card,
 .table-top-row .game-data-card {
-  min-height: 64px;
+  min-height: 56px;
   align-content: start;
 }
 
@@ -445,13 +445,13 @@ button {
   height: auto;
   align-self: center;
   justify-self: center;
-  min-height: 132px;
+  min-height: 114px;
   align-content: center;
   justify-items: center;
   text-align: center;
   gap: 1px;
-  padding-top: 7px;
-  padding-bottom: 7px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .seat-west {
@@ -468,14 +468,14 @@ button {
 
 .seat-west strong,
 .seat-east strong {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
 }
 
 .seat-west small,
 .seat-east small,
 .seat-west .seat-status-line,
 .seat-east .seat-status-line {
-  font-size: 0.6rem;
+  font-size: 0.57rem;
 }
 
 .trick-cards {
@@ -504,11 +504,11 @@ button {
 }
 
 .trick-seat-west {
-  transform: translate(calc(-50% - 7.9rem), -50%);
+  transform: translate(calc(-50% - 9.1rem), -50%);
 }
 
 .trick-seat-east {
-  transform: translate(calc(-50% + 7.9rem), -50%);
+  transform: translate(calc(-50% + 9.1rem), -50%);
 }
 
 .trick-cards-animated.phase-highlight .winning-stack {
@@ -537,11 +537,11 @@ button {
 }
 
 .trick-cards-animated.phase-collecting.winner-west .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% - 7.9rem), -50%);
+  transform: translate(calc(-50% - 9.1rem), -50%);
 }
 
 .trick-cards-animated.phase-collecting.winner-east .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% + 7.9rem), -50%);
+  transform: translate(calc(-50% + 9.1rem), -50%);
 }
 
 .player-hand-area .card-fan-row {
@@ -797,12 +797,12 @@ button {
 }
 
 .trick-points-chip.collect-west {
-  transform: translate(calc(-50% - 7.4rem), -50%);
+  transform: translate(calc(-50% - 8.5rem), -50%);
   opacity: 0;
 }
 
 .trick-points-chip.collect-east {
-  transform: translate(calc(-50% + 7.4rem), -50%);
+  transform: translate(calc(-50% + 8.5rem), -50%);
   opacity: 0;
 }
 
@@ -820,11 +820,11 @@ button {
 @keyframes card-land-west {
   from {
     opacity: 0;
-    transform: translate(calc(-50% - 12.6rem), -50%) scale(1.02);
+    transform: translate(calc(-50% - 14.6rem), -50%) scale(1.02);
   }
   to {
     opacity: 1;
-    transform: translate(calc(-50% - 7.9rem), -50%) scale(1);
+    transform: translate(calc(-50% - 9.1rem), -50%) scale(1);
   }
 }
 
@@ -842,11 +842,11 @@ button {
 @keyframes card-land-east {
   from {
     opacity: 0;
-    transform: translate(calc(-50% + 12.6rem), -50%) scale(1.02);
+    transform: translate(calc(-50% + 14.6rem), -50%) scale(1.02);
   }
   to {
     opacity: 1;
-    transform: translate(calc(-50% + 7.9rem), -50%) scale(1);
+    transform: translate(calc(-50% + 9.1rem), -50%) scale(1);
   }
 }
 
@@ -1344,13 +1344,13 @@ button {
   }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1040px) and (orientation: landscape) {
   :root {
-    --side-panel-width: 126px;
-    --north-panel-width: 150px;
-    --match-data-width: 164px;
-    --game-data-width: 176px;
-    --table-center-width: 372px;
+    --side-panel-width: 120px;
+    --north-panel-width: 146px;
+    --match-data-width: 160px;
+    --game-data-width: 172px;
+    --table-center-width: 468px;
   }
 
   .table-surface {
@@ -1368,13 +1368,13 @@ button {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 920px) and (orientation: landscape) {
   :root {
-    --side-panel-width: 112px;
-    --north-panel-width: 140px;
-    --match-data-width: 150px;
-    --game-data-width: 164px;
-    --table-center-width: min(100%, 360px);
+    --side-panel-width: 108px;
+    --north-panel-width: 136px;
+    --match-data-width: 148px;
+    --game-data-width: 160px;
+    --table-center-width: min(100%, 430px);
   }
 
   .table-middle-row {
@@ -1391,13 +1391,13 @@ button {
   }
 }
 
-@media (max-width: 860px) and (orientation: landscape) {
+@media (max-width: 760px) and (orientation: landscape) {
   :root {
-    --side-panel-width: 102px;
-    --north-panel-width: 128px;
-    --match-data-width: 140px;
-    --game-data-width: 152px;
-    --table-center-width: min(100%, 332px);
+    --side-panel-width: 100px;
+    --north-panel-width: 124px;
+    --match-data-width: 138px;
+    --game-data-width: 150px;
+    --table-center-width: min(100%, 396px);
   }
 
   .table-top-row {
@@ -1437,14 +1437,14 @@ button {
   }
 }
 
-@media (max-width: 860px) and (orientation: portrait) {
+@media (orientation: portrait) {
   :root {
     --edge-buffer: 0.12rem;
     --side-panel-width: fit-content;
     --north-panel-width: fit-content;
-    --match-data-width: min(100%, clamp(144px, 42vw, 248px));
-    --game-data-width: min(100%, clamp(144px, 42vw, 248px));
-    --table-center-width: min(100%, clamp(248px, 62vw, 360px));
+    --match-data-width: min(100%, clamp(144px, 42vw, 268px));
+    --game-data-width: min(100%, clamp(144px, 42vw, 268px));
+    --table-center-width: min(100%, clamp(248px, 70vw, 440px));
     --trick-center-x: 50%;
   }
 
@@ -1478,7 +1478,7 @@ button {
     min-width: 0;
     width: fit-content;
     min-height: 0;
-    padding: 4px 7px 5px;
+    padding: 4px 5px 5px;
     gap: 2px;
   }
 
@@ -1495,16 +1495,16 @@ button {
     min-width: 0;
     min-height: 0;
     width: fit-content;
-    padding: 4px 7px 5px;
+    padding: 4px 5px 5px;
     gap: 2px;
   }
 
   .seat-panel strong {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
   }
 
   .seat-panel small {
-    font-size: 0.6rem;
+    font-size: 0.56rem;
   }
 
   .seat-direction-label {
@@ -1747,7 +1747,7 @@ button {
     width: 100%;
     min-width: 0;
     min-height: 0;
-    padding: 4px 6px 5px;
+    padding: 4px 5px 5px;
     gap: 2px;
     justify-self: stretch;
   }
@@ -1773,11 +1773,11 @@ button {
   }
 
   .compact-mobile-player-row .seat-panel strong {
-    font-size: 0.71rem;
+    font-size: 0.68rem;
   }
 
   .compact-mobile-player-row .seat-panel small {
-    font-size: 0.58rem;
+    font-size: 0.56rem;
   }
 
   .compact-mobile-player-row .seat-badge {
@@ -1850,7 +1850,7 @@ button {
   }
 }
 
-@media (max-height: 820px) and (min-width: 701px) {
+@media (max-height: 820px) and (orientation: landscape) {
   .app-shell {
     padding: 8px;
     gap: 8px;

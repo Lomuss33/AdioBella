@@ -31,6 +31,7 @@ const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 function App() {
   const gateway = getGameGateway();
   const persistSession = shouldPersistSession();
+  const bootstrapStartedRef = useRef(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([]);
@@ -51,7 +52,10 @@ function App() {
   const pendingAnimationQueueRef = useRef<AnimatedTrickState[]>([]);
 
   useEffect(() => {
-    void bootstrapSession();
+    if (!bootstrapStartedRef.current) {
+      bootstrapStartedRef.current = true;
+      void bootstrapSession();
+    }
 
     return () => {
       subscriptionRef.current?.close();
@@ -318,7 +322,7 @@ function App() {
   function applySession(response: SessionResponse, options?: { deferSnapshot?: boolean; forceCommit?: boolean }) {
     const shouldDeferSnapshot = !options?.forceCommit && (options?.deferSnapshot || animatedTrickRef.current !== null);
 
-    setSessionId(response.sessionId);
+    setSessionId((current) => (current === response.sessionId ? current : response.sessionId));
     if (persistSession) {
       window.localStorage.setItem(SESSION_KEY, response.sessionId);
     }

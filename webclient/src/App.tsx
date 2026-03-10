@@ -28,6 +28,13 @@ import type {
 const SESSION_KEY = "belot-session-id";
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
+const THEME_META_COLOR: Record<TableTheme, string> = {
+  GREEN: "#07120d",
+  DARK_BLUE: "#060b16",
+  CHERRY_RED: "#150607",
+  WOODY_BROWN: "#120b07",
+  FINE_BLACK: "#050505"
+};
 
 function App() {
   const gateway = getGameGateway();
@@ -72,6 +79,7 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute("data-table-theme", gameSettings.tableTheme);
     window.localStorage.setItem(THEME_KEY, gameSettings.tableTheme);
+    syncThemeColorMeta(THEME_META_COLOR[gameSettings.tableTheme]);
   }, [gameSettings.tableTheme]);
 
   useEffect(() => {
@@ -614,6 +622,16 @@ function latestGameWinMessage(events: GameEvent[]) {
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function syncThemeColorMeta(color: string) {
+  let meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "theme-color";
+    document.head.appendChild(meta);
+  }
+  meta.content = color;
 }
 
 function isMissingSessionError(error: unknown) {

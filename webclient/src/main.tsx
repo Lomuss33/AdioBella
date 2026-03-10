@@ -3,7 +3,7 @@ import App from "./App";
 import "./app.css";
 import "./styles/playing-cards.css";
 
-const FAVICON_HREF = "/favicon.ico?v=root-belot-20260310";
+const FAVICON_HREF = `${import.meta.env.BASE_URL}favicon-belot-20260310.ico`;
 
 syncFaviconLink("icon", FAVICON_HREF, "image/x-icon");
 syncFaviconLink("shortcut icon", FAVICON_HREF);

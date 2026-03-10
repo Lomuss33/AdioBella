@@ -15,42 +15,44 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
   const pointsValue = animatedTrick ? animatedTrick.pointsDisplay : staticPoints;
 
   return (
-    <div className="trick-pool">
-      <span className="panel-caption">Table</span>
-      <div
-        className={[
-          "trick-cards",
-          animatedTrick ? "trick-cards-animated" : "",
-          animatedTrick ? `phase-${animatedTrick.phase}` : "",
-          animatedTrick?.winnerSeat ? `winner-${animatedTrick.winnerSeat.toLowerCase()}` : ""
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {renderedCards.map((playedCard, index) => {
-          const isAnimatedPlay = animatedTrick ? index >= animatedTrick.baseCards.length : false;
-          const key = cardKey(playedCard);
-          return (
-            <div
-              key={key}
-              className={[
-                "trick-card-stack",
-                `trick-seat-${playedCard.seat.toLowerCase()}`,
-                isAnimatedPlay ? "animated-play" : "",
-                animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing" ? "winning-stack" : ""
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={isAnimatedPlay ? { animationDuration: `${animatedTrick?.plays[index - (animatedTrick?.baseCards.length ?? 0)]?.durationMs ?? 220}ms` } : undefined}
-            >
-              <PlayingCard
-                card={playedCard.card}
-                disabled
-                highlighted={animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing"}
-              />
-            </div>
-          );
-        })}
+    <div className="trick-pool-shell">
+      <div className="trick-pool">
+        <span className="panel-caption">Table</span>
+        <div
+          className={[
+            "trick-cards",
+            animatedTrick ? "trick-cards-animated" : "",
+            animatedTrick ? `phase-${animatedTrick.phase}` : "",
+            animatedTrick?.winnerSeat ? `winner-${animatedTrick.winnerSeat.toLowerCase()}` : ""
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {renderedCards.map((playedCard, index) => {
+            const isAnimatedPlay = animatedTrick ? index >= animatedTrick.baseCards.length : false;
+            const key = cardKey(playedCard);
+            return (
+              <div
+                key={key}
+                className={[
+                  "trick-card-stack",
+                  `trick-seat-${playedCard.seat.toLowerCase()}`,
+                  isAnimatedPlay ? "animated-play" : "",
+                  animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing" ? "winning-stack" : ""
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={isAnimatedPlay ? { animationDuration: `${animatedTrick?.plays[index - (animatedTrick?.baseCards.length ?? 0)]?.durationMs ?? 220}ms` } : undefined}
+              >
+                <PlayingCard
+                  card={playedCard.card}
+                  disabled
+                  highlighted={animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing"}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
       {showPointsChip ? (
         <div

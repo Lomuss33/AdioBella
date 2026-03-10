@@ -29,7 +29,6 @@ function SouthPlayerInfo({
           {showTrumpCaller ? <span className="seat-badge seat-badge-trump">trump</span> : null}
         </div>
       ) : null}
-      <div className="seat-status-line">{player.currentTurn ? "current turn" : "waiting"}</div>
     </div>
   );
 }

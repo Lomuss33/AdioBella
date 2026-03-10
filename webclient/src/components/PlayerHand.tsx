@@ -5,13 +5,27 @@ interface PlayerHandProps {
   player?: PlayerView;
   pendingType?: string;
   selectedIndex?: number | null;
+  hiddenIndex?: number | null;
   locked?: boolean;
+  winnerGlow?: boolean;
+  showDealer?: boolean;
+  showTrumpCaller?: boolean;
   onPlayCard: (handIndex: number) => void;
 }
 
 const TOTAL_HAND_SLOTS = 8;
 
-function PlayerHand({ player, pendingType, selectedIndex, locked, onPlayCard }: PlayerHandProps) {
+function PlayerHand({
+  player,
+  pendingType,
+  selectedIndex,
+  hiddenIndex,
+  locked,
+  winnerGlow,
+  showDealer,
+  showTrumpCaller,
+  onPlayCard
+}: PlayerHandProps) {
   if (!player) {
     return null;
   }
@@ -24,6 +38,13 @@ function PlayerHand({ player, pendingType, selectedIndex, locked, onPlayCard }: 
       return null;
     }
 
+    if (hiddenIndex !== null && handIndex === hiddenIndex) {
+      return {
+        handIndex,
+        card: null
+      };
+    }
+
     return {
       handIndex,
       card: player.hand[handIndex]
@@ -32,9 +53,24 @@ function PlayerHand({ player, pendingType, selectedIndex, locked, onPlayCard }: 
 
   return (
     <div className="player-hand-area">
-      <div className="card-fan-row" data-card-count={player.hand.length}>
+      <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
+        <span className="south-inline-side south-inline-left">
+          {showDealer ? <span className="south-inline-badge">dealer</span> : null}
+        </span>
+        <div className="south-inline-main">
+          <span className="south-inline-seat">{player.seat}</span>
+          <span className="south-inline-separator">:</span>
+          <strong>{player.name}</strong>
+          <span className="south-inline-separator">:</span>
+          <span>{player.team}</span>
+        </div>
+        <span className="south-inline-side south-inline-right">
+          {showTrumpCaller ? <span className="south-inline-badge south-inline-badge-trump">trump</span> : null}
+        </span>
+      </div>
+      <div className="card-fan-row" data-card-count={player.hand.length - (hiddenIndex !== null ? 1 : 0)}>
         {slots.map((slot, slotIndex) =>
-          slot ? (
+          slot && slot.card ? (
             <div key={`slot-${slotIndex}-${slot.card.label}`} className="hand-slot">
               <PlayingCard
                 card={slot.card}
@@ -45,6 +81,8 @@ function PlayerHand({ player, pendingType, selectedIndex, locked, onPlayCard }: 
                 onClick={() => onPlayCard(slot.handIndex)}
               />
             </div>
+          ) : slot ? (
+            <div key={`slot-${slotIndex}-hidden`} className="hand-slot hand-slot-hidden" aria-hidden="true" />
           ) : (
             <div key={`slot-${slotIndex}`} className="hand-slot hand-slot-empty" aria-hidden="true" />
           )

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
 import TableLayout from "./components/TableLayout";
 import TerminalLog from "./components/TerminalLog";
-import { openEventStream } from "./lib/eventStream";
+import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
 import {
   buildAnimatedTrickTimeline,
   CARD_SELECTION_DELAY_MS,
@@ -10,24 +10,39 @@ import {
   POST_COLLECT_SETTLE_MS,
   POINTS_FINAL_PULSE_MS
 } from "./lib/trickAnimation";
-import { chooseTrump, createSession, getSession, getSessionEvents, playCard, startMatch, updateLobbySettings } from "./lib/sessionApi";
-import type { AnimatedTrickState, GameEvent, GameSnapshot, PlayerNameDrafts, PlayerView, Seat, SessionResponse, TeamNameDrafts } from "./types";
+import type {
+  AnimatedTrickState,
+  GameEvent,
+  GameSettingsDrafts,
+  GameSnapshot,
+  MatchTargetWins,
+  PlayerNameDrafts,
+  PlayerView,
+  Seat,
+  SessionResponse,
+  TableTheme,
+  TeamNameDrafts
+} from "./types";
 
 const SESSION_KEY = "belot-session-id";
+const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 
 function App() {
+  const gateway = getGameGateway();
+  const persistSession = shouldPersistSession();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(emptyPlayerNames());
   const [teamNames, setTeamNames] = useState<TeamNameDrafts>(emptyTeamNames());
-  const [difficulty, setDifficulty] = useState("NORMAL");
+  const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(defaultGameSettings);
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
+  const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
   const [animatedTrick, setAnimatedTrick] = useState<AnimatedTrickState | null>(null);
   const lastSequenceRef = useRef(0);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
   const animationTimeoutsRef = useRef<number[]>([]);
   const animatedTrickRef = useRef<AnimatedTrickState | null>(null);
@@ -39,7 +54,7 @@ function App() {
     void bootstrapSession();
 
     return () => {
-      eventSourceRef.current?.close();
+      subscriptionRef.current?.close();
       clearScheduledRefresh();
       clearAnimationTimeline();
     };
@@ -50,13 +65,18 @@ function App() {
   }, [animatedTrick]);
 
   useEffect(() => {
+    document.documentElement.setAttribute("data-table-theme", gameSettings.tableTheme);
+    window.localStorage.setItem(THEME_KEY, gameSettings.tableTheme);
+  }, [gameSettings.tableTheme]);
+
+  useEffect(() => {
     if (!sessionId) {
       return;
     }
 
-    eventSourceRef.current?.close();
-    const source = openEventStream(sessionId, lastSequenceRef.current, {
-      onEvent: (event) => {
+    subscriptionRef.current?.close();
+    const source = gateway.subscribe(sessionId, lastSequenceRef.current, {
+      onEvent: (event: GameEvent) => {
         lastSequenceRef.current = Math.max(lastSequenceRef.current, event.sequence);
         setEvents((current) => dedupeEvents([...current, event]).slice(-100));
         scheduleSnapshotRefresh(sessionId);
@@ -65,25 +85,27 @@ function App() {
         setErrorMessage("Live event stream disconnected. The browser will retry automatically.");
       }
     });
-    eventSourceRef.current = source;
+    subscriptionRef.current = source;
 
     return () => source.close();
   }, [sessionId]);
 
   async function bootstrapSession() {
     try {
-      const existingSessionId = window.localStorage.getItem(SESSION_KEY);
-      if (existingSessionId) {
-        try {
-          await loadSession(existingSessionId, true);
-          setSessionId(existingSessionId);
-          return;
-        } catch {
-          window.localStorage.removeItem(SESSION_KEY);
+      if (persistSession) {
+        const existingSessionId = window.localStorage.getItem(SESSION_KEY);
+        if (existingSessionId) {
+          try {
+            await loadSession(existingSessionId, true);
+            setSessionId(existingSessionId);
+            return;
+          } catch {
+            window.localStorage.removeItem(SESSION_KEY);
+          }
         }
       }
 
-      const response = await createSession();
+      const response = await gateway.createSession();
       applySession(response);
       await syncEvents(response.sessionId, 0);
     } catch (error) {
@@ -92,7 +114,7 @@ function App() {
   }
 
   async function loadSession(id: string, includeHistory = false) {
-    const response = await getSession(id);
+    const response = await gateway.getSession(id);
     applySession(response);
     if (includeHistory) {
       await syncEvents(id, 0);
@@ -139,8 +161,10 @@ function App() {
     }
     try {
       const previousSequence = lastSequenceRef.current;
-      await persistLobbySettingsIfNeeded(sessionId);
-      const response = await startMatch(sessionId);
+      if (snapshot?.pendingAction.type === "START_MATCH") {
+        await persistLobbySettingsIfNeeded(sessionId);
+      }
+      const response = await gateway.startMatch(sessionId);
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
@@ -154,7 +178,7 @@ function App() {
     }
     try {
       const previousSequence = lastSequenceRef.current;
-      const response = await chooseTrump(sessionId, choice);
+      const response = await gateway.chooseTrump(sessionId, choice);
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
@@ -170,12 +194,13 @@ function App() {
     try {
       const previousSequence = lastSequenceRef.current;
       const currentSnapshot = snapshot;
-      const request = playCard(sessionId, handIndex);
+      const request = gateway.playCard(sessionId, handIndex);
       setSelectedHandIndex(handIndex);
       await delay(CARD_SELECTION_DELAY_MS);
+      setHiddenHandIndex(handIndex);
 
       const response = await request;
-      const history = await getSessionEvents(sessionId, previousSequence);
+      const history = await gateway.getSessionEvents(sessionId, previousSequence);
       appendHistory(history);
       const trickAnimations = buildAnimatedTrickTimeline(currentSnapshot, response.snapshot, history);
       if (trickAnimations.length > 0) {
@@ -188,6 +213,7 @@ function App() {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to play the card.");
       setSelectedHandIndex(null);
+      setHiddenHandIndex(null);
       clearAnimationTimeline();
       pendingAnimationQueueRef.current = [];
       setAnimatedTrick(null);
@@ -289,11 +315,13 @@ function App() {
     });
   }
 
-  function applySession(response: SessionResponse, options?: { deferSnapshot?: boolean }) {
-    const shouldDeferSnapshot = options?.deferSnapshot || animatedTrickRef.current !== null;
+  function applySession(response: SessionResponse, options?: { deferSnapshot?: boolean; forceCommit?: boolean }) {
+    const shouldDeferSnapshot = !options?.forceCommit && (options?.deferSnapshot || animatedTrickRef.current !== null);
 
     setSessionId(response.sessionId);
-    window.localStorage.setItem(SESSION_KEY, response.sessionId);
+    if (persistSession) {
+      window.localStorage.setItem(SESSION_KEY, response.sessionId);
+    }
     lastSequenceRef.current = Math.max(lastSequenceRef.current, response.snapshot.lastEventSequence);
 
     if (shouldDeferSnapshot) {
@@ -307,9 +335,15 @@ function App() {
   function commitSessionSnapshot(response: SessionResponse) {
     deferredSessionRef.current = null;
     setSnapshot(response.snapshot);
+    setHiddenHandIndex(null);
     setPlayerNames((current) => mergePlayerNames(current, response.snapshot.players));
     setTeamNames((current) => mergeTeamNames(current, response.snapshot));
-    setDifficulty(response.snapshot.score.difficulty || "NORMAL");
+    setGameSettings((current) => ({
+      ...current,
+      difficulty: toDifficulty(response.snapshot.score.difficulty),
+      matchTargetWins: toMatchTargetWins(response.snapshot.score.matchTargetWins),
+      gameLength: response.snapshot.score.gameTargetPoints <= 501 ? "SHORT" : "LONG"
+    }));
     setErrorMessage(response.snapshot.pendingAction.validationMessage);
   }
 
@@ -319,13 +353,18 @@ function App() {
     const deferredSession = deferredSessionRef.current;
 
     if (refreshSessionId) {
-      void loadSession(refreshSessionId).catch(() => {
+      void gateway
+        .getSession(refreshSessionId)
+        .then((response) => {
+          applySession(response, { forceCommit: true });
+        })
+        .catch(() => {
         if (deferredSession) {
           commitSessionSnapshot(deferredSession);
           return;
         }
         setErrorMessage("Unable to refresh the game state.");
-      });
+        });
       return;
     }
 
@@ -344,7 +383,7 @@ function App() {
   }
 
   async function syncEvents(id: string, afterSequence: number) {
-    const history = await getSessionEvents(id, afterSequence);
+    const history = await gateway.getSessionEvents(id, afterSequence);
     appendHistory(history);
   }
 
@@ -358,12 +397,21 @@ function App() {
     if (
       JSON.stringify(currentNames) === JSON.stringify(playerNames) &&
       JSON.stringify(currentTeams) === JSON.stringify(teamNames) &&
-      (snapshot.score.difficulty || "NORMAL") === difficulty
+      toDifficulty(snapshot.score.difficulty) === gameSettings.difficulty &&
+      toMatchTargetWins(snapshot.score.matchTargetWins) === gameSettings.matchTargetWins &&
+      (snapshot.score.gameTargetPoints <= 501 ? "SHORT" : "LONG") === gameSettings.gameLength
     ) {
       return;
     }
 
-    const response = await updateLobbySettings(id, difficulty, playerNames, teamNames);
+    const response = await gateway.updateLobbySettings(
+      id,
+      gameSettings.difficulty,
+      playerNames,
+      teamNames,
+      gameSettings.matchTargetWins,
+      gameSettings.gameLength
+    );
     applySession(response);
   }
 
@@ -371,12 +419,12 @@ function App() {
     setPlayerNames((current) => ({ ...current, [seat]: value }));
   }
 
-  function handleDifficultyChange(value: string) {
-    setDifficulty(value);
-  }
-
   function handleTeamNameChange(team: keyof TeamNameDrafts, value: string) {
     setTeamNames((current) => ({ ...current, [team]: value }));
+  }
+
+  function handleGameSettingsChange(patch: Partial<GameSettingsDrafts>) {
+    setGameSettings((current) => ({ ...current, ...patch }));
   }
 
   const playersBySeat = indexPlayers(snapshot?.players ?? []);
@@ -390,10 +438,10 @@ function App() {
           snapshot={snapshot}
           playersBySeat={playersBySeat}
           onPlayCard={handlePlayCard}
-          pendingPrompt={snapshot?.pendingAction.prompt}
           errorMessage={errorMessage}
           pendingType={snapshot?.pendingAction.type}
           selectedHandIndex={selectedHandIndex}
+          hiddenHandIndex={hiddenHandIndex}
           animatedTrick={animatedTrick}
           highlightedSeat={highlightedSeat}
           handLocked={handLocked}
@@ -403,10 +451,11 @@ function App() {
           errorMessage={errorMessage}
           playerNames={playerNames}
           teamNames={teamNames}
-          difficulty={difficulty}
+          gameSettings={gameSettings}
           onPlayerNameChange={handlePlayerNameChange}
           onTeamNameChange={handleTeamNameChange}
-          onDifficultyChange={handleDifficultyChange}
+          onGameSettingsChange={handleGameSettingsChange}
+          gameWinMessage={latestGameWinMessage(events)}
           onStart={handleStartMatch}
           onChooseTrump={handleChooseTrump}
         />
@@ -460,6 +509,16 @@ function emptyTeamNames(): TeamNameDrafts {
   };
 }
 
+function defaultGameSettings(): GameSettingsDrafts {
+  const storedTheme = typeof window === "undefined" ? null : window.localStorage.getItem(THEME_KEY);
+  return {
+    difficulty: "NORMAL",
+    matchTargetWins: 3,
+    gameLength: "LONG",
+    tableTheme: isTableTheme(storedTheme) ? storedTheme : "GREEN"
+  };
+}
+
 function toTeamNames(snapshot: GameSnapshot): TeamNameDrafts {
   return {
     yourTeam: snapshot.score.teamOneName,
@@ -483,6 +542,23 @@ function mergeTeamNames(current: TeamNameDrafts, snapshot: GameSnapshot): TeamNa
     yourTeam: current.yourTeam || incoming.yourTeam,
     enemyTeam: current.enemyTeam || incoming.enemyTeam
   };
+}
+
+function toDifficulty(value: string | null | undefined): GameSettingsDrafts["difficulty"] {
+  return value === "EASY" || value === "HARD" ? value : "NORMAL";
+}
+
+function toMatchTargetWins(value: number | null | undefined): MatchTargetWins {
+  return value === 1 || value === 5 ? value : 3;
+}
+
+function isTableTheme(value: string | null): value is TableTheme {
+  return value === "GREEN" || value === "DARK_BLUE" || value === "CHERRY_RED" || value === "WOODY_BROWN" || value === "FINE_BLACK";
+}
+
+function latestGameWinMessage(events: GameEvent[]) {
+  const latest = [...events].reverse().find((event) => event.payload.eventKind === "GAME_WIN");
+  return latest?.message ?? null;
 }
 
 function delay(ms: number) {

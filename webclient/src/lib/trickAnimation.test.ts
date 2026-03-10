@@ -19,6 +19,8 @@ const baseSnapshot: GameSnapshot = {
     declarerTeam: "Your Team",
     gameNumber: 1,
     difficulty: "NORMAL",
+    matchTargetWins: 3,
+    gameTargetPoints: 1001,
     teamOneMeldPoints: 0,
     teamTwoMeldPoints: 0,
     meldDeclarations: []

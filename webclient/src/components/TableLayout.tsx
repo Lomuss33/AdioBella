@@ -4,17 +4,16 @@ import MatchDataCard from "./MatchDataCard";
 import PlayerHand from "./PlayerHand";
 import ScoreBar from "./ScoreBar";
 import SeatPanel from "./SeatPanel";
-import SouthPlayerInfo from "./SouthPlayerInfo";
 import TrickPile from "./TrickPile";
 
 interface TableLayoutProps {
   snapshot: GameSnapshot | null;
   playersBySeat: Partial<Record<PlayerView["seat"], PlayerView>>;
   onPlayCard: (handIndex: number) => void;
-  pendingPrompt?: string;
   errorMessage: string | null;
   pendingType?: string;
   selectedHandIndex?: number | null;
+  hiddenHandIndex?: number | null;
   animatedTrick?: AnimatedTrickState | null;
   highlightedSeat?: Seat | null;
   handLocked?: boolean;
@@ -24,10 +23,10 @@ function TableLayout({
   snapshot,
   playersBySeat,
   onPlayCard,
-  pendingPrompt,
   errorMessage,
   pendingType,
   selectedHandIndex,
+  hiddenHandIndex,
   animatedTrick,
   highlightedSeat,
   handLocked
@@ -48,6 +47,20 @@ function TableLayout({
           />
           <GameDataCard snapshot={snapshot} />
         </div>
+        <div className="compact-mobile-player-row compact-mobile-player-row-enemy">
+          <SeatPanel
+            player={playersBySeat.WEST}
+            winnerGlow={highlightedSeat === "WEST"}
+            showDealer={dealerSeat === "WEST"}
+            showTrumpCaller={declarerSeat === "WEST"}
+          />
+          <SeatPanel
+            player={playersBySeat.EAST}
+            winnerGlow={highlightedSeat === "EAST"}
+            showDealer={dealerSeat === "EAST"}
+            showTrumpCaller={declarerSeat === "EAST"}
+          />
+        </div>
         <div className="table-middle-row">
           <SeatPanel
             player={playersBySeat.WEST}
@@ -67,20 +80,32 @@ function TableLayout({
             showTrumpCaller={declarerSeat === "EAST"}
           />
         </div>
-        <div className="table-bottom-row">
-          <ScoreBar snapshot={snapshot} pendingPrompt={pendingPrompt} errorMessage={errorMessage} />
-          <PlayerHand
-            player={playersBySeat.SOUTH}
-            pendingType={snapshot?.pendingAction.type}
-            selectedIndex={selectedHandIndex}
-            locked={handLocked}
-            onPlayCard={onPlayCard}
-          />
-          <SouthPlayerInfo
+        <div className="compact-mobile-player-row compact-mobile-player-row-team">
+          <SeatPanel
             player={playersBySeat.SOUTH}
             winnerGlow={highlightedSeat === "SOUTH"}
             showDealer={dealerSeat === "SOUTH"}
             showTrumpCaller={declarerSeat === "SOUTH"}
+          />
+          <SeatPanel
+            player={playersBySeat.NORTH}
+            winnerGlow={highlightedSeat === "NORTH"}
+            showDealer={dealerSeat === "NORTH"}
+            showTrumpCaller={declarerSeat === "NORTH"}
+          />
+        </div>
+        <div className="table-bottom-row">
+          <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
+          <PlayerHand
+            player={playersBySeat.SOUTH}
+            pendingType={snapshot?.pendingAction.type}
+            selectedIndex={selectedHandIndex}
+            hiddenIndex={hiddenHandIndex}
+            locked={handLocked}
+            winnerGlow={highlightedSeat === "SOUTH"}
+            showDealer={dealerSeat === "SOUTH"}
+            showTrumpCaller={declarerSeat === "SOUTH"}
+            onPlayCard={onPlayCard}
           />
         </div>
       </div>

@@ -1,5 +1,9 @@
-export type ActionType = "NONE" | "START_MATCH" | "CHOOSE_TRUMP" | "PLAY_CARD";
+export type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "PLAY_CARD";
 export type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
+export type Difficulty = "EASY" | "NORMAL" | "HARD";
+export type GameLength = "SHORT" | "LONG";
+export type MatchTargetWins = 1 | 3 | 5;
+export type TableTheme = "GREEN" | "DARK_BLUE" | "CHERRY_RED" | "WOODY_BROWN" | "FINE_BLACK";
 
 export interface CardView {
   suit: string | null;
@@ -45,6 +49,8 @@ export interface ScoreView {
   declarerTeam: string | null;
   gameNumber: number;
   difficulty: string;
+  matchTargetWins: number;
+  gameTargetPoints: number;
   teamOneMeldPoints: number;
   teamTwoMeldPoints: number;
   meldDeclarations: MeldDeclarationView[];
@@ -105,6 +111,13 @@ export interface PlayerNameDrafts {
 export interface TeamNameDrafts {
   yourTeam: string;
   enemyTeam: string;
+}
+
+export interface GameSettingsDrafts {
+  difficulty: Difficulty;
+  matchTargetWins: MatchTargetWins;
+  gameLength: GameLength;
+  tableTheme: TableTheme;
 }
 
 export interface AnimatedPlayStep {

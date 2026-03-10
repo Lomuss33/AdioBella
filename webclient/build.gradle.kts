@@ -13,8 +13,13 @@ tasks.register<Exec>("npmInstall") {
     workingDir(projectDir)
 }
 
+val syncFavicon by tasks.registering(Sync::class) {
+    from(rootProject.file("favicon.ico"))
+    into(layout.projectDirectory.dir("public"))
+}
+
 tasks.register<Exec>("buildWebApp") {
-    dependsOn("npmInstall")
+    dependsOn("npmInstall", syncFavicon)
     commandLine(npmCommand, "run", "build")
     workingDir(projectDir)
 }

@@ -70,14 +70,18 @@ class SessionControllerTest {
                                   "difficulty":"HARD",
                                   "playerNamesBySeat":{"SOUTH":"Lovro"},
                                   "yourTeamName":"Blue Team",
-                                  "enemyTeamName":"Red Team"
+                                  "enemyTeamName":"Red Team",
+                                  "matchTargetWins":5,
+                                  "gameLength":"SHORT"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.snapshot.score.teamOneName").value("Blue Team"))
                 .andExpect(jsonPath("$.snapshot.score.teamTwoName").value("Red Team"))
                 .andExpect(jsonPath("$.snapshot.players[0].name").value("Lovro"))
-                .andExpect(jsonPath("$.snapshot.score.difficulty").value("HARD"));
+                .andExpect(jsonPath("$.snapshot.score.difficulty").value("HARD"))
+                .andExpect(jsonPath("$.snapshot.score.matchTargetWins").value(5))
+                .andExpect(jsonPath("$.snapshot.score.gameTargetPoints").value(501));
     }
 
     private String createSessionId() throws Exception {

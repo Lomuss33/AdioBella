@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
+import type { GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
 
 export async function createSession(): Promise<SessionResponse> {
   return sendRequest<SessionResponse>("/api/sessions", {
@@ -32,7 +32,9 @@ export async function updateLobbySettings(
   sessionId: string,
   difficulty: string,
   playerNamesBySeat: PlayerNameDrafts,
-  teamNames: TeamNameDrafts
+  teamNames: TeamNameDrafts,
+  matchTargetWins: MatchTargetWins,
+  gameLength: GameLength
 ): Promise<SessionResponse> {
   return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/settings`, {
     method: "POST",
@@ -40,7 +42,9 @@ export async function updateLobbySettings(
       difficulty,
       playerNamesBySeat,
       yourTeamName: teamNames.yourTeam,
-      enemyTeamName: teamNames.enemyTeam
+      enemyTeamName: teamNames.enemyTeam,
+      matchTargetWins,
+      gameLength
     })
   });
 }

@@ -27,7 +27,6 @@ function SeatPanel({ player, winnerGlow, showDealer, showTrumpCaller }: SeatPane
       <div className="seat-main-copy">
         <strong>{player.name}</strong>
         <small>{player.team}</small>
-        <small>{player.handSize} cards</small>
       </div>
       {(showDealer || showTrumpCaller) ? (
         <div className="seat-badges">
@@ -35,7 +34,6 @@ function SeatPanel({ player, winnerGlow, showDealer, showTrumpCaller }: SeatPane
           {showTrumpCaller ? <span className="seat-badge seat-badge-trump">trump</span> : null}
         </div>
       ) : null}
-      <div className="seat-status-line">{player.currentTurn ? "current turn" : "waiting"}</div>
     </div>
   );
 }

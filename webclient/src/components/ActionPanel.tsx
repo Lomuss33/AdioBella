@@ -1,4 +1,5 @@
-import type { PendingAction, PlayerNameDrafts, TeamNameDrafts } from "../types";
+import type { ReactNode } from "react";
+import type { GameSettingsDrafts, PendingAction, PlayerNameDrafts, TeamNameDrafts } from "../types";
 import SuitChoiceButton from "./SuitChoiceButton";
 
 interface ActionPanelProps {
@@ -6,10 +7,11 @@ interface ActionPanelProps {
   errorMessage: string | null;
   playerNames: PlayerNameDrafts;
   teamNames: TeamNameDrafts;
-  difficulty: string;
+  gameSettings: GameSettingsDrafts;
+  gameWinMessage: string | null;
   onPlayerNameChange: (seat: keyof PlayerNameDrafts, value: string) => void;
   onTeamNameChange: (team: keyof TeamNameDrafts, value: string) => void;
-  onDifficultyChange: (value: string) => void;
+  onGameSettingsChange: (patch: Partial<GameSettingsDrafts>) => void;
   onStart: () => void;
   onChooseTrump: (choice: string) => void;
 }
@@ -19,41 +21,44 @@ function ActionPanel({
   errorMessage,
   playerNames,
   teamNames,
-  difficulty,
+  gameSettings,
+  gameWinMessage,
   onPlayerNameChange,
   onTeamNameChange,
-  onDifficultyChange,
+  onGameSettingsChange,
   onStart,
   onChooseTrump
 }: ActionPanelProps) {
-  const isPopupVisible = pendingAction?.type === "START_MATCH" || pendingAction?.type === "CHOOSE_TRUMP";
+  const isStart = pendingAction?.type === "START_MATCH";
+  const isNextGame = pendingAction?.type === "START_NEXT_GAME";
+  const isTrumpChoice = pendingAction?.type === "CHOOSE_TRUMP";
+  const isPopupVisible = isStart || isNextGame || isTrumpChoice;
 
   if (!isPopupVisible) {
     return null;
   }
 
+  const title = isStart ? "Start the match" : isNextGame ? "Game complete" : "Choose the trump suit";
+  const subtitle = isStart
+    ? "Set the table, the pace, and the people before the first deal."
+    : isNextGame
+      ? gameWinMessage ?? "That game is done. Take a breath and deal the next one."
+      : pendingAction?.prompt || "Choose the trump suit or skip.";
+
   return (
-    <div className={`action-overlay ${pendingAction?.type === "START_MATCH" ? "action-overlay-start" : "action-overlay-trump"}`}>
-      <div className="action-bar action-popup" role="dialog" aria-modal="true" aria-label="Game action">
-        <div>
-          <span className="panel-caption">Prompt</span>
-          <p>{pendingAction?.prompt || "Waiting for the session to load."}</p>
+    <div
+      className={`action-overlay ${
+        isTrumpChoice ? "action-overlay-trump" : isNextGame ? "action-overlay-next-game" : "action-overlay-start"
+      }`}
+    >
+      <div className={`action-bar action-popup ${isStart ? "action-popup-start" : ""}`} role="dialog" aria-modal="true" aria-label={title}>
+        <div className="action-popup-header">
+          <h2 className="action-popup-title">{title}</h2>
+          <p className="action-popup-subtitle">{subtitle}</p>
           {errorMessage ? <p className="error-line">{errorMessage}</p> : null}
         </div>
-        {pendingAction?.type === "START_MATCH" ? (
-          <>
-            <div className="difficulty-row" role="group" aria-label="Difficulty">
-              {(["EASY", "NORMAL", "HARD"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  className={`difficulty-button ${difficulty === mode ? "selected" : ""}`}
-                  onClick={() => onDifficultyChange(mode)}
-                >
-                  {mode.toLowerCase()}
-                </button>
-              ))}
-            </div>
+        {isStart ? (
+          <div className="action-popup-body">
             <div className="name-settings-grid">
               <label className="name-setting-field">
                 <span className="panel-caption">your team</span>
@@ -85,16 +90,88 @@ function ActionPanel({
                 </label>
               ))}
             </div>
-          </>
+
+            <div className="settings-stack">
+              <SettingGroup label="difficulty">
+                {(["EASY", "NORMAL", "HARD"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    className={`setting-pill ${gameSettings.difficulty === mode ? "selected" : ""}`}
+                    onClick={() => onGameSettingsChange({ difficulty: mode })}
+                  >
+                    {mode.toLowerCase()}
+                  </button>
+                ))}
+              </SettingGroup>
+
+              <SettingGroup label="match length">
+                {([1, 3, 5] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`setting-pill ${gameSettings.matchTargetWins === value ? "selected" : ""}`}
+                    onClick={() => onGameSettingsChange({ matchTargetWins: value })}
+                  >
+                    first to {value}
+                  </button>
+                ))}
+              </SettingGroup>
+
+              <SettingGroup label="game length">
+                {([
+                  { value: "SHORT", label: "short 501" },
+                  { value: "LONG", label: "long 1001" }
+                ] as const).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`setting-pill ${gameSettings.gameLength === option.value ? "selected" : ""}`}
+                    onClick={() => onGameSettingsChange({ gameLength: option.value })}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </SettingGroup>
+
+              <SettingGroup label="table color">
+                {([
+                  { value: "GREEN", label: "green" },
+                  { value: "DARK_BLUE", label: "dark blue" },
+                  { value: "CHERRY_RED", label: "cherry red" },
+                  { value: "WOODY_BROWN", label: "woody brown" },
+                  { value: "FINE_BLACK", label: "fine black" }
+                ] as const).map((theme) => (
+                  <button
+                    key={theme.value}
+                    type="button"
+                    className={`setting-pill setting-pill-theme ${gameSettings.tableTheme === theme.value ? "selected" : ""}`}
+                    onClick={() => onGameSettingsChange({ tableTheme: theme.value })}
+                  >
+                    {theme.label}
+                  </button>
+                ))}
+              </SettingGroup>
+            </div>
+          </div>
         ) : null}
-        <div className={`action-controls ${pendingAction?.type === "CHOOSE_TRUMP" ? "trump-controls" : ""}`}>
-          {pendingAction?.type === "START_MATCH" ? (
-            <button type="button" className="action-button" onClick={onStart}>
-              Start Match
+        {isNextGame ? (
+          <div className="between-games-summary">
+            <div className="between-games-chip">next stop</div>
+            <p>
+              First to {gameSettings.matchTargetWins} game{gameSettings.matchTargetWins === 1 ? "" : "s"} wins the match.
+            </p>
+            <p>The next game plays to {gameSettings.gameLength === "SHORT" ? 501 : 1001} points.</p>
+          </div>
+        ) : null}
+        <div className={`action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
+          {isStart || isNextGame ? (
+            <button type="button" className="action-button action-button-primary" onClick={onStart}>
+              {isStart ? "Start the match" : "Deal the next game"}
             </button>
           ) : null}
-          {pendingAction?.type === "CHOOSE_TRUMP"
-            ? pendingAction.legalTrumpChoices.map((choice) =>
+          {isTrumpChoice
+            ? (pendingAction?.legalTrumpChoices ?? []).map((choice) =>
                 choice === "SKIP" ? (
                   <button
                     key={choice}
@@ -116,6 +193,15 @@ function ActionPanel({
         </div>
       </div>
     </div>
+  );
+}
+
+function SettingGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <section className="setting-group">
+      <span className="panel-caption">{label}</span>
+      <div className="setting-pill-row">{children}</div>
+    </section>
   );
 }
 

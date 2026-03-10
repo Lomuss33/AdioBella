@@ -37,6 +37,8 @@ const baseSession: SessionResponse = {
       declarerTeam: null,
       gameNumber: 0,
       difficulty: "NORMAL",
+      matchTargetWins: 3,
+      gameTargetPoints: 1001,
       teamOneMeldPoints: 0,
       teamTwoMeldPoints: 0,
       meldDeclarations: []
@@ -59,6 +61,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 test("renders the table and terminal", async () => {
@@ -73,9 +76,9 @@ test("renders the table and terminal", async () => {
   render(<App />);
 
   await waitFor(() => expect(screen.getByText("Game Terminal")).toBeInTheDocument());
-  expect(screen.getByRole("button", { name: "Start Match" })).toBeEnabled();
-  expect(screen.getByText("SOUTH")).toBeInTheDocument();
-  expect(screen.getByText("Zapad")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Start the match" })).toBeEnabled();
+  expect(screen.getAllByText("SOUTH").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Zapad").length).toBeGreaterThan(0);
   expect(screen.getByRole("button", { name: "easy" })).toBeEnabled();
   expect(screen.getAllByText(/us/i).length).toBeGreaterThan(0);
 });
@@ -89,7 +92,7 @@ test("starts the match from the start button", async () => {
 
   render(<App />);
 
-  const startButton = await screen.findByRole("button", { name: "Start Match" });
+  const startButton = await screen.findByRole("button", { name: "Start the match" });
   await userEvent.click(startButton);
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
@@ -98,7 +101,7 @@ test("starts the match from the start button", async () => {
   ));
 });
 
-test("renders card labels and disables unplayable cards", async () => {
+test("renders playable cards and disables unplayable cards", async () => {
   const playableSession: SessionResponse = {
     ...baseSession,
     snapshot: {
@@ -137,8 +140,6 @@ test("renders card labels and disables unplayable cards", async () => {
 
   render(<App />);
 
-  expect(await screen.findByText("as")).toBeInTheDocument();
-  expect(await screen.findByText("kh")).toBeInTheDocument();
   const blockedCard = await screen.findByRole("button", { name: "as" });
   const playableCard = await screen.findByRole("button", { name: "kh" });
   expect(blockedCard).toBeDisabled();
@@ -175,4 +176,16 @@ test("renders trump suit options with lowercase labels", async () => {
   expect(await screen.findByText("hearts")).toBeInTheDocument();
   expect(await screen.findByText("clubs")).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "hearts" })).toBeEnabled();
+});
+
+test("browser mode bootstraps without backend requests", async () => {
+  vi.stubEnv("VITE_GAME_RUNTIME", "browser");
+  const fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+
+  render(<App />);
+
+  await waitFor(() => expect(screen.getByRole("button", { name: "Start the match" })).toBeEnabled());
+  expect(fetchMock).not.toHaveBeenCalled();
+  expect(window.localStorage.getItem("belot-session-id")).toBeNull();
 });

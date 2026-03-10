@@ -12,6 +12,8 @@ public record ScoreView(
         String declarerTeam,
         int gameNumber,
         String difficulty,
+        int matchTargetWins,
+        int gameTargetPoints,
         int teamOneMeldPoints,
         int teamTwoMeldPoints,
         List<MeldDeclarationView> meldDeclarations

@@ -2,6 +2,7 @@ package com.belot.server.web;
 
 import com.belot.engine.api.Difficulty;
 import com.belot.engine.api.GameEvent;
+import com.belot.engine.api.GameLength;
 import com.belot.engine.api.GameSnapshot;
 import com.belot.engine.api.TrumpChoice;
 import java.util.List;
@@ -68,7 +69,9 @@ public class SessionController {
                         request.difficulty(),
                         request.playerNamesBySeat(),
                         request.yourTeamName(),
-                        request.enemyTeamName()
+                        request.enemyTeamName(),
+                        request.matchTargetWins(),
+                        request.gameLength()
                 )
         );
     }
@@ -101,7 +104,9 @@ public class SessionController {
             Difficulty difficulty,
             java.util.Map<String, String> playerNamesBySeat,
             String yourTeamName,
-            String enemyTeamName
+            String enemyTeamName,
+            Integer matchTargetWins,
+            GameLength gameLength
     ) {
     }
 

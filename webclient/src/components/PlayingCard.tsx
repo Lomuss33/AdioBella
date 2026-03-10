@@ -57,7 +57,6 @@ function PlayingCard({
           </>
         )}
       </div>
-      {!presentation.hidden ? <span className="card-code-label">{presentation.label}</span> : null}
     </button>
   );
 }

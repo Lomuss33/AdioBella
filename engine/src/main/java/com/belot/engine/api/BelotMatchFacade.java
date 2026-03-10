@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public final class BelotMatchFacade {
 
-    private static final int GAME_WIN_SCORE = 1001;
+    private static final int DEFAULT_MATCH_TARGET_WINS = 3;
     private static final int FULL_HAND_SIZE = 8;
     private static final int OPENING_DEAL_SIZE = 6;
     private static final int LAST_TRICK_BONUS = 10;
@@ -44,9 +44,13 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void startMatch() {
-        ensure(state.phase == Phase.READY_TO_START, "The match is already running.");
+        ensure(state.phase == Phase.READY_TO_START || state.phase == Phase.BETWEEN_GAMES, "The match is already running.");
         clearValidation();
-        startNextGame(false);
+        if (state.phase == Phase.READY_TO_START) {
+            startNextGame(false);
+        } else {
+            startNextFullGame(true);
+        }
         processUntilHumanTurn();
     }
 
@@ -96,13 +100,33 @@ public final class BelotMatchFacade {
         }
     }
 
-    public synchronized void updateLobbySettings(Difficulty difficulty, Map<String, String> playerNamesBySeat, String yourTeamName, String enemyTeamName) {
+    public synchronized void updateLobbySettings(
+            Difficulty difficulty,
+            Map<String, String> playerNamesBySeat,
+            String yourTeamName,
+            String enemyTeamName,
+            Integer matchTargetWins,
+            GameLength gameLength
+    ) {
         ensure(state.phase == Phase.READY_TO_START, "Lobby settings can only be changed before the match starts.");
         if (difficulty != null) {
             state.difficulty = difficulty;
         }
+        updateGameSettings(matchTargetWins, gameLength);
         updateTeamNames(yourTeamName, enemyTeamName);
         updatePlayerNames(playerNamesBySeat);
+    }
+
+    public synchronized void updateGameSettings(Integer matchTargetWins, GameLength gameLength) {
+        ensure(state.phase == Phase.READY_TO_START, "Game settings can only be changed before the match starts.");
+
+        if (matchTargetWins != null) {
+            state.matchTargetWins = sanitizeMatchTargetWins(matchTargetWins);
+        }
+
+        if (gameLength != null) {
+            state.gameTargetPoints = gameLength.targetPoints();
+        }
     }
 
     public synchronized void chooseTrump(TrumpChoice choice) {
@@ -165,13 +189,15 @@ public final class BelotMatchFacade {
         ScoreView score = new ScoreView(
                 state.teamOne.name,
                 state.teamOne.matchWins,
-                state.teamOne.gameScore,
+                displayedGameScore(state.teamOne),
                 state.teamTwo.name,
                 state.teamTwo.matchWins,
-                state.teamTwo.gameScore,
+                displayedGameScore(state.teamTwo),
                 state.declarer == null ? null : teamFor(state.declarer).name,
                 state.gameNumber,
                 state.difficulty.name(),
+                state.matchTargetWins,
+                state.gameTargetPoints,
                 state.teamOne.meldPoints,
                 state.teamTwo.meldPoints,
                 state.lastMeldAwards.stream()
@@ -185,7 +211,7 @@ public final class BelotMatchFacade {
                 state.trumpSuit == null ? null : state.trumpSuit.name(),
                 playerAt(state.dealerIndex).id,
                 state.declarerPlayerIndex == null ? null : playerAt(state.declarerPlayerIndex).id,
-                state.phase == Phase.READY_TO_START || state.phase == Phase.MATCH_COMPLETE ? null : currentPlayer().id,
+                state.phase == Phase.READY_TO_START || state.phase == Phase.BETWEEN_GAMES || state.phase == Phase.MATCH_COMPLETE ? null : currentPlayer().id,
                 players,
                 trick,
                 score,
@@ -201,7 +227,7 @@ public final class BelotMatchFacade {
 
     private void processUntilHumanTurn() {
         while (true) {
-            if (state.phase == Phase.MATCH_COMPLETE || state.phase == Phase.READY_TO_START) {
+            if (state.phase == Phase.MATCH_COMPLETE || state.phase == Phase.READY_TO_START || state.phase == Phase.BETWEEN_GAMES) {
                 return;
             }
 
@@ -326,27 +352,63 @@ public final class BelotMatchFacade {
         }
 
         TeamState winner = state.teamOne.gameScore >= state.teamTwo.gameScore ? state.teamOne : state.teamTwo;
-        if (winner.gameScore >= GAME_WIN_SCORE) {
-            state.phase = Phase.MATCH_COMPLETE;
-            state.pendingType = ActionType.NONE;
+        if (winner.gameScore >= state.gameTargetPoints) {
             winner.matchWins += 1;
             log("INFO", winner.name + " won the game.", Map.of(
+                    "eventKind", "GAME_WIN",
                     "winner", winner.name,
                     "winningScore", String.valueOf(winner.gameScore),
                     "matchWins", String.valueOf(winner.matchWins)
             ));
+
+            if (winner.matchWins >= state.matchTargetWins) {
+                state.phase = Phase.MATCH_COMPLETE;
+                state.pendingType = ActionType.NONE;
+                log("INFO", winner.name + " won the match.", Map.of(
+                        "eventKind", "MATCH_WIN",
+                        "winner", winner.name,
+                        "matchWins", String.valueOf(winner.matchWins)
+                ));
+                return;
+            }
+
+            state.phase = Phase.BETWEEN_GAMES;
+            state.pendingType = ActionType.START_NEXT_GAME;
+            state.pendingValidationMessage = null;
+            state.currentTrick = null;
             return;
         }
 
         startNextGame(true);
     }
 
+    private void startNextFullGame(boolean rotateDealer) {
+        state.teamOne.gameScore = 0;
+        state.teamTwo.gameScore = 0;
+        state.gameNumber++;
+        startNextHand(rotateDealer);
+        log("INFO", "Game " + state.gameNumber + " started. " + playerAt(state.dealerIndex).name + " is the dealer.",
+                Map.of(
+                        "eventKind", "GAME_START",
+                        "gameNumber", String.valueOf(state.gameNumber),
+                        "dealerPlayerId", playerAt(state.dealerIndex).id
+                ));
+    }
+
     private void startNextGame(boolean rotateDealer) {
+        if (state.gameNumber == 0) {
+            startNextFullGame(rotateDealer);
+            return;
+        }
+
+        startNextHand(rotateDealer);
+    }
+
+    private void startNextHand(boolean rotateDealer) {
         if (rotateDealer) {
             state.dealerIndex = (state.dealerIndex + 1) % state.players.size();
         }
 
-        state.gameNumber++;
         state.phase = Phase.TRUMP_SELECTION;
         state.pendingType = ActionType.NONE;
         state.pendingValidationMessage = null;
@@ -366,9 +428,6 @@ public final class BelotMatchFacade {
 
         state.deck = RuleUtils.createShuffledDeck(random);
         dealCards(OPENING_DEAL_SIZE);
-
-        log("INFO", "Game " + state.gameNumber + " started. " + playerAt(state.dealerIndex).name + " is the dealer.",
-                Map.of("dealerPlayerId", playerAt(state.dealerIndex).id));
     }
 
     private void selectTrump(PlayerState player, Suit suit) {
@@ -402,27 +461,14 @@ public final class BelotMatchFacade {
         List<MeldAward> awards = state.players.stream().map(player -> MeldService.evaluate(player, state.trumpSuit)).toList();
         state.lastMeldAwards = awards;
 
-        for (MeldAward award : awards) {
-            if (award.belaPoints > 0) {
-                teamFor(award.player.team.side).meldPoints += award.belaPoints;
-                log("INFO", award.player.name + " declared Bela for 20 points.", Map.of("playerId", award.player.id));
-            }
-        }
-
-        MeldAward winningAward = awards.stream()
-                .filter(award -> award.comparisonValue > 0)
-                .max(Comparator.comparingInt((MeldAward award) -> award.comparisonValue)
-                        .thenComparingInt(award -> 10 - award.player.index))
-                .orElse(null);
-
-        if (winningAward == null) {
+        TeamSide winningTeam = determineWinningMeldTeam(awards);
+        if (winningTeam == null) {
             return;
         }
 
-        TeamSide winningTeam = winningAward.player.team.side;
         int points = awards.stream()
                 .filter(award -> award.player.team.side == winningTeam)
-                .mapToInt(award -> award.meldPoints)
+                .mapToInt(award -> award.meldPoints + award.belaPoints)
                 .sum();
         if (points == 0) {
             return;
@@ -432,11 +478,63 @@ public final class BelotMatchFacade {
 
         String labels = awards.stream()
                 .filter(award -> award.player.team.side == winningTeam)
-                .flatMap(award -> award.labels.stream())
+                .flatMap(award -> declarationLabels(award).stream())
                 .collect(Collectors.joining(", "));
 
-        log("INFO", teamFor(winningTeam).name + " won meld points: " + labels + ".",
+        log("INFO", teamFor(winningTeam).name + " won meld points: " + (labels.isBlank() ? points + " points" : labels) + ".",
                 Map.of("team", teamFor(winningTeam).name, "points", String.valueOf(points)));
+    }
+
+    private TeamSide determineWinningMeldTeam(List<MeldAward> awards) {
+        int yourHighest = highestComparisonValue(awards, TeamSide.YOURS);
+        int enemyHighest = highestComparisonValue(awards, TeamSide.ENEMIES);
+
+        if (yourHighest > enemyHighest) {
+            return TeamSide.YOURS;
+        }
+        if (enemyHighest > yourHighest) {
+            return TeamSide.ENEMIES;
+        }
+
+        if (yourHighest > 0) {
+            return state.declarer;
+        }
+
+        int yourTotal = declarationPointsForTeam(awards, TeamSide.YOURS);
+        int enemyTotal = declarationPointsForTeam(awards, TeamSide.ENEMIES);
+        if (yourTotal == 0 && enemyTotal == 0) {
+            return null;
+        }
+        if (yourTotal > enemyTotal) {
+            return TeamSide.YOURS;
+        }
+        if (enemyTotal > yourTotal) {
+            return TeamSide.ENEMIES;
+        }
+        return state.declarer;
+    }
+
+    private int highestComparisonValue(List<MeldAward> awards, TeamSide side) {
+        return awards.stream()
+                .filter(award -> award.player.team.side == side)
+                .mapToInt(MeldAward::comparisonValue)
+                .max()
+                .orElse(0);
+    }
+
+    private int declarationPointsForTeam(List<MeldAward> awards, TeamSide side) {
+        return awards.stream()
+                .filter(award -> award.player.team.side == side)
+                .mapToInt(award -> award.meldPoints + award.belaPoints)
+                .sum();
+    }
+
+    private List<String> declarationLabels(MeldAward award) {
+        List<String> labels = new ArrayList<>(award.labels);
+        if (award.belaPoints > 0) {
+            labels.add("Bela");
+        }
+        return labels;
     }
 
     private void dealCards(int count) {
@@ -514,6 +612,7 @@ public final class BelotMatchFacade {
     private PendingAction buildPendingAction() {
         return switch (state.pendingType) {
             case START_MATCH -> new PendingAction(ActionType.START_MATCH, playerAt(0).id, List.of(), List.of(), state.pendingValidationMessage, "Start the match.");
+            case START_NEXT_GAME -> new PendingAction(ActionType.START_NEXT_GAME, playerAt(0).id, List.of(), List.of(), state.pendingValidationMessage, "Start the next game.");
             case CHOOSE_TRUMP -> new PendingAction(
                     ActionType.CHOOSE_TRUMP,
                     currentPlayer().id,
@@ -558,9 +657,12 @@ public final class BelotMatchFacade {
                 hand,
                 player.hand.size(),
                 player.team.matchWins,
-                player.team.gameScore,
+                displayedGameScore(player.team),
                 player.index == state.dealerIndex,
-                state.phase != Phase.READY_TO_START && state.phase != Phase.MATCH_COMPLETE && player.index == state.currentPlayerIndex
+                state.phase != Phase.READY_TO_START
+                        && state.phase != Phase.BETWEEN_GAMES
+                        && state.phase != Phase.MATCH_COMPLETE
+                        && player.index == state.currentPlayerIndex
         );
     }
 
@@ -632,6 +734,20 @@ public final class BelotMatchFacade {
         return side == TeamSide.YOURS ? state.teamTwo : state.teamOne;
     }
 
+    private int displayedGameScore(TeamState team) {
+        if (state.phase == Phase.BETWEEN_GAMES || state.phase == Phase.MATCH_COMPLETE) {
+            return team.gameScore;
+        }
+        return team.gameScore + team.totalHandPoints();
+    }
+
+    private int sanitizeMatchTargetWins(int matchTargetWins) {
+        return switch (matchTargetWins) {
+            case 1, 3, 5 -> matchTargetWins;
+            default -> DEFAULT_MATCH_TARGET_WINS;
+        };
+    }
+
     private Suit toSuit(TrumpChoice choice) {
         return switch (choice) {
             case SPADES -> Suit.SPADES;
@@ -644,6 +760,7 @@ public final class BelotMatchFacade {
 
     private enum Phase {
         READY_TO_START,
+        BETWEEN_GAMES,
         TRUMP_SELECTION,
         TRICK_PLAY,
         MATCH_COMPLETE
@@ -823,6 +940,8 @@ public final class BelotMatchFacade {
         private int currentPlayerIndex;
         private int trumpTurnOffset;
         private int gameNumber;
+        private int matchTargetWins;
+        private int gameTargetPoints;
         private List<Card> deck = new ArrayList<>();
         private Suit trumpSuit;
         private TeamSide declarer;
@@ -841,6 +960,8 @@ public final class BelotMatchFacade {
             this.dealerIndex = 3;
             this.phase = Phase.READY_TO_START;
             this.pendingType = ActionType.START_MATCH;
+            this.matchTargetWins = DEFAULT_MATCH_TARGET_WINS;
+            this.gameTargetPoints = GameLength.LONG.targetPoints();
         }
 
         private static MatchState create(Difficulty difficulty) {

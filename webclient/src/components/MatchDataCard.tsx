@@ -4,7 +4,7 @@ function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
   const score = snapshot?.score;
   const melds = score?.meldDeclarations ?? [];
   const gameGapPercent = score
-    ? Math.round((Math.abs(score.teamOneGamePoints - score.teamTwoGamePoints) / 1001) * 100)
+    ? Math.min(100, Math.round((Math.abs(score.teamOneGamePoints - score.teamTwoGamePoints) / Math.max(score.gameTargetPoints, 1)) * 100))
     : 0;
 
   return (

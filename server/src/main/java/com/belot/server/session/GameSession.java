@@ -3,6 +3,7 @@ package com.belot.server.session;
 import com.belot.engine.api.BelotMatchFacade;
 import com.belot.engine.api.Difficulty;
 import com.belot.engine.api.GameEvent;
+import com.belot.engine.api.GameLength;
 import com.belot.engine.api.GameSnapshot;
 import com.belot.engine.api.TrumpChoice;
 import java.io.IOException;
@@ -50,9 +51,11 @@ public final class GameSession {
             Difficulty difficulty,
             java.util.Map<String, String> playerNamesBySeat,
             String yourTeamName,
-            String enemyTeamName
+            String enemyTeamName,
+            Integer matchTargetWins,
+            GameLength gameLength
     ) {
-        facade.updateLobbySettings(difficulty, playerNamesBySeat, yourTeamName, enemyTeamName);
+        facade.updateLobbySettings(difficulty, playerNamesBySeat, yourTeamName, enemyTeamName, matchTargetWins, gameLength);
         broadcastNewEvents();
         return facade.getSnapshot();
     }

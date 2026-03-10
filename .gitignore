@@ -34,3 +34,5 @@ test.java
 Test.java
 # Ignore Gradle project-specific cache directory
 .gradle
+node_modules/
+dist/

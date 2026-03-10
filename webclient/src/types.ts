@@ -1,0 +1,149 @@
+export type ActionType = "NONE" | "START_MATCH" | "CHOOSE_TRUMP" | "PLAY_CARD";
+export type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
+
+export interface CardView {
+  suit: string | null;
+  rank: string | null;
+  label: string;
+  faceUp: boolean;
+  playable: boolean;
+}
+
+export interface PlayerView {
+  id: string;
+  name: string;
+  seat: Seat;
+  human: boolean;
+  team: string;
+  hand: CardView[];
+  handSize: number;
+  matchScore: number;
+  gamePoints: number;
+  dealer: boolean;
+  currentTurn: boolean;
+}
+
+export interface PlayedCardView {
+  playerId: string;
+  playerName: string;
+  seat: Seat;
+  card: CardView;
+}
+
+export interface TrickView {
+  leadPlayerId: string | null;
+  cards: PlayedCardView[];
+}
+
+export interface ScoreView {
+  teamOneName: string;
+  teamOneMatchScore: number;
+  teamOneGamePoints: number;
+  teamTwoName: string;
+  teamTwoMatchScore: number;
+  teamTwoGamePoints: number;
+  declarerTeam: string | null;
+  gameNumber: number;
+  difficulty: string;
+  teamOneMeldPoints: number;
+  teamTwoMeldPoints: number;
+  meldDeclarations: MeldDeclarationView[];
+}
+
+export interface MeldDeclarationView {
+  playerId: string;
+  playerName: string;
+  teamName: string;
+  meldPoints: number;
+  belaPoints: number;
+  labels: string[];
+}
+
+export interface PendingAction {
+  type: ActionType;
+  actingPlayerId: string | null;
+  legalCardIndices: number[];
+  legalTrumpChoices: string[];
+  validationMessage: string | null;
+  prompt: string;
+}
+
+export interface GameEvent {
+  sequence: number;
+  type: string;
+  message: string;
+  createdAt: string;
+  payload: Record<string, string>;
+}
+
+export interface GameSnapshot {
+  phase: string;
+  trumpSuit: string | null;
+  dealerPlayerId: string;
+  declarerPlayerId: string | null;
+  currentPlayerId: string | null;
+  players: PlayerView[];
+  trick: TrickView;
+  score: ScoreView;
+  pendingAction: PendingAction;
+  lastEventSequence: number;
+  matchComplete: boolean;
+}
+
+export interface SessionResponse {
+  sessionId: string;
+  snapshot: GameSnapshot;
+}
+
+export interface PlayerNameDrafts {
+  SOUTH: string;
+  WEST: string;
+  NORTH: string;
+  EAST: string;
+}
+
+export interface TeamNameDrafts {
+  yourTeam: string;
+  enemyTeam: string;
+}
+
+export interface AnimatedPlayStep {
+  seat: Seat;
+  playerId: string;
+  playerName: string;
+  card: CardView;
+  startAtMs: number;
+  durationMs: number;
+  landingPoints: number;
+  pointsAfterLanding: number;
+}
+
+export interface TrickResolutionStep {
+  winnerSeat: Seat;
+  winnerPlayerId: string;
+  trickPoints: number;
+  countUpStartMs: number;
+  highlightDurationMs: number;
+  collectStartMs: number;
+  collectDurationMs: number;
+  lastTrickBonus: number;
+}
+
+export interface AnimatedTrickState {
+  baseCards: PlayedCardView[];
+  plays: AnimatedPlayStep[];
+  visiblePlayCount: number;
+  phase: "placing" | "highlight" | "collecting";
+  winnerSeat: Seat | null;
+  winnerPlayerId: string | null;
+  winningCardKey: string | null;
+  pointsDisplay: number;
+  pointsVisible: boolean;
+  pointsPulse: boolean;
+  resolution: TrickResolutionStep | null;
+}
+
+export interface DisplaySnapshotState {
+  snapshot: GameSnapshot | null;
+  animatedTrick: AnimatedTrickState | null;
+}

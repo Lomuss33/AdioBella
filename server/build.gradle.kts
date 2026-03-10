@@ -1,26 +1,41 @@
-/*
- * SERVER MODULE - Multiplayer Game Server
- * 
- * RESPONSIBILITY: Manage multiple games, player connections, networking.
- * DEPENDS ON: engine (uses game rules and logic)
- * 
- * EXAMPLE DEPENDENCIES:
- * - WebSocket library for real-time communication
- * - Database for storing game history
- * - Session management
- */
+plugins {
+    id("org.springframework.boot") version "3.4.0"
+    id("io.spring.dependency-management") version "1.1.6"
+    java
+}
 
-description = "Belot Game Server - Multiplayer support and networking"
+description = "Belot web server"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 dependencies {
-    // Use the engine module (game logic)
     implementation(project(":engine"))
-    
-    // Future: Add server libraries
-    // implementation("io.netty:netty-all:4.1.100.Final")  // For networking
-    // implementation("org.postgresql:postgresql:42.5.0")  // For database
-    
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+val buildWebClient by tasks.registering {
+    dependsOn(":webclient:buildWebApp")
+}
+
+tasks.processResources {
+    dependsOn(buildWebClient)
+    from(project(":webclient").layout.projectDirectory.dir("dist")) {
+        into("static")
+    }
+}
+
+tasks.bootRun {
+    val serverPort = providers.gradleProperty("serverPort").orNull
+    if (!serverPort.isNullOrBlank()) {
+        systemProperty("server.port", serverPort)
+    }
 }
 
 tasks.test {

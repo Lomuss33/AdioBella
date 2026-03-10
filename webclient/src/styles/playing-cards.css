@@ -1,0 +1,75 @@
+.playing-card-face {
+  position: relative;
+  width: clamp(4rem, 5.4vw, 4.7rem);
+  height: clamp(5.75rem, 7.5vw, 6.7rem);
+  border-radius: 0.68rem;
+  border: 1px solid rgba(22, 31, 19, 0.18);
+  background: linear-gradient(180deg, #fffdfa 0%, #f4ecdf 100%);
+  box-shadow:
+    0 0.22rem 0.55rem rgba(0, 0, 0, 0.18),
+    inset 0 0 0 0.1rem rgba(255, 255, 255, 0.76);
+  overflow: hidden;
+}
+
+.playing-card-face.hearts,
+.playing-card-face.diams {
+  color: #aa2d2d;
+}
+
+.playing-card-face.spades,
+.playing-card-face.clubs {
+  color: #162319;
+}
+
+.playing-card-corner {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+}
+
+.playing-card-corner-top {
+  top: 0.3rem;
+  left: 0.34rem;
+}
+
+.playing-card-corner-bottom {
+  right: 0.34rem;
+  bottom: 0.3rem;
+  transform: rotate(180deg);
+}
+
+.playing-card-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.78rem;
+  line-height: 1;
+}
+
+.playing-card-face.back {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, #3d1830 0%, #1f0a1f 100%);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.playing-card-back-mark {
+  position: absolute;
+  inset: 0.46rem;
+  border-radius: 0.46rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.14), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+.playing-card-shell.winning-card .playing-card-face {
+  box-shadow:
+    0 0 0 0.16rem rgba(214, 186, 116, 0.95),
+    0 0 1rem rgba(214, 186, 116, 0.4);
+}

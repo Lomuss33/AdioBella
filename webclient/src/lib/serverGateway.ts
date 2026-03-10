@@ -1,6 +1,16 @@
 import type { GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
 import type { GameGateway } from "./gameGateway";
 
+export class HttpError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "HttpError";
+  }
+}
+
 export const serverGateway: GameGateway = {
   createSession() {
     return sendRequest<SessionResponse>("/api/sessions", {
@@ -85,7 +95,7 @@ async function sendRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({ error: "Request failed." }))) as { error?: string };
-    throw new Error(errorBody.error ?? "Request failed.");
+    throw new HttpError(errorBody.error ?? "Request failed.", response.status);
   }
 
   return (await response.json()) as T;

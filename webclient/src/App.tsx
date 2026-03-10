@@ -3,6 +3,7 @@ import ActionPanel from "./components/ActionPanel";
 import TableLayout from "./components/TableLayout";
 import TerminalLog from "./components/TerminalLog";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
+import { HttpError } from "./lib/serverGateway";
 import {
   buildAnimatedTrickTimeline,
   CARD_SELECTION_DELAY_MS,
@@ -110,8 +111,7 @@ function App() {
       }
 
       const response = await gateway.createSession();
-      applySession(response);
-      await syncEvents(response.sessionId, 0);
+      applyFreshSession(response);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to create a session.");
     }
@@ -133,7 +133,10 @@ function App() {
 
     clearScheduledRefresh();
     refreshTimeoutRef.current = window.setTimeout(() => {
-      void loadSession(id).catch(() => {
+      void loadSession(id).catch(async (error) => {
+        if (await recoverMissingSession(error)) {
+          return;
+        }
         setErrorMessage("Unable to refresh the game state.");
       });
       refreshTimeoutRef.current = null;
@@ -172,6 +175,9 @@ function App() {
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
       setErrorMessage(error instanceof Error ? error.message : "Unable to start the match.");
     }
   }
@@ -186,6 +192,9 @@ function App() {
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
       setErrorMessage(error instanceof Error ? error.message : "Unable to choose trump.");
     }
   }
@@ -215,6 +224,9 @@ function App() {
         setSelectedHandIndex(null);
       }
     } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
       setErrorMessage(error instanceof Error ? error.message : "Unable to play the card.");
       setSelectedHandIndex(null);
       setHiddenHandIndex(null);
@@ -389,6 +401,41 @@ function App() {
   async function syncEvents(id: string, afterSequence: number) {
     const history = await gateway.getSessionEvents(id, afterSequence);
     appendHistory(history);
+  }
+
+  async function recoverMissingSession(error: unknown) {
+    if (!isMissingSessionError(error)) {
+      return false;
+    }
+
+    subscriptionRef.current?.close();
+    clearScheduledRefresh();
+    clearAnimationTimeline();
+    pendingAnimationQueueRef.current = [];
+    deferredSessionRef.current = null;
+    deferredRefreshSessionIdRef.current = null;
+    animatedTrickRef.current = null;
+
+    setAnimatedTrick(null);
+    setSelectedHandIndex(null);
+    setHiddenHandIndex(null);
+    setEvents([]);
+    setSnapshot(null);
+    lastSequenceRef.current = 0;
+
+    if (persistSession) {
+      window.localStorage.removeItem(SESSION_KEY);
+    }
+
+    const response = await gateway.createSession();
+    applyFreshSession(response);
+    setErrorMessage("The old session expired. A fresh table has been opened.");
+    return true;
+  }
+
+  function applyFreshSession(response: SessionResponse) {
+    applySession(response);
+    void syncEvents(response.sessionId, 0);
   }
 
   async function persistLobbySettingsIfNeeded(id: string) {
@@ -567,6 +614,18 @@ function latestGameWinMessage(events: GameEvent[]) {
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isMissingSessionError(error: unknown) {
+  if (error instanceof HttpError) {
+    return error.status === 404;
+  }
+
+  if (error instanceof Error) {
+    return /session not found/i.test(error.message);
+  }
+
+  return false;
 }
 
 export default App;

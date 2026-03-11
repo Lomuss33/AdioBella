@@ -63,6 +63,12 @@ interface MeldAward {
   labels: string[];
 }
 
+interface MeldScore {
+  meldPoints: number;
+  comparisonValue: number;
+  labels: string[];
+}
+
 interface MatchState {
   difficulty: Difficulty;
   players: PlayerState[];
@@ -1138,84 +1144,158 @@ function declarationLabels(award: MeldAward) {
 }
 
 function evaluateMeld(player: PlayerState, trumpSuit: Suit): MeldAward {
-  const labels: string[] = [];
-  let meldPoints = 0;
+  const sameRankScore = evaluateSameRankMelds(player.hand);
+  const sequenceScore = evaluateSequenceMelds(player.hand);
   const belaPoints = hasBela(player.hand, trumpSuit) ? 20 : 0;
-  let comparisonValue = 0;
-
-  const byRank = new Map<Rank, Card[]>();
-  for (const card of player.hand) {
-    const cards = byRank.get(card.rank) ?? [];
-    cards.push(card);
-    byRank.set(card.rank, cards);
-  }
-
-  for (const [rank, cards] of byRank.entries()) {
-    if (cards.length !== 4 || rank === "SEVEN" || rank === "EIGHT") {
-      continue;
-    }
-
-    if (rank === "JACK") {
-      meldPoints += 200;
-      comparisonValue = Math.max(comparisonValue, 700);
-      labels.push("Four Jacks");
-    } else if (rank === "NINE") {
-      meldPoints += 150;
-      comparisonValue = Math.max(comparisonValue, 650);
-      labels.push("Four Nines");
-    } else {
-      meldPoints += 100;
-      comparisonValue = Math.max(comparisonValue, 600);
-      labels.push("Four of a Kind");
-    }
-  }
-
-  const bySuit = new Map<Suit, Card[]>();
-  for (const card of player.hand) {
-    const cards = bySuit.get(card.suit) ?? [];
-    cards.push(card);
-    bySuit.set(card.suit, cards);
-  }
-
-  for (const cards of bySuit.values()) {
-    const sortedCards = [...cards].sort((left, right) => RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank));
-    let runLength = 1;
-    for (let index = 1; index <= sortedCards.length; index += 1) {
-      const contiguous =
-        index < sortedCards.length && RANKS.indexOf(sortedCards[index].rank) === RANKS.indexOf(sortedCards[index - 1].rank) + 1;
-
-      if (contiguous) {
-        runLength += 1;
-        continue;
-      }
-
-      if (runLength >= 3) {
-        if (runLength >= 5) {
-          meldPoints += 100;
-          comparisonValue = Math.max(comparisonValue, 500 + runLength);
-          labels.push(`Sequence of ${runLength}`);
-        } else if (runLength === 4) {
-          meldPoints += 50;
-          comparisonValue = Math.max(comparisonValue, 450);
-          labels.push("Sequence of 4");
-        } else {
-          meldPoints += 20;
-          comparisonValue = Math.max(comparisonValue, 400);
-          labels.push("Sequence of 3");
-        }
-      }
-
-      runLength = 1;
-    }
-  }
 
   return {
     player,
-    meldPoints,
+    meldPoints: sameRankScore.meldPoints + sequenceScore.meldPoints,
     belaPoints,
-    comparisonValue,
-    labels
+    comparisonValue: Math.max(sameRankScore.comparisonValue, sequenceScore.comparisonValue),
+    labels: [...sameRankScore.labels, ...sequenceScore.labels]
   };
+}
+
+function evaluateSameRankMelds(cards: Card[]): MeldScore {
+  const score = emptyMeldScore();
+  const byRank = groupCardsByRank(cards);
+
+  for (const [rank, matchingCards] of byRank.entries()) {
+    const rankScore = toSameRankMeldScore(rank, matchingCards.length);
+    if (rankScore) {
+      mergeMeldScore(score, rankScore);
+    }
+  }
+
+  return score;
+}
+
+function evaluateSequenceMelds(cards: Card[]): MeldScore {
+  const score = emptyMeldScore();
+  const bySuit = groupCardsBySuit(cards);
+
+  for (const suitedCards of bySuit.values()) {
+    for (const runLength of collectRunLengths(suitedCards)) {
+      const sequenceScore = toSequenceMeldScore(runLength);
+      if (sequenceScore) {
+        mergeMeldScore(score, sequenceScore);
+      }
+    }
+  }
+
+  return score;
+}
+
+function emptyMeldScore(): MeldScore {
+  return {
+    meldPoints: 0,
+    comparisonValue: 0,
+    labels: []
+  };
+}
+
+function mergeMeldScore(target: MeldScore, score: MeldScore) {
+  target.meldPoints += score.meldPoints;
+  target.comparisonValue = Math.max(target.comparisonValue, score.comparisonValue);
+  target.labels.push(...score.labels);
+}
+
+function groupCardsByRank(cards: Card[]) {
+  const byRank = new Map<Rank, Card[]>();
+  for (const card of cards) {
+    const matchingCards = byRank.get(card.rank) ?? [];
+    matchingCards.push(card);
+    byRank.set(card.rank, matchingCards);
+  }
+  return byRank;
+}
+
+function groupCardsBySuit(cards: Card[]) {
+  const bySuit = new Map<Suit, Card[]>();
+  for (const card of cards) {
+    const suitedCards = bySuit.get(card.suit) ?? [];
+    suitedCards.push(card);
+    bySuit.set(card.suit, suitedCards);
+  }
+  return bySuit;
+}
+
+function toSameRankMeldScore(rank: Rank, count: number): MeldScore | null {
+  if (count !== 4 || rank === "SEVEN" || rank === "EIGHT") {
+    return null;
+  }
+
+  if (rank === "JACK") {
+    return {
+      meldPoints: 200,
+      comparisonValue: 700,
+      labels: ["Four Jacks"]
+    };
+  }
+
+  if (rank === "NINE") {
+    return {
+      meldPoints: 150,
+      comparisonValue: 650,
+      labels: ["Four Nines"]
+    };
+  }
+
+  return {
+    meldPoints: 100,
+    comparisonValue: 600,
+    labels: ["Four of a Kind"]
+  };
+}
+
+function collectRunLengths(cards: Card[]) {
+  const sortedCards = [...cards].sort((left, right) => RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank));
+  const runLengths: number[] = [];
+  let runLength = 1;
+
+  for (let index = 1; index <= sortedCards.length; index += 1) {
+    const contiguous =
+      index < sortedCards.length && RANKS.indexOf(sortedCards[index].rank) === RANKS.indexOf(sortedCards[index - 1].rank) + 1;
+
+    if (contiguous) {
+      runLength += 1;
+      continue;
+    }
+
+    runLengths.push(runLength);
+    runLength = 1;
+  }
+
+  return runLengths;
+}
+
+function toSequenceMeldScore(runLength: number): MeldScore | null {
+  if (runLength >= 5) {
+    return {
+      meldPoints: 100,
+      comparisonValue: 500 + runLength,
+      labels: [`Sequence of ${runLength}`]
+    };
+  }
+
+  if (runLength === 4) {
+    return {
+      meldPoints: 50,
+      comparisonValue: 450,
+      labels: ["Sequence of 4"]
+    };
+  }
+
+  if (runLength === 3) {
+    return {
+      meldPoints: 20,
+      comparisonValue: 400,
+      labels: ["Sequence of 3"]
+    };
+  }
+
+  return null;
 }
 
 function hasBela(cards: Card[], trumpSuit: Suit) {

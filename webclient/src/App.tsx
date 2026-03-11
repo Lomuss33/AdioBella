@@ -29,6 +29,7 @@ import type {
 const SESSION_KEY = "belot-session-id";
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
+const START_LOADING_MS = 600;
 const THEME_META_COLOR: Record<TableTheme, string> = {
   GREEN: "#07120d",
   DARK_BLUE: "#060b16",
@@ -48,12 +49,14 @@ function App() {
   const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(emptyPlayerNames());
   const [teamNames, setTeamNames] = useState<TeamNameDrafts>(emptyTeamNames());
   const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(defaultGameSettings);
+  const [startScreenPhase, setStartScreenPhase] = useState<"boot-loading" | "ready">("boot-loading");
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
   const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
   const [animatedTrick, setAnimatedTrick] = useState<AnimatedTrickState | null>(null);
   const lastSequenceRef = useRef(0);
   const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
+  const startScreenTimeoutRef = useRef<number | null>(null);
   const animationTimeoutsRef = useRef<number[]>([]);
   const animationRunIdRef = useRef(0);
   const animatedTrickRef = useRef<AnimatedTrickState | null>(null);
@@ -71,6 +74,7 @@ function App() {
       subscriptionRef.current?.close();
       clearScheduledRefresh();
       clearAnimationTimeline();
+      clearStartScreenTimer();
     };
   }, []);
 
@@ -111,7 +115,8 @@ function App() {
         const existingSessionId = window.localStorage.getItem(SESSION_KEY);
         if (existingSessionId) {
           try {
-            await loadSession(existingSessionId, true);
+            const restoredSession = await loadSession(existingSessionId, true);
+            primeStartScreenPhase(restoredSession.snapshot.pendingAction.type === "START_MATCH");
             setSessionId(existingSessionId);
             return;
           } catch {
@@ -133,6 +138,7 @@ function App() {
     if (includeHistory) {
       await syncEvents(id, 0);
     }
+    return response;
   }
 
   function scheduleSnapshotRefresh(id: string) {
@@ -166,6 +172,13 @@ function App() {
       window.clearTimeout(timeoutId);
     }
     animationTimeoutsRef.current = [];
+  }
+
+  function clearStartScreenTimer() {
+    if (startScreenTimeoutRef.current !== null) {
+      window.clearTimeout(startScreenTimeoutRef.current);
+      startScreenTimeoutRef.current = null;
+    }
   }
 
   function queueAnimation(runId: number, ms: number, callback: () => void) {
@@ -462,8 +475,23 @@ function App() {
   }
 
   function applyFreshSession(response: SessionResponse) {
+    primeStartScreenPhase(true);
     applySession(response);
     void syncEvents(response.sessionId, 0);
+  }
+
+  function primeStartScreenPhase(shouldShowLoading: boolean) {
+    clearStartScreenTimer();
+    if (!shouldShowLoading) {
+      setStartScreenPhase("ready");
+      return;
+    }
+
+    setStartScreenPhase("boot-loading");
+    startScreenTimeoutRef.current = window.setTimeout(() => {
+      setStartScreenPhase("ready");
+      startScreenTimeoutRef.current = null;
+    }, START_LOADING_MS);
   }
 
   async function persistLobbySettingsIfNeeded(id: string) {
@@ -527,6 +555,7 @@ function App() {
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
+          startScreenPhase={startScreenPhase}
           errorMessage={errorMessage}
           playerNames={playerNames}
           teamNames={teamNames}

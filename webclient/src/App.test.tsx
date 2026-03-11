@@ -76,8 +76,10 @@ test("renders the table and terminal", async () => {
   render(<App />);
 
   await waitFor(() => expect(screen.getByText("Game Terminal")).toBeInTheDocument());
-  expect(screen.getByRole("button", { name: "Start the match" })).toBeEnabled();
-  expect(screen.getAllByText("SOUTH").length).toBeGreaterThan(0);
+  expect(screen.getByRole("status", { name: "Loading table" })).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
+  expect(screen.getByDisplayValue("You")).toBeInTheDocument();
+  expect(screen.getByDisplayValue("Ti")).toBeInTheDocument();
   expect(screen.getAllByText("Zapad").length).toBeGreaterThan(0);
   expect(screen.getByRole("button", { name: "easy" })).toBeEnabled();
   expect(screen.getAllByText(/us/i).length).toBeGreaterThan(0);

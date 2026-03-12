@@ -31,32 +31,40 @@ function PlayerHand({
   }
 
   const choosingCard = pendingType === "PLAY_CARD" && !locked;
-  const leadingEmptySlots = Math.floor((TOTAL_HAND_SLOTS - player.hand.length) / 2);
+  const visibleCards = player.hand
+    .map((card, handIndex) => (hiddenIndex !== null && handIndex === hiddenIndex ? null : { handIndex, card }))
+    .filter((slot): slot is { handIndex: number; card: PlayerView["hand"][number] } => slot !== null);
+  const leadingEmptySlots = Math.floor((TOTAL_HAND_SLOTS - visibleCards.length) / 2);
   const slots = Array.from({ length: TOTAL_HAND_SLOTS }, (_, slotIndex) => {
-    const handIndex = slotIndex - leadingEmptySlots;
-    if (handIndex < 0 || handIndex >= player.hand.length) {
+    const visibleIndex = slotIndex - leadingEmptySlots;
+    if (visibleIndex < 0 || visibleIndex >= visibleCards.length) {
       return null;
     }
 
-    if (hiddenIndex !== null && handIndex === hiddenIndex) {
-      return {
-        handIndex,
-        card: null
-      };
-    }
-
-    return {
-      handIndex,
-      card: player.hand[handIndex]
-    };
+    return visibleCards[visibleIndex];
   });
 
   return (
     <div className="player-hand-area">
       <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
-        <span className="south-inline-side south-inline-left">
-          {showDealer ? <span className="south-inline-badge">dealer</span> : null}
-        </span>
+        <div className="south-inline-status-row">
+          <span className="south-inline-side south-inline-left">
+            <span
+              className={`south-inline-badge ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
+              aria-hidden={showDealer ? undefined : true}
+            >
+              {showDealer ? "dealer" : ""}
+            </span>
+          </span>
+          <span className="south-inline-side south-inline-right">
+            <span
+              className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
+              aria-hidden={showTrumpCaller ? undefined : true}
+            >
+              {showTrumpCaller ? "trump" : ""}
+            </span>
+          </span>
+        </div>
         <div className="south-inline-main">
           <span className="south-inline-seat">{player.seat}</span>
           <span className="south-inline-separator">:</span>
@@ -64,11 +72,8 @@ function PlayerHand({
           <span className="south-inline-separator">:</span>
           <span>{player.team}</span>
         </div>
-        <span className="south-inline-side south-inline-right">
-          {showTrumpCaller ? <span className="south-inline-badge south-inline-badge-trump">trump</span> : null}
-        </span>
       </div>
-      <div className="card-fan-row" data-card-count={player.hand.length - (hiddenIndex !== null ? 1 : 0)}>
+      <div className="card-fan-row" data-card-count={visibleCards.length}>
         {slots.map((slot, slotIndex) =>
           slot && slot.card ? (
             <div key={`slot-${slotIndex}-${slot.card.label}`} className="hand-slot">
@@ -81,8 +86,6 @@ function PlayerHand({
                 onClick={() => onPlayCard(slot.handIndex)}
               />
             </div>
-          ) : slot ? (
-            <div key={`slot-${slotIndex}-hidden`} className="hand-slot hand-slot-hidden" aria-hidden="true" />
           ) : (
             <div key={`slot-${slotIndex}`} className="hand-slot hand-slot-empty" aria-hidden="true" />
           )

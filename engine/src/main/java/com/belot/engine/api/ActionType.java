@@ -5,5 +5,7 @@ public enum ActionType {
     START_MATCH,
     START_NEXT_GAME,
     CHOOSE_TRUMP,
+    REPORT_MELDS,
+    ACKNOWLEDGE_MELDS,
     PLAY_CARD
 }

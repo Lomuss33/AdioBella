@@ -51,6 +51,7 @@ function App() {
   const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(defaultGameSettings);
   const [startScreenPhase, setStartScreenPhase] = useState<"boot-loading" | "ready">("boot-loading");
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
+  const [pendingBelaChoiceIndex, setPendingBelaChoiceIndex] = useState<number | null>(null);
   const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
   const [animatedTrick, setAnimatedTrick] = useState<AnimatedTrickState | null>(null);
   const lastSequenceRef = useRef(0);
@@ -228,16 +229,17 @@ function App() {
     }
   }
 
-  async function handlePlayCard(handIndex: number) {
-    if (!sessionId || !snapshot || selectedHandIndex !== null || animatedTrick !== null) {
+  async function submitCardPlay(handIndex: number, callBela = false) {
+    if (!sessionId || !snapshot || (selectedHandIndex !== null && pendingBelaChoiceIndex == null) || animatedTrick !== null) {
       return;
     }
 
     try {
       const previousSequence = lastSequenceRef.current;
       const currentSnapshot = snapshot;
-      const request = gateway.playCard(sessionId, handIndex);
+      const request = gateway.playCard(sessionId, handIndex, callBela);
       setSelectedHandIndex(handIndex);
+      setPendingBelaChoiceIndex(null);
       await delay(CARD_SELECTION_DELAY_MS);
       setHiddenHandIndex(handIndex);
 
@@ -258,11 +260,78 @@ function App() {
       }
       setErrorMessage(error instanceof Error ? error.message : "Unable to play the card.");
       setSelectedHandIndex(null);
+      setPendingBelaChoiceIndex(null);
       setHiddenHandIndex(null);
       clearAnimationTimeline();
       pendingAnimationQueueRef.current = [];
       setAnimatedTrick(null);
     }
+  }
+
+  function handleCardClick(handIndex: number) {
+    if (!snapshot || selectedHandIndex !== null || animatedTrick !== null) {
+      return;
+    }
+
+    if (snapshot.pendingAction.belaEligibleCardIndices.includes(handIndex)) {
+      setSelectedHandIndex(handIndex);
+      setPendingBelaChoiceIndex(handIndex);
+      return;
+    }
+
+    void submitCardPlay(handIndex, false);
+  }
+
+  async function handleReportMelds(declare: boolean) {
+    if (!sessionId) {
+      return;
+    }
+
+    try {
+      const previousSequence = lastSequenceRef.current;
+      const response = await gateway.reportMelds(sessionId, declare);
+      applySession(response);
+      await syncEvents(sessionId, previousSequence);
+    } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
+      setErrorMessage(error instanceof Error ? error.message : "Unable to report melds.");
+    }
+  }
+
+  async function handleAcknowledgeMelds() {
+    if (!sessionId) {
+      return;
+    }
+
+    try {
+      const previousSequence = lastSequenceRef.current;
+      const response = await gateway.acknowledgeMelds(sessionId);
+      applySession(response);
+      await syncEvents(sessionId, previousSequence);
+    } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
+      setErrorMessage(error instanceof Error ? error.message : "Unable to continue after melds.");
+    }
+  }
+
+  function handlePlayWithBela() {
+    if (pendingBelaChoiceIndex == null) {
+      return;
+    }
+    setSelectedHandIndex(null);
+    void submitCardPlay(pendingBelaChoiceIndex, true);
+  }
+
+  function handlePlayWithoutBela() {
+    if (pendingBelaChoiceIndex == null) {
+      return;
+    }
+    setSelectedHandIndex(null);
+    void submitCardPlay(pendingBelaChoiceIndex, false);
   }
 
   function startTrickAnimationQueue(trickAnimations: AnimatedTrickState[]) {
@@ -393,6 +462,7 @@ function App() {
     deferredSessionRef.current = null;
     setSnapshot(response.snapshot);
     setHiddenHandIndex(null);
+    setPendingBelaChoiceIndex(null);
     setPlayerNames((current) => mergePlayerNames(current, response.snapshot.players));
     setTeamNames((current) => mergeTeamNames(current, response.snapshot));
     setGameSettings((current) => ({
@@ -459,6 +529,7 @@ function App() {
 
     setAnimatedTrick(null);
     setSelectedHandIndex(null);
+    setPendingBelaChoiceIndex(null);
     setHiddenHandIndex(null);
     setEvents([]);
     setSnapshot(null);
@@ -536,7 +607,12 @@ function App() {
 
   const playersBySeat = indexPlayers(snapshot?.players ?? []);
   const highlightedSeat = animatedTrick && animatedTrick.phase !== "placing" ? animatedTrick.winnerSeat : null;
-  const handLocked = selectedHandIndex !== null || animatedTrick !== null;
+  const handLocked = selectedHandIndex !== null || animatedTrick !== null || pendingBelaChoiceIndex !== null;
+  const southPlayer = playersBySeat.SOUTH;
+  const belaChoiceCard =
+    pendingBelaChoiceIndex != null && southPlayer?.hand[pendingBelaChoiceIndex]
+      ? southPlayer.hand[pendingBelaChoiceIndex]
+      : null;
 
   return (
     <main className="app-shell">
@@ -544,7 +620,7 @@ function App() {
         <TableLayout
           snapshot={snapshot}
           playersBySeat={playersBySeat}
-          onPlayCard={handlePlayCard}
+          onPlayCard={handleCardClick}
           errorMessage={errorMessage}
           pendingType={snapshot?.pendingAction.type}
           selectedHandIndex={selectedHandIndex}
@@ -566,6 +642,11 @@ function App() {
           gameWinMessage={latestGameWinMessage(events)}
           onStart={handleStartMatch}
           onChooseTrump={handleChooseTrump}
+          onReportMelds={handleReportMelds}
+          onAcknowledgeMelds={handleAcknowledgeMelds}
+          pendingBelaChoiceCard={belaChoiceCard}
+          onPlayWithBela={handlePlayWithBela}
+          onPlayWithoutBela={handlePlayWithoutBela}
         />
       </div>
       <section className="after-table">

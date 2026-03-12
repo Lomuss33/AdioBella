@@ -83,10 +83,26 @@ public class SessionController {
         return new SessionResponse(session.id().toString(), session.chooseTrump(choice));
     }
 
+    @PostMapping("/{sessionId}/melds")
+    public SessionResponse reportMelds(@PathVariable UUID sessionId, @RequestBody ReportMeldsRequest request) {
+        GameSession session = sessions.requireSession(sessionId);
+        return new SessionResponse(session.id().toString(), session.reportMelds(request.declare()));
+    }
+
+    @PostMapping("/{sessionId}/melds/ack")
+    public SessionResponse acknowledgeMelds(@PathVariable UUID sessionId, @RequestBody AcknowledgeMeldsRequest request) {
+        if (!request.acknowledged()) {
+            throw new IllegalArgumentException("Meld acknowledgement must be confirmed.");
+        }
+
+        GameSession session = sessions.requireSession(sessionId);
+        return new SessionResponse(session.id().toString(), session.acknowledgeMelds());
+    }
+
     @PostMapping("/{sessionId}/card")
     public SessionResponse playCard(@PathVariable UUID sessionId, @RequestBody PlayCardRequest request) {
         GameSession session = sessions.requireSession(sessionId);
-        return new SessionResponse(session.id().toString(), session.playCard(request.handIndex()));
+        return new SessionResponse(session.id().toString(), session.playCard(request.handIndex(), Boolean.TRUE.equals(request.callBela())));
     }
 
     @GetMapping(value = "/{sessionId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -113,7 +129,13 @@ public class SessionController {
     public record TrumpChoiceRequest(String choice) {
     }
 
-    public record PlayCardRequest(int handIndex) {
+    public record ReportMeldsRequest(boolean declare) {
+    }
+
+    public record AcknowledgeMeldsRequest(boolean acknowledged) {
+    }
+
+    public record PlayCardRequest(int handIndex, Boolean callBela) {
     }
 
     public record SessionResponse(String sessionId, GameSnapshot snapshot) {

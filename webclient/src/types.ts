@@ -1,4 +1,4 @@
-export type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "PLAY_CARD";
+export type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "REPORT_MELDS" | "ACKNOWLEDGE_MELDS" | "PLAY_CARD";
 export type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
 export type Difficulty = "EASY" | "NORMAL" | "HARD";
 export type GameLength = "SHORT" | "LONG";
@@ -65,11 +65,35 @@ export interface MeldDeclarationView {
   labels: string[];
 }
 
+export interface MeldCombinationView {
+  kind: string;
+  label: string;
+  points: number;
+  comparisonValue: number;
+  cards: CardView[];
+}
+
+export interface MeldSetView {
+  playerId: string;
+  playerName: string;
+  teamName: string;
+  totalPoints: number;
+  melds: MeldCombinationView[];
+}
+
+export interface MeldWinnerView {
+  teamName: string;
+  players: MeldSetView[];
+}
+
 export interface PendingAction {
   type: ActionType;
   actingPlayerId: string | null;
   legalCardIndices: number[];
   legalTrumpChoices: string[];
+  belaEligibleCardIndices: number[];
+  availableMelds: MeldSetView[];
+  meldWinner: MeldWinnerView | null;
   validationMessage: string | null;
   prompt: string;
 }

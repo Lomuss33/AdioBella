@@ -61,10 +61,24 @@ export const serverGateway: GameGateway = {
     });
   },
 
-  playCard(sessionId: string, handIndex: number) {
+  reportMelds(sessionId: string, declare: boolean) {
+    return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/melds`, {
+      method: "POST",
+      body: JSON.stringify({ declare })
+    });
+  },
+
+  acknowledgeMelds(sessionId: string) {
+    return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/melds/ack`, {
+      method: "POST",
+      body: JSON.stringify({ acknowledged: true })
+    });
+  },
+
+  playCard(sessionId: string, handIndex: number, callBela = false) {
     return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/card`, {
       method: "POST",
-      body: JSON.stringify({ handIndex })
+      body: JSON.stringify({ handIndex, callBela })
     });
   },
 

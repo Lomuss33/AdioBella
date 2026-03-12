@@ -28,12 +28,17 @@ function SeatPanel({ player, winnerGlow, showDealer, showTrumpCaller }: SeatPane
         <strong>{player.name}</strong>
         <small>{player.team}</small>
       </div>
-      {(showDealer || showTrumpCaller) ? (
-        <div className="seat-badges">
-          {showDealer ? <span className="seat-badge">dealer</span> : null}
-          {showTrumpCaller ? <span className="seat-badge seat-badge-trump">trump</span> : null}
-        </div>
-      ) : null}
+      <div className="seat-badges">
+        <span className={`seat-badge ${showDealer ? "" : "seat-badge-placeholder"}`.trim()} aria-hidden={showDealer ? undefined : true}>
+          {showDealer ? "dealer" : ""}
+        </span>
+        <span
+          className={`seat-badge seat-badge-trump ${showTrumpCaller ? "" : "seat-badge-placeholder"}`.trim()}
+          aria-hidden={showTrumpCaller ? undefined : true}
+        >
+          {showTrumpCaller ? "trump" : ""}
+        </span>
+      </div>
     </div>
   );
 }

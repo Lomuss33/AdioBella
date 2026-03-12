@@ -30,6 +30,9 @@ const baseSnapshot: GameSnapshot = {
     actingPlayerId: "south",
     legalCardIndices: [0],
     legalTrumpChoices: [],
+    belaEligibleCardIndices: [],
+    availableMelds: [],
+    meldWinner: null,
     validationMessage: null,
     prompt: "Play a legal card."
   },

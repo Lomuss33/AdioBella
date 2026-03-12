@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import type { GameSettingsDrafts, PendingAction, PlayerNameDrafts, TeamNameDrafts } from "../types";
+import type { CardView, GameSettingsDrafts, MeldSetView, MeldWinnerView, PendingAction, PlayerNameDrafts, TeamNameDrafts } from "../types";
+import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 
 interface ActionPanelProps {
@@ -15,6 +16,11 @@ interface ActionPanelProps {
   onGameSettingsChange: (patch: Partial<GameSettingsDrafts>) => void;
   onStart: () => void;
   onChooseTrump: (choice: string) => void;
+  onReportMelds: (declare: boolean) => void;
+  onAcknowledgeMelds: () => void;
+  pendingBelaChoiceCard: CardView | null;
+  onPlayWithBela: () => void;
+  onPlayWithoutBela: () => void;
 }
 
 function ActionPanel({
@@ -29,24 +35,46 @@ function ActionPanel({
   onTeamNameChange,
   onGameSettingsChange,
   onStart,
-  onChooseTrump
+  onChooseTrump,
+  onReportMelds,
+  onAcknowledgeMelds,
+  pendingBelaChoiceCard,
+  onPlayWithBela,
+  onPlayWithoutBela
 }: ActionPanelProps) {
   const isStart = pendingAction?.type === "START_MATCH";
   const isNextGame = pendingAction?.type === "START_NEXT_GAME";
   const isTrumpChoice = pendingAction?.type === "CHOOSE_TRUMP";
+  const isReportMelds = pendingAction?.type === "REPORT_MELDS";
+  const isAcknowledgeMelds = pendingAction?.type === "ACKNOWLEDGE_MELDS";
+  const isBelaChoice = pendingBelaChoiceCard !== null;
   const isBootLoading = isStart && startScreenPhase === "boot-loading";
-  const isPopupVisible = isStart || isNextGame || isTrumpChoice;
+  const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice;
 
   if (!isPopupVisible) {
     return null;
   }
 
-  const title = isStart ? "Start the match" : isNextGame ? "Game complete" : "Choose the trump suit";
+  const title = isStart
+    ? "Start the match"
+    : isNextGame
+      ? "Game complete"
+      : isTrumpChoice
+        ? "Choose the trump suit"
+        : isReportMelds || isAcknowledgeMelds
+          ? "Melds"
+          : "Bela";
   const subtitle = isStart
     ? "Set the table, the pace, and the people before the first deal."
     : isNextGame
       ? gameWinMessage ?? "That game is done. Take a breath and deal the next one."
-      : pendingAction?.prompt || "Choose the trump suit or skip.";
+      : isTrumpChoice
+        ? pendingAction?.prompt || "Choose the trump suit or skip."
+        : isReportMelds
+          ? "Declare your melds or keep them hidden."
+          : isAcknowledgeMelds
+            ? "Review the winning melds before the first trick."
+            : "Call Bela with this card or play it quietly.";
 
   return (
     <div
@@ -182,6 +210,23 @@ function ActionPanel({
                   </div>
                 </div>
               ) : null}
+              {isReportMelds ? (
+                <div className="action-popup-body meld-popup-body">
+                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} />
+                </div>
+              ) : null}
+              {isAcknowledgeMelds ? (
+                <div className="action-popup-body meld-popup-body">
+                  <MeldWinnerSection meldWinner={pendingAction?.meldWinner ?? null} />
+                </div>
+              ) : null}
+              {isBelaChoice ? (
+                <div className="action-popup-body meld-popup-body bela-popup-body">
+                  <div className="meld-card-row meld-card-row-single">
+                    <PlayingCard card={pendingBelaChoiceCard} />
+                  </div>
+                </div>
+              ) : null}
               {isNextGame ? (
                 <div className="between-games-summary">
                   <div className="between-games-chip">next stop</div>
@@ -197,6 +242,31 @@ function ActionPanel({
                 <button type="button" className="action-button action-button-primary" onClick={onStart}>
                   Deal the next game
                 </button>
+              ) : null}
+              {isReportMelds ? (
+                <>
+                  <button type="button" className="action-button" onClick={() => onReportMelds(false)}>
+                    Pass
+                  </button>
+                  <button type="button" className="action-button action-button-primary" onClick={() => onReportMelds(true)}>
+                    Declare melds
+                  </button>
+                </>
+              ) : null}
+              {isAcknowledgeMelds ? (
+                <button type="button" className="action-button action-button-primary" onClick={onAcknowledgeMelds}>
+                  Continue
+                </button>
+              ) : null}
+              {isBelaChoice ? (
+                <>
+                  <button type="button" className="action-button" onClick={onPlayWithoutBela}>
+                    Play only
+                  </button>
+                  <button type="button" className="action-button action-button-primary" onClick={onPlayWithBela}>
+                    Play + Bela
+                  </button>
+                </>
               ) : null}
               {isTrumpChoice
                 ? (pendingAction?.legalTrumpChoices ?? []).map((choice) =>
@@ -222,6 +292,54 @@ function ActionPanel({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
+  if (!meldSet) {
+    return <p className="panel-caption">No melds available.</p>;
+  }
+
+  return (
+    <div className="meld-popup-stack">
+      <div className="meld-summary-line">
+        <span className="panel-caption">player</span>
+        <strong>{meldSet.playerName}</strong>
+        <span className="meld-points-chip">{meldSet.totalPoints}</span>
+      </div>
+      {meldSet.melds.map((meld) => (
+        <div key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
+          <div className="meld-summary-line">
+            <span className="panel-caption">meld</span>
+            <strong>{meld.label}</strong>
+            <span className="meld-points-chip">{meld.points}</span>
+          </div>
+          <div className="meld-card-row">
+            {meld.cards.map((card) => (
+              <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }) {
+  if (!meldWinner) {
+    return <p className="panel-caption">No melds this game.</p>;
+  }
+
+  return (
+    <div className="meld-popup-stack">
+      <div className="meld-summary-line">
+        <span className="panel-caption">team</span>
+        <strong>{meldWinner.teamName} took melds</strong>
+      </div>
+      {meldWinner.players.map((meldSet) => (
+        <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} />
+      ))}
     </div>
   );
 }

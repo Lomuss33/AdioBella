@@ -51,8 +51,20 @@ export class GameSession {
     return this.facade.getSnapshot();
   }
 
-  playCard(handIndex: number) {
-    this.facade.playCard(handIndex);
+  reportMelds(declare: boolean) {
+    this.facade.reportMelds(declare);
+    this.broadcastNewEvents();
+    return this.facade.getSnapshot();
+  }
+
+  acknowledgeMelds() {
+    this.facade.acknowledgeMelds();
+    this.broadcastNewEvents();
+    return this.facade.getSnapshot();
+  }
+
+  playCard(handIndex: number, callBela = false) {
+    this.facade.playCardWithBela(handIndex, callBela);
     this.broadcastNewEvents();
     return this.facade.getSnapshot();
   }

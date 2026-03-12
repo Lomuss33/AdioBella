@@ -4,10 +4,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class BelotMatchFacade {
@@ -159,6 +161,10 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void playCard(int handIndex) {
+        playCard(handIndex, false);
+    }
+
+    public synchronized void playCard(int handIndex, boolean callBela) {
         ensurePending(ActionType.PLAY_CARD);
         clearValidation();
 
@@ -167,7 +173,47 @@ public final class BelotMatchFacade {
             reject("That card is not legal in the current trick.");
         }
 
-        playCardInternal(handIndex);
+        playCardInternal(handIndex, callBela);
+        processUntilHumanTurn();
+    }
+
+    public synchronized void reportMelds(boolean declare) {
+        ensurePending(ActionType.REPORT_MELDS);
+        clearValidation();
+
+        if (state.humanMeldOffer == null || state.humanMeldOffer.totalPoints() == 0) {
+            reject("There are no melds to report.");
+        }
+
+        if (declare) {
+            state.declaredMeldSets.add(state.humanMeldOffer);
+            log("INFO", state.humanMeldOffer.player().name + " declared melds.", Map.of(
+                    "eventKind", "MELDS_DECLARE",
+                    "playerId", state.humanMeldOffer.player().id,
+                    "playerName", state.humanMeldOffer.player().name,
+                    "playerSeat", state.humanMeldOffer.player().seat.name(),
+                    "team", state.humanMeldOffer.player().team.name,
+                    "points", String.valueOf(state.humanMeldOffer.totalPoints())
+            ));
+        } else {
+            log("INFO", state.humanMeldOffer.player().name + " passed on melds.", Map.of(
+                    "eventKind", "MELDS_PASS",
+                    "playerId", state.humanMeldOffer.player().id,
+                    "playerName", state.humanMeldOffer.player().name,
+                    "playerSeat", state.humanMeldOffer.player().seat.name()
+            ));
+        }
+
+        state.humanMeldOffer = null;
+        finalizeMeldDeclarations();
+        processUntilHumanTurn();
+    }
+
+    public synchronized void acknowledgeMelds() {
+        ensurePending(ActionType.ACKNOWLEDGE_MELDS);
+        clearValidation();
+        state.pendingMeldWinner = null;
+        state.pendingType = ActionType.NONE;
         processUntilHumanTurn();
     }
 
@@ -200,8 +246,7 @@ public final class BelotMatchFacade {
                 state.gameTargetPoints,
                 state.teamOne.meldPoints,
                 state.teamTwo.meldPoints,
-                state.lastMeldAwards.stream()
-                        .filter(award -> award.meldPoints > 0 || award.belaPoints > 0)
+                visibleMeldSets().stream()
                         .map(this::toMeldDeclarationView)
                         .toList()
         );
@@ -231,6 +276,10 @@ public final class BelotMatchFacade {
                 return;
             }
 
+            if (state.pendingType == ActionType.REPORT_MELDS || state.pendingType == ActionType.ACKNOWLEDGE_MELDS) {
+                return;
+            }
+
             if (state.phase == Phase.TRUMP_SELECTION) {
                 PlayerState player = currentPlayer();
                 if (player.human) {
@@ -254,6 +303,15 @@ public final class BelotMatchFacade {
                 continue;
             }
 
+            if (!state.firstTrickAnnounced && state.currentTrick != null && state.currentTrick.cards.isEmpty()) {
+                state.firstTrickAnnounced = true;
+                log("INFO", playerAt(state.currentPlayerIndex).name + " leads the first trick.", Map.of(
+                        "eventKind", "TRICK_LEAD",
+                        "playerId", playerAt(state.currentPlayerIndex).id,
+                        "playerSeat", playerAt(state.currentPlayerIndex).seat.name()
+                ));
+            }
+
             if (state.players.stream().allMatch(player -> player.hand.isEmpty())) {
                 finishGame();
                 continue;
@@ -267,13 +325,33 @@ public final class BelotMatchFacade {
             }
 
             int chosenIndex = chooseCardForAi(player, legal);
-            playCardInternal(chosenIndex);
+            playCardInternal(chosenIndex, belaEligibleCardIndices(player).contains(chosenIndex));
         }
     }
 
-    private void playCardInternal(int handIndex) {
+    private void playCardInternal(int handIndex, boolean callBela) {
         PlayerState player = currentPlayer();
+        boolean belaEligible = isBelaEligible(player, handIndex);
+        if (callBela && !belaEligible) {
+            reject("Bela cannot be called with that card.");
+        }
+
         Card card = player.hand.remove(handIndex);
+        if (belaEligible) {
+            player.belaResolved = true;
+            if (callBela) {
+                player.belaCalled = true;
+                player.team.meldPoints += 20;
+                log("INFO", player.name + " called Bela.", Map.of(
+                        "eventKind", "BELA_CALL",
+                        "playerId", player.id,
+                        "playerName", player.name,
+                        "playerSeat", player.seat.name(),
+                        "team", player.team.name,
+                        "points", "20"
+                ));
+            }
+        }
         state.currentTrick.cards.add(new PlayedCard(player.index, card));
         log("ACTION", player.name + " played " + card.label() + ".", Map.of(
                 "eventKind", "PLAY_CARD",
@@ -419,11 +497,17 @@ public final class BelotMatchFacade {
         state.teamOne.resetHandState();
         state.teamTwo.resetHandState();
         state.currentTrick = null;
-        state.lastMeldAwards = List.of();
+        state.lastWinningMeldSets = List.of();
+        state.declaredMeldSets = new ArrayList<>();
+        state.humanMeldOffer = null;
+        state.pendingMeldWinner = null;
+        state.firstTrickAnnounced = false;
         state.declarerPlayerIndex = null;
 
         for (PlayerState player : state.players) {
             player.hand.clear();
+            player.belaCalled = false;
+            player.belaResolved = false;
         }
 
         state.deck = RuleUtils.createShuffledDeck(random);
@@ -453,88 +537,137 @@ public final class BelotMatchFacade {
         state.currentTrick = new TrickState(state.currentPlayerIndex);
         state.phase = Phase.TRICK_PLAY;
         state.pendingType = ActionType.NONE;
-        applyMelds();
-        log("INFO", playerAt(state.currentPlayerIndex).name + " leads the first trick.", Map.of("playerId", playerAt(state.currentPlayerIndex).id));
+        setupMeldFlow();
     }
 
     private void applyMelds() {
-        List<MeldAward> awards = state.players.stream().map(player -> MeldService.evaluate(player, state.trumpSuit)).toList();
-        state.lastMeldAwards = awards;
-
-        TeamSide winningTeam = determineWinningMeldTeam(awards);
-        if (winningTeam == null) {
-            return;
-        }
-
-        int points = awards.stream()
-                .filter(award -> award.player.team.side == winningTeam)
-                .mapToInt(award -> award.meldPoints + award.belaPoints)
-                .sum();
-        if (points == 0) {
-            return;
-        }
-
-        teamFor(winningTeam).meldPoints += points;
-
-        String labels = awards.stream()
-                .filter(award -> award.player.team.side == winningTeam)
-                .flatMap(award -> declarationLabels(award).stream())
-                .collect(Collectors.joining(", "));
-
-        log("INFO", teamFor(winningTeam).name + " won meld points: " + (labels.isBlank() ? points + " points" : labels) + ".",
-                Map.of("team", teamFor(winningTeam).name, "points", String.valueOf(points)));
+        state.declaredMeldSets = state.players.stream()
+                .map(player -> MeldService.evaluate(player, state.trumpSuit))
+                .filter(meldSet -> meldSet.totalPoints() > 0)
+                .collect(Collectors.toCollection(ArrayList::new));
+        state.humanMeldOffer = null;
+        finalizeMeldDeclarations();
     }
 
-    private TeamSide determineWinningMeldTeam(List<MeldAward> awards) {
-        int yourHighest = highestComparisonValue(awards, TeamSide.YOURS);
-        int enemyHighest = highestComparisonValue(awards, TeamSide.ENEMIES);
+    private void setupMeldFlow() {
+        state.declaredMeldSets = new ArrayList<>();
+        state.lastWinningMeldSets = List.of();
+        state.pendingMeldWinner = null;
+        state.humanMeldOffer = null;
 
-        if (yourHighest > enemyHighest) {
-            return TeamSide.YOURS;
-        }
-        if (enemyHighest > yourHighest) {
-            return TeamSide.ENEMIES;
+        for (PlayerState player : state.players) {
+            MeldSet meldSet = MeldService.evaluate(player, state.trumpSuit);
+            if (meldSet.totalPoints() == 0) {
+                continue;
+            }
+
+            if (player.human) {
+                state.humanMeldOffer = meldSet;
+            } else {
+                state.declaredMeldSets.add(meldSet);
+                log("INFO", player.name + " declared melds.", Map.of(
+                        "eventKind", "MELDS_DECLARE",
+                        "playerId", player.id,
+                        "playerName", player.name,
+                        "playerSeat", player.seat.name(),
+                        "team", player.team.name,
+                        "points", String.valueOf(meldSet.totalPoints())
+                ));
+            }
         }
 
-        if (yourHighest > 0) {
-            return state.declarer;
+        if (state.humanMeldOffer != null) {
+            state.pendingType = ActionType.REPORT_MELDS;
+            return;
         }
 
-        int yourTotal = declarationPointsForTeam(awards, TeamSide.YOURS);
-        int enemyTotal = declarationPointsForTeam(awards, TeamSide.ENEMIES);
-        if (yourTotal == 0 && enemyTotal == 0) {
+        finalizeMeldDeclarations();
+    }
+
+    private void finalizeMeldDeclarations() {
+        MeldWinner winner = determineWinningMeldWinner(state.declaredMeldSets);
+        if (winner == null) {
+            state.lastWinningMeldSets = List.of();
+            state.pendingMeldWinner = null;
+            state.pendingType = ActionType.NONE;
+            return;
+        }
+
+        state.lastWinningMeldSets = List.copyOf(winner.players());
+        state.pendingMeldWinner = toMeldWinnerView(winner);
+        teamFor(winner.team()).meldPoints += winner.totalPoints();
+
+        log("INFO", winner.teamName() + " took melds.", Map.of(
+                "eventKind", "MELDS_WIN",
+                "team", winner.teamName(),
+                "points", String.valueOf(winner.totalPoints())
+        ));
+        state.pendingType = ActionType.ACKNOWLEDGE_MELDS;
+    }
+
+    private MeldWinner determineWinningMeldWinner(List<MeldSet> declaredMeldSets) {
+        List<MeldSet> yourSets = declaredMeldSets.stream()
+                .filter(meldSet -> meldSet.player().team.side == TeamSide.YOURS)
+                .toList();
+        List<MeldSet> enemySets = declaredMeldSets.stream()
+                .filter(meldSet -> meldSet.player().team.side == TeamSide.ENEMIES)
+                .toList();
+
+        int yourHighest = yourSets.stream().mapToInt(MeldSet::strongestComparisonValue).max().orElse(0);
+        int enemyHighest = enemySets.stream().mapToInt(MeldSet::strongestComparisonValue).max().orElse(0);
+        if (yourHighest == 0 && enemyHighest == 0) {
             return null;
         }
-        if (yourTotal > enemyTotal) {
-            return TeamSide.YOURS;
+
+        TeamSide winningTeam;
+        if (yourHighest > enemyHighest) {
+            winningTeam = TeamSide.YOURS;
+        } else if (enemyHighest > yourHighest) {
+            winningTeam = TeamSide.ENEMIES;
+        } else {
+            winningTeam = state.declarer;
         }
-        if (enemyTotal > yourTotal) {
-            return TeamSide.ENEMIES;
-        }
-        return state.declarer;
+
+        List<MeldSet> winningSets = winningTeam == TeamSide.YOURS ? yourSets : enemySets;
+        return new MeldWinner(
+                winningTeam,
+                teamFor(winningTeam).name,
+                winningSets,
+                winningSets.stream().mapToInt(MeldSet::totalPoints).sum()
+        );
     }
 
-    private int highestComparisonValue(List<MeldAward> awards, TeamSide side) {
-        return awards.stream()
-                .filter(award -> award.player.team.side == side)
-                .mapToInt(MeldAward::comparisonValue)
-                .max()
-                .orElse(0);
-    }
-
-    private int declarationPointsForTeam(List<MeldAward> awards, TeamSide side) {
-        return awards.stream()
-                .filter(award -> award.player.team.side == side)
-                .mapToInt(award -> award.meldPoints + award.belaPoints)
-                .sum();
-    }
-
-    private List<String> declarationLabels(MeldAward award) {
-        List<String> labels = new ArrayList<>(award.labels);
-        if (award.belaPoints > 0) {
-            labels.add("Bela");
+    private List<Integer> belaEligibleCardIndices(PlayerState player) {
+        List<Integer> eligible = new ArrayList<>();
+        for (int index = 0; index < player.hand.size(); index++) {
+            if (isBelaEligible(player, index)) {
+                eligible.add(index);
+            }
         }
-        return labels;
+        return eligible;
+    }
+
+    private boolean isBelaEligible(PlayerState player, int handIndex) {
+        if (player.belaResolved || state.trumpSuit == null || handIndex < 0 || handIndex >= player.hand.size()) {
+            return false;
+        }
+
+        Card card = player.hand.get(handIndex);
+        if (card.suit != state.trumpSuit || (card.rank != Rank.QUEEN && card.rank != Rank.KING)) {
+            return false;
+        }
+
+        Rank partnerRank = card.rank == Rank.QUEEN ? Rank.KING : Rank.QUEEN;
+        for (int index = 0; index < player.hand.size(); index++) {
+            if (index == handIndex) {
+                continue;
+            }
+            Card candidate = player.hand.get(index);
+            if (candidate.suit == state.trumpSuit && candidate.rank == partnerRank) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void dealCards(int count) {
@@ -611,8 +744,8 @@ public final class BelotMatchFacade {
 
     private PendingAction buildPendingAction() {
         return switch (state.pendingType) {
-            case START_MATCH -> new PendingAction(ActionType.START_MATCH, playerAt(0).id, List.of(), List.of(), state.pendingValidationMessage, "Start the match.");
-            case START_NEXT_GAME -> new PendingAction(ActionType.START_NEXT_GAME, playerAt(0).id, List.of(), List.of(), state.pendingValidationMessage, "Start the next game.");
+            case START_MATCH -> new PendingAction(ActionType.START_MATCH, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "Start the match.");
+            case START_NEXT_GAME -> new PendingAction(ActionType.START_NEXT_GAME, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "Start the next game.");
             case CHOOSE_TRUMP -> new PendingAction(
                     ActionType.CHOOSE_TRUMP,
                     currentPlayer().id,
@@ -620,18 +753,46 @@ public final class BelotMatchFacade {
                     state.trumpTurnOffset == 3
                             ? List.of("SPADES", "HEARTS", "DIAMONDS", "CLUBS")
                             : List.of("SKIP", "SPADES", "HEARTS", "DIAMONDS", "CLUBS"),
+                    List.of(),
+                    List.of(),
+                    null,
                     state.pendingValidationMessage,
                     state.trumpTurnOffset == 3 ? "Choose the trump suit." : "Choose the trump suit or skip."
+            );
+            case REPORT_MELDS -> new PendingAction(
+                    ActionType.REPORT_MELDS,
+                    currentPlayer().id,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    state.humanMeldOffer == null ? List.of() : List.of(toMeldSetView(state.humanMeldOffer)),
+                    null,
+                    state.pendingValidationMessage,
+                    "Declare melds or pass."
+            );
+            case ACKNOWLEDGE_MELDS -> new PendingAction(
+                    ActionType.ACKNOWLEDGE_MELDS,
+                    currentPlayer().id,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    state.pendingMeldWinner,
+                    state.pendingValidationMessage,
+                    "Review the melds and continue."
             );
             case PLAY_CARD -> new PendingAction(
                     ActionType.PLAY_CARD,
                     currentPlayer().id,
                     legalCardIndices(currentPlayer()),
                     List.of(),
+                    belaEligibleCardIndices(currentPlayer()),
+                    List.of(),
+                    null,
                     state.pendingValidationMessage,
                     "Play a legal card."
             );
-            case NONE -> new PendingAction(ActionType.NONE, null, List.of(), List.of(), state.pendingValidationMessage, "");
+            case NONE -> new PendingAction(ActionType.NONE, null, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "");
         };
     }
 
@@ -677,14 +838,45 @@ public final class BelotMatchFacade {
         );
     }
 
-    private MeldDeclarationView toMeldDeclarationView(MeldAward award) {
+    private MeldDeclarationView toMeldDeclarationView(MeldSet meldSet) {
         return new MeldDeclarationView(
-                award.player.id,
-                award.player.name,
-                award.player.team.name,
-                award.meldPoints,
-                award.belaPoints,
-                List.copyOf(award.labels)
+                meldSet.player().id,
+                meldSet.player().name,
+                meldSet.player().team.name,
+                meldSet.totalPoints(),
+                0,
+                meldSet.melds().stream().map(MeldCombination::label).toList()
+        );
+    }
+
+    private List<MeldSet> visibleMeldSets() {
+        return state.lastWinningMeldSets;
+    }
+
+    private MeldSetView toMeldSetView(MeldSet meldSet) {
+        return new MeldSetView(
+                meldSet.player().id,
+                meldSet.player().name,
+                meldSet.player().team.name,
+                meldSet.totalPoints(),
+                meldSet.melds().stream().map(this::toMeldCombinationView).toList()
+        );
+    }
+
+    private MeldCombinationView toMeldCombinationView(MeldCombination meldCombination) {
+        return new MeldCombinationView(
+                meldCombination.kind(),
+                meldCombination.label(),
+                meldCombination.points(),
+                meldCombination.comparisonValue(),
+                meldCombination.cards().stream().map(card -> new CardView(card.suit.name(), card.rank.name(), card.label(), true, false)).toList()
+        );
+    }
+
+    private MeldWinnerView toMeldWinnerView(MeldWinner winner) {
+        return new MeldWinnerView(
+                winner.teamName(),
+                winner.players().stream().map(this::toMeldSetView).toList()
         );
     }
 
@@ -895,7 +1087,7 @@ public final class BelotMatchFacade {
         }
 
         private int totalHandPoints() {
-            return trickPoints + meldPoints;
+            return trickPoints == 0 ? 0 : trickPoints + meldPoints;
         }
     }
 
@@ -907,6 +1099,8 @@ public final class BelotMatchFacade {
         private final boolean human;
         private final TeamState team;
         private final List<Card> hand = new ArrayList<>();
+        private boolean belaCalled;
+        private boolean belaResolved;
 
         private PlayerState(int index, String id, String name, Seat seat, boolean human, TeamState team) {
             this.index = index;
@@ -947,7 +1141,11 @@ public final class BelotMatchFacade {
         private TeamSide declarer;
         private Integer declarerPlayerIndex;
         private TrickState currentTrick;
-        private List<MeldAward> lastMeldAwards = List.of();
+        private List<MeldSet> lastWinningMeldSets = List.of();
+        private List<MeldSet> declaredMeldSets = new ArrayList<>();
+        private MeldSet humanMeldOffer;
+        private MeldWinnerView pendingMeldWinner;
+        private boolean firstTrickAnnounced;
         private Phase phase;
         private ActionType pendingType;
         private String pendingValidationMessage;
@@ -977,78 +1175,129 @@ public final class BelotMatchFacade {
         }
     }
 
-    private record MeldAward(PlayerState player, int meldPoints, int belaPoints, int comparisonValue, List<String> labels) {
+    private record MeldCombination(String kind, String label, int points, int comparisonValue, List<Card> cards) {
+    }
+
+    private record MeldSet(PlayerState player, List<MeldCombination> melds, int totalPoints, int strongestComparisonValue) {
+    }
+
+    private record MeldWinner(TeamSide team, String teamName, List<MeldSet> players, int totalPoints) {
     }
 
     private static final class MeldService {
-        private static MeldAward evaluate(PlayerState player, Suit trumpSuit) {
-            List<String> labels = new ArrayList<>();
-            int meldPoints = 0;
-            int belaPoints = hasBela(player.hand, trumpSuit) ? 20 : 0;
-            int comparisonValue = 0;
+        private static MeldSet evaluate(PlayerState player, Suit trumpSuit) {
+            List<MeldCombination> candidates = new ArrayList<>();
+            candidates.addAll(fourOfKindCandidates(player.hand));
+            candidates.addAll(sequenceCandidates(player.hand));
 
-            Map<Rank, List<Card>> byRank = player.hand.stream().collect(Collectors.groupingBy(card -> card.rank));
+            BestSelection bestSelection = chooseBestNonOverlapping(candidates, 0, new HashSet<>(), new ArrayList<>(), 0, 0, null);
+            return new MeldSet(player, List.copyOf(bestSelection.melds()), bestSelection.totalPoints(), bestSelection.strongestComparisonValue());
+        }
+
+        private static List<MeldCombination> fourOfKindCandidates(List<Card> hand) {
+            List<MeldCombination> combinations = new ArrayList<>();
+            Map<Rank, List<Card>> byRank = hand.stream().collect(Collectors.groupingBy(card -> card.rank));
             for (Map.Entry<Rank, List<Card>> entry : byRank.entrySet()) {
-                if (entry.getValue().size() != 4 || entry.getKey() == Rank.SEVEN || entry.getKey() == Rank.EIGHT) {
+                Rank rank = entry.getKey();
+                if (entry.getValue().size() != 4 || rank == Rank.SEVEN || rank == Rank.EIGHT) {
                     continue;
                 }
 
-                Rank rank = entry.getKey();
-                if (rank == Rank.JACK) {
-                    meldPoints += 200;
-                    comparisonValue = Math.max(comparisonValue, 700);
-                    labels.add("Four Jacks");
-                } else if (rank == Rank.NINE) {
-                    meldPoints += 150;
-                    comparisonValue = Math.max(comparisonValue, 650);
-                    labels.add("Four Nines");
-                } else {
-                    meldPoints += 100;
-                    comparisonValue = Math.max(comparisonValue, 600);
-                    labels.add("Four of a Kind");
-                }
+                int points = rank == Rank.JACK ? 200 : rank == Rank.NINE ? 150 : 100;
+                int comparisonValue = rank == Rank.JACK ? 700 + rank.ordinal() : rank == Rank.NINE ? 650 + rank.ordinal() : 600 + rank.ordinal();
+                String label = rank == Rank.JACK ? "Four Jacks" : rank == Rank.NINE ? "Four Nines" : "Four of a Kind";
+                combinations.add(new MeldCombination("FOUR_OF_A_KIND", label, points, comparisonValue, List.copyOf(entry.getValue())));
             }
+            return combinations;
+        }
 
-            Map<Suit, List<Card>> bySuit = player.hand.stream().collect(Collectors.groupingBy(card -> card.suit));
+        private static List<MeldCombination> sequenceCandidates(List<Card> hand) {
+            List<MeldCombination> combinations = new ArrayList<>();
+            Map<Suit, List<Card>> bySuit = hand.stream().collect(Collectors.groupingBy(card -> card.suit));
             for (Map.Entry<Suit, List<Card>> entry : bySuit.entrySet()) {
                 List<Card> cards = new ArrayList<>(entry.getValue());
                 cards.sort(Comparator.comparingInt(card -> card.rank.ordinal()));
 
-                int runLength = 1;
-                for (int index = 1; index <= cards.size(); index++) {
-                    boolean contiguous = index < cards.size()
-                            && cards.get(index).rank.ordinal() == cards.get(index - 1).rank.ordinal() + 1;
-                    if (contiguous) {
-                        runLength++;
-                        continue;
-                    }
-
-                    if (runLength >= 3) {
-                        if (runLength >= 5) {
-                            meldPoints += 100;
-                            comparisonValue = Math.max(comparisonValue, 500 + runLength);
-                            labels.add("Sequence of " + runLength);
-                        } else if (runLength == 4) {
-                            meldPoints += 50;
-                            comparisonValue = Math.max(comparisonValue, 450);
-                            labels.add("Sequence of 4");
-                        } else {
-                            meldPoints += 20;
-                            comparisonValue = Math.max(comparisonValue, 400);
-                            labels.add("Sequence of 3");
+                for (int start = 0; start < cards.size(); start++) {
+                    List<Card> run = new ArrayList<>();
+                    run.add(cards.get(start));
+                    for (int index = start + 1; index < cards.size(); index++) {
+                        Card previous = cards.get(index - 1);
+                        Card current = cards.get(index);
+                        if (current.rank.ordinal() != previous.rank.ordinal() + 1) {
+                            break;
+                        }
+                        run.add(current);
+                        if (run.size() >= 3) {
+                            combinations.add(sequenceCombination(run));
                         }
                     }
-                    runLength = 1;
                 }
             }
-
-            return new MeldAward(player, meldPoints, belaPoints, comparisonValue, labels);
+            return combinations;
         }
 
-        private static boolean hasBela(List<Card> cards, Suit trumpSuit) {
-            boolean hasKing = cards.stream().anyMatch(card -> card.suit == trumpSuit && card.rank == Rank.KING);
-            boolean hasQueen = cards.stream().anyMatch(card -> card.suit == trumpSuit && card.rank == Rank.QUEEN);
-            return hasKing && hasQueen;
+        private static MeldCombination sequenceCombination(List<Card> run) {
+            Card highest = run.get(run.size() - 1);
+            int points = run.size() >= 5 ? 100 : run.size() == 4 ? 50 : 20;
+            int comparisonValue = run.size() >= 5 ? 500 + highest.rank.ordinal() : run.size() == 4 ? 450 + highest.rank.ordinal() : 400 + highest.rank.ordinal();
+            String label = "Sequence of " + run.size();
+            return new MeldCombination("SEQUENCE", label, points, comparisonValue, List.copyOf(run));
+        }
+
+        private static BestSelection chooseBestNonOverlapping(
+                List<MeldCombination> candidates,
+                int index,
+                Set<String> usedCards,
+                List<MeldCombination> chosen,
+                int totalPoints,
+                int strongestComparisonValue,
+                BestSelection best
+        ) {
+            BestSelection currentBest = best;
+            if (index >= candidates.size()) {
+                BestSelection candidate = new BestSelection(List.copyOf(chosen), totalPoints, strongestComparisonValue);
+                if (currentBest == null || candidate.beats(currentBest)) {
+                    return candidate;
+                }
+                return currentBest;
+            }
+
+            currentBest = chooseBestNonOverlapping(candidates, index + 1, usedCards, chosen, totalPoints, strongestComparisonValue, currentBest);
+            MeldCombination combination = candidates.get(index);
+            if (combination.cards().stream().map(MeldService::cardKey).noneMatch(usedCards::contains)) {
+                List<String> addedKeys = combination.cards().stream().map(MeldService::cardKey).toList();
+                usedCards.addAll(addedKeys);
+                chosen.add(combination);
+                currentBest = chooseBestNonOverlapping(
+                        candidates,
+                        index + 1,
+                        usedCards,
+                        chosen,
+                        totalPoints + combination.points(),
+                        Math.max(strongestComparisonValue, combination.comparisonValue()),
+                        currentBest
+                );
+                chosen.remove(chosen.size() - 1);
+                usedCards.removeAll(addedKeys);
+            }
+            return currentBest;
+        }
+
+        private static String cardKey(Card card) {
+            return card.suit.name() + ":" + card.rank.name();
+        }
+
+        private record BestSelection(List<MeldCombination> melds, int totalPoints, int strongestComparisonValue) {
+            private boolean beats(BestSelection other) {
+                if (totalPoints != other.totalPoints()) {
+                    return totalPoints > other.totalPoints();
+                }
+                if (strongestComparisonValue != other.strongestComparisonValue()) {
+                    return strongestComparisonValue > other.strongestComparisonValue();
+                }
+                return melds.size() < other.melds.size();
+            }
         }
     }
 

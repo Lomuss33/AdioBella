@@ -20,7 +20,9 @@ export interface GameGateway {
     gameLength: GameLength
   ): Promise<SessionResponse>;
   chooseTrump(sessionId: string, choice: string): Promise<SessionResponse>;
-  playCard(sessionId: string, handIndex: number): Promise<SessionResponse>;
+  reportMelds(sessionId: string, declare: boolean): Promise<SessionResponse>;
+  acknowledgeMelds(sessionId: string): Promise<SessionResponse>;
+  playCard(sessionId: string, handIndex: number, callBela?: boolean): Promise<SessionResponse>;
   subscribe(
     sessionId: string,
     afterSequence: number,

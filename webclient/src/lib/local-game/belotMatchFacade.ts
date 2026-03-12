@@ -3,7 +3,10 @@ import type {
   GameLength,
   GameEvent,
   GameSnapshot,
+  MeldCombinationView,
   MeldDeclarationView,
+  MeldSetView,
+  MeldWinnerView,
   MatchTargetWins,
   PendingAction,
   PlayedCardView,
@@ -13,7 +16,7 @@ import type {
 import type { RandomSource } from "./random";
 import { BrowserRandom } from "./random";
 
-type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "PLAY_CARD";
+type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "REPORT_MELDS" | "ACKNOWLEDGE_MELDS" | "PLAY_CARD";
 type Phase = "READY_TO_START" | "BETWEEN_GAMES" | "TRUMP_SELECTION" | "TRICK_PLAY" | "MATCH_COMPLETE";
 type TeamSide = "YOURS" | "ENEMIES";
 type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
@@ -48,6 +51,8 @@ interface PlayerState {
   human: boolean;
   team: TeamState;
   hand: Card[];
+  belaCalled?: boolean;
+  belaResolved?: boolean;
 }
 
 interface TrickState {
@@ -55,18 +60,26 @@ interface TrickState {
   cards: PlayedCard[];
 }
 
-interface MeldAward {
-  player: PlayerState;
-  meldPoints: number;
-  belaPoints: number;
+interface MeldCombination {
+  kind: string;
+  label: string;
+  points: number;
   comparisonValue: number;
-  labels: string[];
+  cards: Card[];
 }
 
-interface MeldScore {
-  meldPoints: number;
-  comparisonValue: number;
-  labels: string[];
+interface MeldSet {
+  player: PlayerState;
+  melds: MeldCombination[];
+  totalPoints: number;
+  strongestComparisonValue: number;
+}
+
+interface MeldWinner {
+  team: TeamSide;
+  teamName: string;
+  players: MeldSet[];
+  totalPoints: number;
 }
 
 interface MatchState {
@@ -85,7 +98,11 @@ interface MatchState {
   declarer: TeamSide | null;
   declarerPlayerIndex: number | null;
   currentTrick: TrickState | null;
-  lastMeldAwards: MeldAward[];
+  lastWinningMeldSets: MeldSet[];
+  declaredMeldSets: MeldSet[];
+  humanMeldOffer: MeldSet | null;
+  pendingMeldWinner: MeldWinnerView | null;
+  firstTrickAnnounced: boolean;
   phase: Phase;
   pendingType: ActionType;
   pendingValidationMessage: string | null;
@@ -247,6 +264,10 @@ export class BelotMatchFacade {
   }
 
   playCard(handIndex: number) {
+    this.playCardWithBela(handIndex, false);
+  }
+
+  playCardWithBela(handIndex: number, callBela = false) {
     this.ensurePending("PLAY_CARD");
     this.clearValidation();
 
@@ -255,7 +276,48 @@ export class BelotMatchFacade {
       this.reject("That card is not legal in the current trick.");
     }
 
-    this.playCardInternal(handIndex);
+    this.playCardInternal(handIndex, callBela);
+    this.processUntilHumanTurn();
+  }
+
+  reportMelds(declare: boolean) {
+    this.ensurePending("REPORT_MELDS");
+    this.clearValidation();
+
+    const meldOffer = this.state.humanMeldOffer;
+    if (!meldOffer || meldOffer.totalPoints === 0) {
+      this.reject("There are no melds to report.");
+    }
+
+    if (declare) {
+      this.state.declaredMeldSets.push(meldOffer);
+      this.log("INFO", `${meldOffer.player.name} declared melds.`, {
+        eventKind: "MELDS_DECLARE",
+        playerId: meldOffer.player.id,
+        playerName: meldOffer.player.name,
+        playerSeat: meldOffer.player.seat,
+        team: meldOffer.player.team.name,
+        points: String(meldOffer.totalPoints)
+      });
+    } else {
+      this.log("INFO", `${meldOffer.player.name} passed on melds.`, {
+        eventKind: "MELDS_PASS",
+        playerId: meldOffer.player.id,
+        playerName: meldOffer.player.name,
+        playerSeat: meldOffer.player.seat
+      });
+    }
+
+    this.state.humanMeldOffer = null;
+    this.finalizeMeldDeclarations();
+    this.processUntilHumanTurn();
+  }
+
+  acknowledgeMelds() {
+    this.ensurePending("ACKNOWLEDGE_MELDS");
+    this.clearValidation();
+    this.state.pendingMeldWinner = null;
+    this.state.pendingType = "NONE";
     this.processUntilHumanTurn();
   }
 
@@ -277,9 +339,8 @@ export class BelotMatchFacade {
       gameTargetPoints: this.state.gameTargetPoints,
       teamOneMeldPoints: this.state.teamOne.meldPoints,
       teamTwoMeldPoints: this.state.teamTwo.meldPoints,
-      meldDeclarations: this.state.lastMeldAwards
-        .filter((award) => award.meldPoints > 0 || award.belaPoints > 0)
-        .map((award) => this.toMeldDeclarationView(award))
+      meldDeclarations: this.visibleMeldSets()
+        .map((meldSet) => this.toMeldDeclarationView(meldSet))
     };
 
     return {
@@ -313,6 +374,10 @@ export class BelotMatchFacade {
         return;
       }
 
+      if (this.state.pendingType === "REPORT_MELDS" || this.state.pendingType === "ACKNOWLEDGE_MELDS") {
+        return;
+      }
+
       if (this.state.phase === "TRUMP_SELECTION") {
         const player = this.currentPlayer();
         if (player.human) {
@@ -341,6 +406,15 @@ export class BelotMatchFacade {
         continue;
       }
 
+      if (!this.state.firstTrickAnnounced && this.state.currentTrick && this.state.currentTrick.cards.length === 0) {
+        this.state.firstTrickAnnounced = true;
+        this.log("INFO", `${this.playerAt(this.state.currentPlayerIndex).name} leads the first trick.`, {
+          eventKind: "TRICK_LEAD",
+          playerId: this.playerAt(this.state.currentPlayerIndex).id,
+          playerSeat: this.playerAt(this.state.currentPlayerIndex).seat
+        });
+      }
+
       const player = this.currentPlayer();
       const legal = legalCardIndices(player, this.state.currentTrick?.cards ?? [], this.state.trumpSuit);
       if (player.human) {
@@ -349,15 +423,36 @@ export class BelotMatchFacade {
       }
 
       const chosenIndex = this.chooseCardForAi(player, legal);
-      this.playCardInternal(chosenIndex);
+      this.playCardInternal(chosenIndex, this.belaEligibleCardIndices(player).includes(chosenIndex));
     }
   }
 
-  private playCardInternal(handIndex: number) {
+  private playCardInternal(handIndex: number, callBela: boolean) {
     const player = this.currentPlayer();
+    const belaEligible = this.isBelaEligible(player, handIndex);
+    if (callBela && !belaEligible) {
+      this.reject("Bela cannot be called with that card.");
+    }
+
     const [card] = player.hand.splice(handIndex, 1);
     if (!card) {
       this.reject("That card is not legal in the current trick.");
+    }
+
+    if (belaEligible) {
+      player.belaResolved = true;
+      if (callBela) {
+        player.belaCalled = true;
+        player.team.meldPoints += 20;
+        this.log("INFO", `${player.name} called Bela.`, {
+          eventKind: "BELA_CALL",
+          playerId: player.id,
+          playerName: player.name,
+          playerSeat: player.seat,
+          team: player.team.name,
+          points: "20"
+        });
+      }
     }
 
     this.state.currentTrick?.cards.push({ playerIndex: player.index, card });
@@ -429,8 +524,8 @@ export class BelotMatchFacade {
   }
 
   private finishGame() {
-    const teamOnePoints = this.state.teamOne.trickPoints + this.state.teamOne.meldPoints;
-    const teamTwoPoints = this.state.teamTwo.trickPoints + this.state.teamTwo.meldPoints;
+    const teamOnePoints = this.teamHandPoints(this.state.teamOne);
+    const teamTwoPoints = this.teamHandPoints(this.state.teamTwo);
     const declarer = this.state.declarer ? this.teamFor(this.state.declarer) : null;
     const defenders = this.state.declarer ? this.otherTeam(this.state.declarer) : null;
     const totalPoints = teamOnePoints + teamTwoPoints;
@@ -439,7 +534,7 @@ export class BelotMatchFacade {
       throw new Error("Cannot finish game without declarer.");
     }
 
-    if (declarer.trickPoints + declarer.meldPoints > defenders.trickPoints + defenders.meldPoints) {
+    if (this.teamHandPoints(declarer) > this.teamHandPoints(defenders)) {
       this.state.teamOne.gameScore += teamOnePoints;
       this.state.teamTwo.gameScore += teamTwoPoints;
       this.log("SCORE", `${declarer.name} passed the hand.`, {
@@ -523,11 +618,17 @@ export class BelotMatchFacade {
     this.state.teamTwo.trickPoints = 0;
     this.state.teamTwo.meldPoints = 0;
     this.state.currentTrick = null;
-    this.state.lastMeldAwards = [];
+    this.state.lastWinningMeldSets = [];
+    this.state.declaredMeldSets = [];
+    this.state.humanMeldOffer = null;
+    this.state.pendingMeldWinner = null;
+    this.state.firstTrickAnnounced = false;
     this.state.declarerPlayerIndex = null;
 
     for (const player of this.state.players) {
       player.hand = [];
+      player.belaCalled = false;
+      player.belaResolved = false;
     }
 
     this.state.deck = createShuffledDeck(this.random);
@@ -558,10 +659,7 @@ export class BelotMatchFacade {
     };
     this.state.phase = "TRICK_PLAY";
     this.state.pendingType = "NONE";
-    this.applyMelds();
-    this.log("INFO", `${this.playerAt(this.state.currentPlayerIndex).name} leads the first trick.`, {
-      playerId: this.playerAt(this.state.currentPlayerIndex).id
-    });
+    this.setupMeldFlow();
   }
 
   private applyMelds() {
@@ -569,32 +667,11 @@ export class BelotMatchFacade {
       return;
     }
 
-    const awards = this.state.players.map((player) => evaluateMeld(player, this.state.trumpSuit!));
-    this.state.lastMeldAwards = awards;
-
-    const winningTeam = this.determineWinningMeldTeam(awards);
-    if (!winningTeam) {
-      return;
-    }
-
-    const points = awards
-      .filter((award) => award.player.team.side === winningTeam)
-      .reduce((sum, award) => sum + award.meldPoints + award.belaPoints, 0);
-
-    if (points === 0) {
-      return;
-    }
-
-    this.teamFor(winningTeam).meldPoints += points;
-    const labels = awards
-      .filter((award) => award.player.team.side === winningTeam)
-      .flatMap((award) => declarationLabels(award))
-      .join(", ");
-
-    this.log("INFO", `${this.teamFor(winningTeam).name} won meld points: ${labels || `${points} points`}.`, {
-      team: this.teamFor(winningTeam).name,
-      points: String(points)
-    });
+    this.state.declaredMeldSets = this.state.players
+      .map((player) => evaluateMeldSet(player, this.state.trumpSuit!))
+      .filter((meldSet) => meldSet.totalPoints > 0);
+    this.state.humanMeldOffer = null;
+    this.finalizeMeldDeclarations();
   }
 
   private dealCards(count: number) {
@@ -673,6 +750,107 @@ export class BelotMatchFacade {
     return forced || bestScore >= threshold ? bestChoice : "SKIP";
   }
 
+  private setupMeldFlow() {
+    this.state.declaredMeldSets = [];
+    this.state.lastWinningMeldSets = [];
+    this.state.pendingMeldWinner = null;
+    this.state.humanMeldOffer = null;
+
+    for (const player of this.state.players) {
+      const meldSet = evaluateMeldSet(player, this.state.trumpSuit!);
+      if (meldSet.totalPoints === 0) {
+        continue;
+      }
+
+      if (player.human) {
+        this.state.humanMeldOffer = meldSet;
+      } else {
+        this.state.declaredMeldSets.push(meldSet);
+        this.log("INFO", `${player.name} declared melds.`, {
+          eventKind: "MELDS_DECLARE",
+          playerId: player.id,
+          playerName: player.name,
+          playerSeat: player.seat,
+          team: player.team.name,
+          points: String(meldSet.totalPoints)
+        });
+      }
+    }
+
+    if (this.state.humanMeldOffer) {
+      this.state.pendingType = "REPORT_MELDS";
+      return;
+    }
+
+    this.finalizeMeldDeclarations();
+  }
+
+  private finalizeMeldDeclarations() {
+    const winner = this.determineWinningMeldWinner(this.state.declaredMeldSets);
+    if (!winner) {
+      this.state.lastWinningMeldSets = [];
+      this.state.pendingMeldWinner = null;
+      this.state.pendingType = "NONE";
+      return;
+    }
+
+    this.state.lastWinningMeldSets = winner.players;
+    this.state.pendingMeldWinner = this.toMeldWinnerView(winner);
+    this.teamFor(winner.team).meldPoints += winner.totalPoints;
+    this.log("INFO", `${winner.teamName} took melds.`, {
+      eventKind: "MELDS_WIN",
+      team: winner.teamName,
+      points: String(winner.totalPoints)
+    });
+    this.state.pendingType = "ACKNOWLEDGE_MELDS";
+  }
+
+  private determineWinningMeldWinner(declaredMeldSets: MeldSet[]) {
+    const yourSets = declaredMeldSets.filter((meldSet) => meldSet.player.team.side === "YOURS");
+    const enemySets = declaredMeldSets.filter((meldSet) => meldSet.player.team.side === "ENEMIES");
+    const yourHighest = Math.max(0, ...yourSets.map((meldSet) => meldSet.strongestComparisonValue));
+    const enemyHighest = Math.max(0, ...enemySets.map((meldSet) => meldSet.strongestComparisonValue));
+
+    if (yourHighest === 0 && enemyHighest === 0) {
+      return null;
+    }
+
+    const winningTeam = yourHighest > enemyHighest ? "YOURS" : enemyHighest > yourHighest ? "ENEMIES" : this.state.declarer;
+    if (!winningTeam) {
+      return null;
+    }
+
+    const players = winningTeam === "YOURS" ? yourSets : enemySets;
+    return {
+      team: winningTeam,
+      teamName: this.teamFor(winningTeam).name,
+      players,
+      totalPoints: players.reduce((sum, player) => sum + player.totalPoints, 0)
+    } satisfies MeldWinner;
+  }
+
+  private teamHandPoints(team: TeamState) {
+    return team.trickPoints === 0 ? 0 : team.trickPoints + team.meldPoints;
+  }
+
+  private belaEligibleCardIndices(player: PlayerState) {
+    return indexRange(player.hand.length).filter((index) => this.isBelaEligible(player, index));
+  }
+
+  private isBelaEligible(player: PlayerState, handIndex: number) {
+    if (player.belaResolved || !this.state.trumpSuit || handIndex < 0 || handIndex >= player.hand.length) {
+      return false;
+    }
+
+    const card = player.hand[handIndex];
+    if (card.suit !== this.state.trumpSuit || (card.rank !== "QUEEN" && card.rank !== "KING")) {
+      return false;
+    }
+
+    const partnerRank: Rank = card.rank === "QUEEN" ? "KING" : "QUEEN";
+    return player.hand.some((candidate, index) => index !== handIndex && candidate.suit === this.state.trumpSuit && candidate.rank === partnerRank);
+  }
+
   private buildPendingAction(): PendingAction {
     switch (this.state.pendingType) {
       case "START_MATCH":
@@ -681,6 +859,9 @@ export class BelotMatchFacade {
           actingPlayerId: this.playerAt(0).id,
           legalCardIndices: [],
           legalTrumpChoices: [],
+          belaEligibleCardIndices: [],
+          availableMelds: [],
+          meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
           prompt: "Start the match."
         };
@@ -690,6 +871,9 @@ export class BelotMatchFacade {
           actingPlayerId: this.playerAt(0).id,
           legalCardIndices: [],
           legalTrumpChoices: [],
+          belaEligibleCardIndices: [],
+          availableMelds: [],
+          meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
           prompt: "Start the next game."
         };
@@ -702,8 +886,35 @@ export class BelotMatchFacade {
             this.state.trumpTurnOffset === 3
               ? ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
               : ["SKIP", "SPADES", "HEARTS", "DIAMONDS", "CLUBS"],
+          belaEligibleCardIndices: [],
+          availableMelds: [],
+          meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
           prompt: this.state.trumpTurnOffset === 3 ? "Choose the trump suit." : "Choose the trump suit or skip."
+        };
+      case "REPORT_MELDS":
+        return {
+          type: "REPORT_MELDS",
+          actingPlayerId: this.state.humanMeldOffer?.player.id ?? this.playerAt(0).id,
+          legalCardIndices: [],
+          legalTrumpChoices: [],
+          belaEligibleCardIndices: [],
+          availableMelds: this.state.humanMeldOffer ? [this.toMeldSetView(this.state.humanMeldOffer)] : [],
+          meldWinner: null,
+          validationMessage: this.state.pendingValidationMessage,
+          prompt: "Declare melds or pass."
+        };
+      case "ACKNOWLEDGE_MELDS":
+        return {
+          type: "ACKNOWLEDGE_MELDS",
+          actingPlayerId: this.playerAt(0).id,
+          legalCardIndices: [],
+          legalTrumpChoices: [],
+          belaEligibleCardIndices: [],
+          availableMelds: [],
+          meldWinner: this.state.pendingMeldWinner,
+          validationMessage: this.state.pendingValidationMessage,
+          prompt: "Review the melds and continue."
         };
       case "PLAY_CARD":
         return {
@@ -711,6 +922,9 @@ export class BelotMatchFacade {
           actingPlayerId: this.currentPlayer().id,
           legalCardIndices: legalCardIndices(this.currentPlayer(), this.state.currentTrick?.cards ?? [], this.state.trumpSuit),
           legalTrumpChoices: [],
+          belaEligibleCardIndices: this.belaEligibleCardIndices(this.currentPlayer()),
+          availableMelds: [],
+          meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
           prompt: "Play a legal card."
         };
@@ -721,6 +935,9 @@ export class BelotMatchFacade {
           actingPlayerId: null,
           legalCardIndices: [],
           legalTrumpChoices: [],
+          belaEligibleCardIndices: [],
+          availableMelds: [],
+          meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
           prompt: ""
         };
@@ -779,15 +996,19 @@ export class BelotMatchFacade {
     };
   }
 
-  private toMeldDeclarationView(award: MeldAward): MeldDeclarationView {
+  private toMeldDeclarationView(meldSet: MeldSet): MeldDeclarationView {
     return {
-      playerId: award.player.id,
-      playerName: award.player.name,
-      teamName: award.player.team.name,
-      meldPoints: award.meldPoints,
-      belaPoints: award.belaPoints,
-      labels: [...award.labels]
+      playerId: meldSet.player.id,
+      playerName: meldSet.player.name,
+      teamName: meldSet.player.team.name,
+      meldPoints: meldSet.totalPoints,
+      belaPoints: 0,
+      labels: meldSet.melds.map((meld) => meld.label)
     };
+  }
+
+  private visibleMeldSets() {
+    return this.state.lastWinningMeldSets;
   }
 
   private advanceTrumpTurn() {
@@ -851,36 +1072,40 @@ export class BelotMatchFacade {
     if (this.state.phase === "BETWEEN_GAMES" || this.state.phase === "MATCH_COMPLETE") {
       return team.gameScore;
     }
-    return team.gameScore + team.trickPoints + team.meldPoints;
+    return team.gameScore + this.teamHandPoints(team);
   }
 
-  private determineWinningMeldTeam(awards: MeldAward[]) {
-    const yourHighest = highestComparisonValue(awards, "YOURS");
-    const enemyHighest = highestComparisonValue(awards, "ENEMIES");
+  private toMeldSetView(meldSet: MeldSet): MeldSetView {
+    return {
+      playerId: meldSet.player.id,
+      playerName: meldSet.player.name,
+      teamName: meldSet.player.team.name,
+      totalPoints: meldSet.totalPoints,
+      melds: meldSet.melds.map((meld) => this.toMeldCombinationView(meld))
+    };
+  }
 
-    if (yourHighest > enemyHighest) {
-      return "YOURS" as const;
-    }
-    if (enemyHighest > yourHighest) {
-      return "ENEMIES" as const;
-    }
+  private toMeldCombinationView(meld: MeldCombination): MeldCombinationView {
+    return {
+      kind: meld.kind,
+      label: meld.label,
+      points: meld.points,
+      comparisonValue: meld.comparisonValue,
+      cards: meld.cards.map((card) => ({
+        suit: card.suit,
+        rank: card.rank,
+        label: cardLabel(card),
+        faceUp: true,
+        playable: false
+      }))
+    };
+  }
 
-    if (yourHighest > 0) {
-      return this.state.declarer;
-    }
-
-    const yourTotal = declarationPointsForTeam(awards, "YOURS");
-    const enemyTotal = declarationPointsForTeam(awards, "ENEMIES");
-    if (yourTotal === 0 && enemyTotal === 0) {
-      return null;
-    }
-    if (yourTotal > enemyTotal) {
-      return "YOURS" as const;
-    }
-    if (enemyTotal > yourTotal) {
-      return "ENEMIES" as const;
-    }
-    return this.state.declarer;
+  private toMeldWinnerView(meldWinner: MeldWinner): MeldWinnerView {
+    return {
+      teamName: meldWinner.teamName,
+      players: meldWinner.players.map((meldSet) => this.toMeldSetView(meldSet))
+    };
   }
 }
 
@@ -923,7 +1148,11 @@ function createMatchState(difficulty: Difficulty): MatchState {
     declarer: null,
     declarerPlayerIndex: null,
     currentTrick: null,
-    lastMeldAwards: [],
+    lastWinningMeldSets: [],
+    declaredMeldSets: [],
+    humanMeldOffer: null,
+    pendingMeldWinner: null,
+    firstTrickAnnounced: false,
     phase: "READY_TO_START",
     pendingType: "START_MATCH",
     pendingValidationMessage: null
@@ -1127,78 +1356,15 @@ function teamSideForPlayer(playerIndex: number): TeamSide {
   return playerIndex % 2 === 0 ? "YOURS" : "ENEMIES";
 }
 
-function highestComparisonValue(awards: MeldAward[], side: TeamSide) {
-  return awards
-    .filter((award) => award.player.team.side === side)
-    .reduce((highest, award) => Math.max(highest, award.comparisonValue), 0);
-}
-
-function declarationPointsForTeam(awards: MeldAward[], side: TeamSide) {
-  return awards
-    .filter((award) => award.player.team.side === side)
-    .reduce((total, award) => total + award.meldPoints + award.belaPoints, 0);
-}
-
-function declarationLabels(award: MeldAward) {
-  return award.belaPoints > 0 ? [...award.labels, "Bela"] : [...award.labels];
-}
-
-function evaluateMeld(player: PlayerState, trumpSuit: Suit): MeldAward {
-  const sameRankScore = evaluateSameRankMelds(player.hand);
-  const sequenceScore = evaluateSequenceMelds(player.hand);
-  const belaPoints = hasBela(player.hand, trumpSuit) ? 20 : 0;
-
+function evaluateMeldSet(player: PlayerState, trumpSuit: Suit): MeldSet {
+  const candidates = [...sameRankCandidates(player.hand), ...sequenceCandidates(player.hand)];
+  const best = chooseBestNonOverlapping(candidates, 0, new Set<string>(), [], 0, 0, null);
   return {
     player,
-    meldPoints: sameRankScore.meldPoints + sequenceScore.meldPoints,
-    belaPoints,
-    comparisonValue: Math.max(sameRankScore.comparisonValue, sequenceScore.comparisonValue),
-    labels: [...sameRankScore.labels, ...sequenceScore.labels]
+    melds: best?.melds ?? [],
+    totalPoints: best?.totalPoints ?? 0,
+    strongestComparisonValue: best?.strongestComparisonValue ?? 0
   };
-}
-
-function evaluateSameRankMelds(cards: Card[]): MeldScore {
-  const score = emptyMeldScore();
-  const byRank = groupCardsByRank(cards);
-
-  for (const [rank, matchingCards] of byRank.entries()) {
-    const rankScore = toSameRankMeldScore(rank, matchingCards.length);
-    if (rankScore) {
-      mergeMeldScore(score, rankScore);
-    }
-  }
-
-  return score;
-}
-
-function evaluateSequenceMelds(cards: Card[]): MeldScore {
-  const score = emptyMeldScore();
-  const bySuit = groupCardsBySuit(cards);
-
-  for (const suitedCards of bySuit.values()) {
-    for (const runLength of collectRunLengths(suitedCards)) {
-      const sequenceScore = toSequenceMeldScore(runLength);
-      if (sequenceScore) {
-        mergeMeldScore(score, sequenceScore);
-      }
-    }
-  }
-
-  return score;
-}
-
-function emptyMeldScore(): MeldScore {
-  return {
-    meldPoints: 0,
-    comparisonValue: 0,
-    labels: []
-  };
-}
-
-function mergeMeldScore(target: MeldScore, score: MeldScore) {
-  target.meldPoints += score.meldPoints;
-  target.comparisonValue = Math.max(target.comparisonValue, score.comparisonValue);
-  target.labels.push(...score.labels);
 }
 
 function groupCardsByRank(cards: Card[]) {
@@ -1221,85 +1387,160 @@ function groupCardsBySuit(cards: Card[]) {
   return bySuit;
 }
 
-function toSameRankMeldScore(rank: Rank, count: number): MeldScore | null {
-  if (count !== 4 || rank === "SEVEN" || rank === "EIGHT") {
-    return null;
+function sameRankCandidates(cards: Card[]): MeldCombination[] {
+  const combinations: MeldCombination[] = [];
+  const byRank = groupCardsByRank(cards);
+
+  for (const [rank, matchingCards] of byRank.entries()) {
+    if (matchingCards.length !== 4 || rank === "SEVEN" || rank === "EIGHT") {
+      continue;
+    }
+
+    if (rank === "JACK") {
+      combinations.push({
+        kind: "FOUR_OF_A_KIND",
+        label: "Four Jacks",
+        points: 200,
+        comparisonValue: 700 + RANKS.indexOf(rank),
+        cards: [...matchingCards]
+      });
+      continue;
+    }
+
+    if (rank === "NINE") {
+      combinations.push({
+        kind: "FOUR_OF_A_KIND",
+        label: "Four Nines",
+        points: 150,
+        comparisonValue: 650 + RANKS.indexOf(rank),
+        cards: [...matchingCards]
+      });
+      continue;
+    }
+
+    combinations.push({
+      kind: "FOUR_OF_A_KIND",
+      label: "Four of a Kind",
+      points: 100,
+      comparisonValue: 600 + RANKS.indexOf(rank),
+      cards: [...matchingCards]
+    });
   }
 
-  if (rank === "JACK") {
+  return combinations;
+}
+
+function sequenceCandidates(cards: Card[]): MeldCombination[] {
+  const combinations: MeldCombination[] = [];
+  const bySuit = groupCardsBySuit(cards);
+
+  for (const suitedCards of bySuit.values()) {
+    const sortedCards = [...suitedCards].sort((left, right) => RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank));
+    for (let start = 0; start < sortedCards.length; start += 1) {
+      const run: Card[] = [sortedCards[start]];
+      for (let index = start + 1; index < sortedCards.length; index += 1) {
+        if (RANKS.indexOf(sortedCards[index].rank) !== RANKS.indexOf(sortedCards[index - 1].rank) + 1) {
+          break;
+        }
+        run.push(sortedCards[index]);
+        if (run.length >= 3) {
+          combinations.push(toSequenceCombination(run));
+        }
+      }
+    }
+  }
+
+  return combinations;
+}
+
+function toSequenceCombination(run: Card[]): MeldCombination {
+  const highest = run[run.length - 1];
+  if (run.length >= 5) {
     return {
-      meldPoints: 200,
-      comparisonValue: 700,
-      labels: ["Four Jacks"]
+      kind: "SEQUENCE",
+      label: `Sequence of ${run.length}`,
+      points: 100,
+      comparisonValue: 500 + RANKS.indexOf(highest.rank),
+      cards: [...run]
     };
   }
 
-  if (rank === "NINE") {
+  if (run.length === 4) {
     return {
-      meldPoints: 150,
-      comparisonValue: 650,
-      labels: ["Four Nines"]
+      kind: "SEQUENCE",
+      label: "Sequence of 4",
+      points: 50,
+      comparisonValue: 450 + RANKS.indexOf(highest.rank),
+      cards: [...run]
     };
   }
 
   return {
-    meldPoints: 100,
-    comparisonValue: 600,
-    labels: ["Four of a Kind"]
+    kind: "SEQUENCE",
+    label: "Sequence of 3",
+    points: 20,
+    comparisonValue: 400 + RANKS.indexOf(highest.rank),
+    cards: [...run]
   };
 }
 
-function collectRunLengths(cards: Card[]) {
-  const sortedCards = [...cards].sort((left, right) => RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank));
-  const runLengths: number[] = [];
-  let runLength = 1;
-
-  for (let index = 1; index <= sortedCards.length; index += 1) {
-    const contiguous =
-      index < sortedCards.length && RANKS.indexOf(sortedCards[index].rank) === RANKS.indexOf(sortedCards[index - 1].rank) + 1;
-
-    if (contiguous) {
-      runLength += 1;
-      continue;
-    }
-
-    runLengths.push(runLength);
-    runLength = 1;
-  }
-
-  return runLengths;
+interface BestSelection {
+  melds: MeldCombination[];
+  totalPoints: number;
+  strongestComparisonValue: number;
 }
 
-function toSequenceMeldScore(runLength: number): MeldScore | null {
-  if (runLength >= 5) {
-    return {
-      meldPoints: 100,
-      comparisonValue: 500 + runLength,
-      labels: [`Sequence of ${runLength}`]
+function chooseBestNonOverlapping(
+  candidates: MeldCombination[],
+  index: number,
+  usedCards: Set<string>,
+  chosen: MeldCombination[],
+  totalPoints: number,
+  strongestComparisonValue: number,
+  best: BestSelection | null
+): BestSelection | null {
+  let currentBest = best;
+  if (index >= candidates.length) {
+    const candidate: BestSelection = {
+      melds: [...chosen],
+      totalPoints,
+      strongestComparisonValue
     };
+    return !currentBest || beatsSelection(candidate, currentBest) ? candidate : currentBest;
   }
 
-  if (runLength === 4) {
-    return {
-      meldPoints: 50,
-      comparisonValue: 450,
-      labels: ["Sequence of 4"]
-    };
+  currentBest = chooseBestNonOverlapping(candidates, index + 1, usedCards, chosen, totalPoints, strongestComparisonValue, currentBest);
+  const combination = candidates[index];
+  const combinationKeys = combination.cards.map(cardKey);
+  if (combinationKeys.every((key) => !usedCards.has(key))) {
+    combinationKeys.forEach((key) => usedCards.add(key));
+    chosen.push(combination);
+    currentBest = chooseBestNonOverlapping(
+      candidates,
+      index + 1,
+      usedCards,
+      chosen,
+      totalPoints + combination.points,
+      Math.max(strongestComparisonValue, combination.comparisonValue),
+      currentBest
+    );
+    chosen.pop();
+    combinationKeys.forEach((key) => usedCards.delete(key));
   }
 
-  if (runLength === 3) {
-    return {
-      meldPoints: 20,
-      comparisonValue: 400,
-      labels: ["Sequence of 3"]
-    };
-  }
-
-  return null;
+  return currentBest;
 }
 
-function hasBela(cards: Card[], trumpSuit: Suit) {
-  const hasKing = cards.some((card) => card.suit === trumpSuit && card.rank === "KING");
-  const hasQueen = cards.some((card) => card.suit === trumpSuit && card.rank === "QUEEN");
-  return hasKing && hasQueen;
+function beatsSelection(candidate: BestSelection, best: BestSelection) {
+  if (candidate.totalPoints !== best.totalPoints) {
+    return candidate.totalPoints > best.totalPoints;
+  }
+  if (candidate.strongestComparisonValue !== best.strongestComparisonValue) {
+    return candidate.strongestComparisonValue > best.strongestComparisonValue;
+  }
+  return candidate.melds.length < best.melds.length;
+}
+
+function cardKey(card: Card) {
+  return `${card.suit}:${card.rank}`;
 }

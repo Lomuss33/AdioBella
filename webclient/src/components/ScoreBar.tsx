@@ -75,6 +75,10 @@ function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedT
       return "A new game is ready when you are.";
     case "CHOOSE_TRUMP":
       return "Choose a trump or skip.";
+    case "REPORT_MELDS":
+      return "Declare melds or pass.";
+    case "ACKNOWLEDGE_MELDS":
+      return "Review the melds and continue.";
     case "PLAY_CARD":
       return snapshot.pendingAction.actingPlayerId === southPlayer?.id
         ? "Play a legal card."

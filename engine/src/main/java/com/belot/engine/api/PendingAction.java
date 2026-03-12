@@ -7,6 +7,9 @@ public record PendingAction(
         String actingPlayerId,
         List<Integer> legalCardIndices,
         List<String> legalTrumpChoices,
+        List<Integer> belaEligibleCardIndices,
+        List<MeldSetView> availableMelds,
+        MeldWinnerView meldWinner,
         String validationMessage,
         String prompt
 ) {

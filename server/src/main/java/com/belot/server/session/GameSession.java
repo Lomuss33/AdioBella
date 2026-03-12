@@ -66,8 +66,20 @@ public final class GameSession {
         return facade.getSnapshot();
     }
 
-    public synchronized GameSnapshot playCard(int handIndex) {
-        facade.playCard(handIndex);
+    public synchronized GameSnapshot reportMelds(boolean declare) {
+        facade.reportMelds(declare);
+        broadcastNewEvents();
+        return facade.getSnapshot();
+    }
+
+    public synchronized GameSnapshot acknowledgeMelds() {
+        facade.acknowledgeMelds();
+        broadcastNewEvents();
+        return facade.getSnapshot();
+    }
+
+    public synchronized GameSnapshot playCard(int handIndex, boolean callBela) {
+        facade.playCard(handIndex, callBela);
         broadcastNewEvents();
         return facade.getSnapshot();
     }

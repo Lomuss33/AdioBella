@@ -50,6 +50,7 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.HEARTS);
+        resolvePreTrickPending(facade, false);
 
         GameSnapshot beforePlay = facade.getSnapshot();
         int playableIndex = beforePlay.pendingAction().legalCardIndices().get(0);
@@ -69,6 +70,7 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.HEARTS);
+        resolvePreTrickPending(facade, false);
 
         int beforePoints = facade.getSnapshot().score().teamOneGamePoints() + facade.getSnapshot().score().teamTwoGamePoints();
         facade.playCard(facade.getSnapshot().pendingAction().legalCardIndices().get(0));
@@ -83,6 +85,7 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.SPADES);
+        resolvePreTrickPending(facade, false);
 
         assertThrows(IllegalArgumentException.class, () -> facade.playCard(99));
         assertNotNull(facade.getSnapshot().pendingAction().validationMessage());
@@ -93,10 +96,15 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.CLUBS);
+        resolvePreTrickPending(facade, false);
 
         for (int step = 0; step < 12 && !facade.getSnapshot().matchComplete(); step++) {
             GameSnapshot snapshot = facade.getSnapshot();
-            if (snapshot.pendingAction().type() == ActionType.PLAY_CARD) {
+            if (snapshot.pendingAction().type() == ActionType.REPORT_MELDS) {
+                facade.reportMelds(false);
+            } else if (snapshot.pendingAction().type() == ActionType.ACKNOWLEDGE_MELDS) {
+                facade.acknowledgeMelds();
+            } else if (snapshot.pendingAction().type() == ActionType.PLAY_CARD) {
                 facade.playCard(snapshot.pendingAction().legalCardIndices().get(0));
             }
         }
@@ -109,6 +117,7 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.HEARTS);
+        resolvePreTrickPending(facade, false);
 
         GameSnapshot snapshot = facade.getSnapshot();
         facade.playCard(snapshot.pendingAction().legalCardIndices().get(0));
@@ -129,6 +138,7 @@ class BelotMatchFacadeTest {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
         facade.startMatch();
         facade.chooseTrump(TrumpChoice.SPADES);
+        resolvePreTrickPending(facade, false);
 
         for (int step = 0; step < 32 && facade.getSnapshot().pendingAction().type() == ActionType.PLAY_CARD; step++) {
             GameSnapshot snapshot = facade.getSnapshot();
@@ -194,6 +204,8 @@ class BelotMatchFacadeTest {
         GameSnapshot snapshot = facade.getSnapshot();
         assertEquals(70, snapshot.score().teamOneMeldPoints());
         assertEquals(0, snapshot.score().teamTwoMeldPoints());
+        assertEquals(2, snapshot.score().meldDeclarations().size());
+        assertTrue(snapshot.score().meldDeclarations().stream().allMatch(meld -> "Us".equals(meld.teamName())));
     }
 
     @Test
@@ -211,10 +223,31 @@ class BelotMatchFacadeTest {
         GameSnapshot snapshot = facade.getSnapshot();
         assertEquals(0, snapshot.score().teamOneMeldPoints());
         assertEquals(40, snapshot.score().teamTwoMeldPoints());
+        assertEquals(2, snapshot.score().meldDeclarations().size());
+        assertTrue(snapshot.score().meldDeclarations().stream().allMatch(meld -> "Them".equals(meld.teamName())));
     }
 
     @Test
-    void belaCountsForWinningDeclarationTeam() throws Exception {
+    void belaIsCalledWhenEligibleCardIsPlayed() throws Exception {
+        BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
+
+        setTrumpAndDeclarer(facade, "HEARTS", "YOURS");
+        setPlayerHand(facade, 0, "QH", "KH");
+        setPlayerHand(facade, 1, "AS");
+        setPlayerHand(facade, 2, "AC");
+        setPlayerHand(facade, 3, "AD");
+        setReadyForPlay(facade, 0);
+
+        GameSnapshot snapshot = facade.getSnapshot();
+        assertTrue(snapshot.pendingAction().belaEligibleCardIndices().contains(0));
+        facade.playCard(0, true);
+
+        snapshot = facade.getSnapshot();
+        assertEquals(20, snapshot.score().teamOneMeldPoints());
+    }
+
+    @Test
+    void preTrickMeldsDoNotAutoCountBela() throws Exception {
         BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
 
         setTrumpAndDeclarer(facade, "HEARTS", "YOURS");
@@ -226,7 +259,7 @@ class BelotMatchFacadeTest {
         invokeApplyMelds(facade);
 
         GameSnapshot snapshot = facade.getSnapshot();
-        assertEquals(20, snapshot.score().teamOneMeldPoints());
+        assertEquals(0, snapshot.score().teamOneMeldPoints());
         assertEquals(0, snapshot.score().teamTwoMeldPoints());
     }
 
@@ -290,6 +323,44 @@ class BelotMatchFacadeTest {
         Field declarerField = stateClass.getDeclaredField("declarer");
         declarerField.setAccessible(true);
         declarerField.set(state, enumValue("com.belot.engine.api.BelotMatchFacade$TeamSide", teamSideName));
+    }
+
+    private static void setReadyForPlay(BelotMatchFacade facade, int currentPlayerIndex) throws Exception {
+        Object state = getState(facade);
+        Class<?> stateClass = state.getClass();
+
+        Field phaseField = stateClass.getDeclaredField("phase");
+        phaseField.setAccessible(true);
+        phaseField.set(state, enumValue("com.belot.engine.api.BelotMatchFacade$Phase", "TRICK_PLAY"));
+
+        Field currentPlayerIndexField = stateClass.getDeclaredField("currentPlayerIndex");
+        currentPlayerIndexField.setAccessible(true);
+        currentPlayerIndexField.setInt(state, currentPlayerIndex);
+
+        Field pendingTypeField = stateClass.getDeclaredField("pendingType");
+        pendingTypeField.setAccessible(true);
+        pendingTypeField.set(state, ActionType.PLAY_CARD);
+
+        Class<?> trickStateClass = Class.forName("com.belot.engine.api.BelotMatchFacade$TrickState");
+        Constructor<?> trickConstructor = trickStateClass.getDeclaredConstructor(int.class);
+        trickConstructor.setAccessible(true);
+
+        Field currentTrickField = stateClass.getDeclaredField("currentTrick");
+        currentTrickField.setAccessible(true);
+        currentTrickField.set(state, trickConstructor.newInstance(currentPlayerIndex));
+    }
+
+    private static void resolvePreTrickPending(BelotMatchFacade facade, boolean declareHumanMelds) {
+        while (true) {
+            ActionType type = facade.getSnapshot().pendingAction().type();
+            if (type == ActionType.REPORT_MELDS) {
+                facade.reportMelds(declareHumanMelds);
+            } else if (type == ActionType.ACKNOWLEDGE_MELDS) {
+                facade.acknowledgeMelds();
+            } else {
+                return;
+            }
+        }
     }
 
     private static void setPlayerHand(BelotMatchFacade facade, int playerIndex, String... cards) throws Exception {

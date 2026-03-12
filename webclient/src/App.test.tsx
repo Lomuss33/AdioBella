@@ -43,7 +43,17 @@ const baseSession: SessionResponse = {
       teamTwoMeldPoints: 0,
       meldDeclarations: []
     },
-    pendingAction: { type: "START_MATCH", actingPlayerId: "south", legalCardIndices: [], legalTrumpChoices: [], validationMessage: null, prompt: "Start the match." },
+    pendingAction: {
+      type: "START_MATCH",
+      actingPlayerId: "south",
+      legalCardIndices: [],
+      legalTrumpChoices: [],
+      belaEligibleCardIndices: [],
+      availableMelds: [],
+      meldWinner: null,
+      validationMessage: null,
+      prompt: "Start the match."
+    },
     lastEventSequence: 1,
     matchComplete: false
   }
@@ -114,6 +124,9 @@ test("renders playable cards and disables unplayable cards", async () => {
         actingPlayerId: "south",
         legalCardIndices: [1],
         legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
         validationMessage: null,
         prompt: "Play a legal card."
       },
@@ -159,6 +172,9 @@ test("renders trump suit options with lowercase labels", async () => {
         actingPlayerId: "south",
         legalCardIndices: [],
         legalTrumpChoices: ["SPADES", "HEARTS", "DIAMONDS", "CLUBS", "SKIP"],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
         validationMessage: null,
         prompt: "Choose the trump suit or skip."
       }

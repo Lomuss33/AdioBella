@@ -58,11 +58,27 @@ export const browserGateway: GameGateway = {
     };
   },
 
-  async playCard(sessionId: string, handIndex: number) {
+  async reportMelds(sessionId: string, declare: boolean) {
     const session = requireSession(sessionId);
     return {
       sessionId,
-      snapshot: session.playCard(handIndex)
+      snapshot: session.reportMelds(declare)
+    };
+  },
+
+  async acknowledgeMelds(sessionId: string) {
+    const session = requireSession(sessionId);
+    return {
+      sessionId,
+      snapshot: session.acknowledgeMelds()
+    };
+  },
+
+  async playCard(sessionId: string, handIndex: number, callBela = false) {
+    const session = requireSession(sessionId);
+    return {
+      sessionId,
+      snapshot: session.playCard(handIndex, callBela)
     };
   },
 

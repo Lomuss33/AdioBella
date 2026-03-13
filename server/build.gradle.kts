@@ -15,6 +15,7 @@ java {
 dependencies {
     implementation(project(":engine"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -24,10 +25,14 @@ val buildWebClient by tasks.registering {
     dependsOn(":webclient:buildWebApp")
 }
 
+val liveFrontendDev = providers.gradleProperty("liveFrontendDev").map(String::toBoolean).orElse(false)
+
 tasks.processResources {
-    dependsOn(buildWebClient)
-    from(project(":webclient").layout.projectDirectory.dir("dist")) {
-        into("static")
+    if (!liveFrontendDev.get()) {
+        dependsOn(buildWebClient)
+        from(project(":webclient").layout.projectDirectory.dir("dist")) {
+            into("static")
+        }
     }
 }
 
@@ -36,6 +41,7 @@ tasks.bootRun {
     if (!serverPort.isNullOrBlank()) {
         systemProperty("server.port", serverPort)
     }
+    systemProperty("spring.devtools.restart.enabled", "true")
 }
 
 tasks.test {

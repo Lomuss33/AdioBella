@@ -113,6 +113,108 @@ test("starts the match from the start button", async () => {
   ));
 });
 
+test("quit match ends the current match and shows the match-complete popup", async () => {
+  const activeSession: SessionResponse = {
+    ...baseSession,
+    snapshot: {
+      ...baseSession.snapshot,
+      phase: "TRICK_PLAY",
+      currentPlayerId: "west",
+      pendingAction: {
+        type: "NONE",
+        actingPlayerId: null,
+        legalCardIndices: [],
+        legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
+        validationMessage: null,
+        prompt: "Wait."
+      }
+    }
+  };
+  const matchCompleteSession: SessionResponse = {
+    ...baseSession,
+    snapshot: {
+      ...baseSession.snapshot,
+      phase: "MATCH_COMPLETE",
+      matchComplete: true,
+      score: {
+        ...baseSession.snapshot.score,
+        gameNumber: 3,
+        teamOneMatchScore: 0,
+        teamOneGamePoints: 744,
+        teamTwoMatchScore: 3,
+        teamTwoGamePoints: 1001
+      },
+      pendingAction: {
+        type: "NONE",
+        actingPlayerId: null,
+        legalCardIndices: [],
+        legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
+        validationMessage: null,
+        prompt: "Match complete."
+      }
+    }
+  };
+
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (url.endsWith("/api/sessions/session-1/quit") || url === "/api/sessions/session-1/quit") {
+      return { ok: true, json: async () => matchCompleteSession };
+    }
+    if (url.includes("/events")) {
+      return {
+        ok: true,
+        json: async () => [
+          {
+            sequence: 10,
+            type: "INFO",
+            message: "Them won the game.",
+            createdAt: "2026-03-13T12:00:00Z",
+            payload: {
+              eventKind: "GAME_WIN",
+              winner: "Them",
+              winningScore: "1001",
+              matchWins: "3",
+              byForfeit: "true"
+            }
+          },
+          {
+            sequence: 11,
+            type: "INFO",
+            message: "Them won the match.",
+            createdAt: "2026-03-13T12:00:01Z",
+            payload: {
+              eventKind: "MATCH_WIN",
+              winner: "Them",
+              matchWins: "3",
+              byForfeit: "true"
+            }
+          }
+        ]
+      };
+    }
+    return { ok: true, json: async () => activeSession };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  render(<App />);
+
+  const quitButton = await screen.findByRole("button", { name: "Quit match" });
+  await userEvent.click(quitButton);
+
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+    "/api/sessions/session-1/quit",
+    expect.objectContaining({ method: "POST" })
+  ));
+  expect(await screen.findByRole("dialog", { name: "Match complete" })).toBeInTheDocument();
+});
+
 test("renders playable cards and disables unplayable cards", async () => {
   const playableSession: SessionResponse = {
     ...baseSession,
@@ -206,4 +308,206 @@ test("browser mode bootstraps without backend requests", async () => {
   await waitFor(() => expect(screen.getByRole("button", { name: "Start the match" })).toBeEnabled());
   expect(fetchMock).not.toHaveBeenCalled();
   expect(window.localStorage.getItem("belot-session-id")).toBeNull();
+});
+
+test("renders meld winner popup with centered colon-separated details", async () => {
+  const meldWinnerSession: SessionResponse = {
+    ...baseSession,
+    snapshot: {
+      ...baseSession.snapshot,
+      phase: "MELD_REVIEW",
+      pendingAction: {
+        type: "ACKNOWLEDGE_MELDS",
+        actingPlayerId: "south",
+        legalCardIndices: [],
+        legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: {
+          teamName: "Them",
+          players: [
+            {
+              playerId: "east",
+              playerName: "Istok",
+              teamName: "Them",
+              totalPoints: 50,
+              melds: [
+                {
+                  kind: "SEQUENCE",
+                  label: "Sequence of 4",
+                  points: 50,
+                  comparisonValue: 450,
+                  cards: [
+                    { suit: "HEARTS", rank: "NINE", label: "9H", faceUp: true, playable: false },
+                    { suit: "HEARTS", rank: "TEN", label: "10H", faceUp: true, playable: false },
+                    { suit: "HEARTS", rank: "JACK", label: "JH", faceUp: true, playable: false },
+                    { suit: "HEARTS", rank: "QUEEN", label: "QH", faceUp: true, playable: false }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        validationMessage: null,
+        prompt: "Review the melds and continue."
+      }
+    }
+  };
+
+  vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    return {
+      ok: true,
+      json: async () => url.includes("/events") ? [] : meldWinnerSession
+    };
+  }));
+
+  render(<App />);
+
+  const dialog = await screen.findByRole("dialog", { name: "Melds" });
+  expect(dialog).toHaveTextContent("team : Them");
+  expect(dialog).toHaveTextContent("player : Istok : 50");
+  expect(dialog).toHaveTextContent("meld : sequence of 4");
+  expect(screen.getAllByRole("button", { name: /^(9h|10h|jh|qh)$/i })).toHaveLength(4);
+});
+
+test("renders a game-complete popup with the final score and match standing", async () => {
+  const nextGameSession: SessionResponse = {
+    ...baseSession,
+    snapshot: {
+      ...baseSession.snapshot,
+      phase: "BETWEEN_GAMES",
+      score: {
+        ...baseSession.snapshot.score,
+        gameNumber: 2,
+        teamOneMatchScore: 0,
+        teamOneGamePoints: 812,
+        teamTwoMatchScore: 1,
+        teamTwoGamePoints: 1001
+      },
+      pendingAction: {
+        type: "START_NEXT_GAME",
+        actingPlayerId: "south",
+        legalCardIndices: [],
+        legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
+        validationMessage: null,
+        prompt: "Start the next game."
+      }
+    }
+  };
+
+  vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    return {
+      ok: true,
+      json: async () =>
+        url.includes("/events")
+          ? [
+              {
+                sequence: 12,
+                type: "INFO",
+                message: "Them won the game.",
+                createdAt: "2026-03-13T12:00:00Z",
+                payload: {
+                  eventKind: "GAME_WIN",
+                  winner: "Them",
+                  winningScore: "1001",
+                  matchWins: "1",
+                  byForfeit: "false"
+                }
+              }
+            ]
+          : nextGameSession
+    };
+  }));
+
+  render(<App />);
+
+  const dialog = await screen.findByRole("dialog", { name: "Game complete" });
+  expect(dialog).toHaveTextContent("Them won the game.");
+  expect(dialog).toHaveTextContent("Settings");
+  expect(dialog).toHaveTextContent("First to 3 games");
+  expect(dialog).toHaveTextContent("1001 points");
+  expect(dialog).toHaveTextContent("Standings");
+  expect(dialog).toHaveTextContent("1 MP · 1001 GP");
+  expect(dialog).toHaveTextContent("0 MP · 812 GP");
+  expect(screen.getByRole("button", { name: "Deal the next game" })).toBeEnabled();
+});
+
+test("renders a match-complete popup with rematch and settings actions", async () => {
+  const matchCompleteSession: SessionResponse = {
+    ...baseSession,
+    snapshot: {
+      ...baseSession.snapshot,
+      phase: "MATCH_COMPLETE",
+      matchComplete: true,
+      score: {
+        ...baseSession.snapshot.score,
+        gameNumber: 4,
+        teamOneMatchScore: 1,
+        teamOneGamePoints: 854,
+        teamTwoMatchScore: 3,
+        teamTwoGamePoints: 1001
+      },
+      pendingAction: {
+        type: "NONE",
+        actingPlayerId: null,
+        legalCardIndices: [],
+        legalTrumpChoices: [],
+        belaEligibleCardIndices: [],
+        availableMelds: [],
+        meldWinner: null,
+        validationMessage: null,
+        prompt: "Match complete."
+      }
+    }
+  };
+
+  vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    return {
+      ok: true,
+      json: async () =>
+        url.includes("/events")
+          ? [
+              {
+                sequence: 20,
+                type: "INFO",
+                message: "Them won the game.",
+                createdAt: "2026-03-13T12:00:00Z",
+                payload: {
+                  eventKind: "GAME_WIN",
+                  winner: "Them",
+                  winningScore: "1001",
+                  matchWins: "3",
+                  byForfeit: "false"
+                }
+              },
+              {
+                sequence: 21,
+                type: "INFO",
+                message: "Them won the match.",
+                createdAt: "2026-03-13T12:00:01Z",
+                payload: {
+                  eventKind: "MATCH_WIN",
+                  winner: "Them",
+                  matchWins: "3",
+                  byForfeit: "false"
+                }
+              }
+            ]
+          : matchCompleteSession
+    };
+  }));
+
+  render(<App />);
+
+  const dialog = await screen.findByRole("dialog", { name: "Match complete" });
+  expect(dialog).toHaveTextContent("Them win the match 3-1.");
+  expect(dialog).toHaveTextContent("Final game: 1001-854.");
+  expect(screen.getByRole("button", { name: "Revenge" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Settings" })).toBeEnabled();
 });

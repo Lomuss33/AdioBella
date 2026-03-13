@@ -1,6 +1,7 @@
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
 import GameDataCard from "./GameDataCard";
 import MatchDataCard from "./MatchDataCard";
+import MatchCornerControls from "./MatchCornerControls";
 import PlayerHand from "./PlayerHand";
 import ScoreBar from "./ScoreBar";
 import SeatPanel from "./SeatPanel";
@@ -17,6 +18,10 @@ interface TableLayoutProps {
   animatedTrick?: AnimatedTrickState | null;
   highlightedSeat?: Seat | null;
   handLocked?: boolean;
+  canForfeitGame: boolean;
+  canQuitMatch: boolean;
+  onForfeitGame: () => void;
+  onQuitMatch: () => void;
 }
 
 function TableLayout({
@@ -29,7 +34,11 @@ function TableLayout({
   hiddenHandIndex,
   animatedTrick,
   highlightedSeat,
-  handLocked
+  handLocked,
+  canForfeitGame,
+  canQuitMatch,
+  onForfeitGame,
+  onQuitMatch
 }: TableLayoutProps) {
   const dealerSeat = (Object.values(playersBySeat).find((player) => player?.dealer)?.seat ?? null) as PlayerView["seat"] | null;
   const declarerSeat = (snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat ?? null) as PlayerView["seat"] | null;
@@ -108,6 +117,12 @@ function TableLayout({
             onPlayCard={onPlayCard}
           />
         </div>
+        <MatchCornerControls
+          canForfeitGame={canForfeitGame}
+          canQuitMatch={canQuitMatch}
+          onForfeitGame={onForfeitGame}
+          onQuitMatch={onQuitMatch}
+        />
       </div>
     </section>
   );

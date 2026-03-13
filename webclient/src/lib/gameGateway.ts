@@ -23,6 +23,8 @@ export interface GameGateway {
   reportMelds(sessionId: string, declare: boolean): Promise<SessionResponse>;
   acknowledgeMelds(sessionId: string): Promise<SessionResponse>;
   playCard(sessionId: string, handIndex: number, callBela?: boolean): Promise<SessionResponse>;
+  forfeitGame(sessionId: string): Promise<SessionResponse>;
+  forfeitMatch(sessionId: string): Promise<SessionResponse>;
   subscribe(
     sessionId: string,
     afterSequence: number,

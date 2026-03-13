@@ -125,6 +125,31 @@ export interface SessionResponse {
   snapshot: GameSnapshot;
 }
 
+export interface GameCompleteSummary {
+  gameNumber: number;
+  winnerName: string;
+  loserName: string;
+  winnerGamePoints: number;
+  loserGamePoints: number;
+  winnerMatchWins: number;
+  loserMatchWins: number;
+  matchTargetWins: number;
+  nextGameTargetPoints: number;
+  byForfeit: boolean;
+}
+
+export interface MatchCompleteSummary {
+  winnerName: string;
+  loserName: string;
+  winnerMatchWins: number;
+  loserMatchWins: number;
+  matchTargetWins: number;
+  finalGameWinnerPoints: number;
+  finalGameLoserPoints: number;
+  finalGameByForfeit: boolean;
+  gameNumber: number;
+}
+
 export interface PlayerNameDrafts {
   SOUTH: string;
   WEST: string;

@@ -69,6 +69,18 @@ export class GameSession {
     return this.facade.getSnapshot();
   }
 
+  forfeitGame() {
+    this.facade.forfeitGame();
+    this.broadcastNewEvents();
+    return this.facade.getSnapshot();
+  }
+
+  forfeitMatch() {
+    this.facade.forfeitMatch();
+    this.broadcastNewEvents();
+    return this.facade.getSnapshot();
+  }
+
   eventsAfter(sequence: number) {
     return this.facade.getEventsAfter(sequence);
   }

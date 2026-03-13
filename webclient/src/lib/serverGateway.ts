@@ -82,6 +82,18 @@ export const serverGateway: GameGateway = {
     });
   },
 
+  forfeitGame(sessionId: string) {
+    return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/forfeit`, {
+      method: "POST"
+    });
+  },
+
+  forfeitMatch(sessionId: string) {
+    return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/quit`, {
+      method: "POST"
+    });
+  },
+
   subscribe(sessionId: string, afterSequence: number, handlers) {
     const source = new EventSource(`/api/sessions/${sessionId}/stream?afterSequence=${afterSequence}`);
     source.onmessage = (message) => {

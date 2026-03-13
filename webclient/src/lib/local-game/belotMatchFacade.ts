@@ -280,6 +280,64 @@ export class BelotMatchFacade {
     this.processUntilHumanTurn();
   }
 
+  forfeitGame() {
+    this.ensure(this.state.phase !== "READY_TO_START", "Start the match before forfeiting a game.");
+    this.ensure(this.state.phase !== "BETWEEN_GAMES", "The current game is already complete.");
+    this.ensure(this.state.phase !== "MATCH_COMPLETE", "The match is already complete.");
+
+    this.clearValidation();
+
+    const forfeitingTeam = this.state.teamOne;
+    const winningTeam = this.state.teamTwo;
+    winningTeam.gameScore = Math.max(winningTeam.gameScore, this.state.gameTargetPoints);
+    this.clearCurrentHandState();
+
+    this.log("INFO", `${forfeitingTeam.name} forfeited the game. ${winningTeam.name} won by forfeit.`, {
+      eventKind: "GAME_FORFEIT",
+      forfeitingTeam: forfeitingTeam.name,
+      winner: winningTeam.name
+    });
+
+    this.finalizeGameWin(winningTeam, true);
+  }
+
+  forfeitMatch() {
+    this.ensure(this.state.phase !== "READY_TO_START", "Start the match before forfeiting it.");
+    this.ensure(this.state.phase !== "MATCH_COMPLETE", "The match is already complete.");
+
+    this.clearValidation();
+
+    const forfeitingTeam = this.state.teamOne;
+    const winningTeam = this.state.teamTwo;
+    winningTeam.gameScore = Math.max(winningTeam.gameScore, this.state.gameTargetPoints);
+    winningTeam.matchWins = this.state.matchTargetWins;
+    this.clearCurrentHandState();
+
+    this.log("INFO", `${forfeitingTeam.name} forfeited the match. ${winningTeam.name} won by forfeit.`, {
+      eventKind: "MATCH_FORFEIT",
+      forfeitingTeam: forfeitingTeam.name,
+      winner: winningTeam.name
+    });
+    this.log("INFO", `${winningTeam.name} won the game.`, {
+      eventKind: "GAME_WIN",
+      winner: winningTeam.name,
+      winningScore: String(winningTeam.gameScore),
+      matchWins: String(winningTeam.matchWins),
+      byForfeit: "true"
+    });
+
+    this.state.phase = "MATCH_COMPLETE";
+    this.state.pendingType = "NONE";
+    this.state.pendingValidationMessage = null;
+    this.state.currentTrick = null;
+    this.log("INFO", `${winningTeam.name} won the match.`, {
+      eventKind: "MATCH_WIN",
+      winner: winningTeam.name,
+      matchWins: String(winningTeam.matchWins),
+      byForfeit: "true"
+    });
+  }
+
   reportMelds(declare: boolean) {
     this.ensurePending("REPORT_MELDS");
     this.clearValidation();
@@ -551,33 +609,39 @@ export class BelotMatchFacade {
 
     const winner = this.state.teamOne.gameScore >= this.state.teamTwo.gameScore ? this.state.teamOne : this.state.teamTwo;
     if (winner.gameScore >= this.state.gameTargetPoints) {
-      winner.matchWins += 1;
-      this.log("INFO", `${winner.name} won the game.`, {
-        eventKind: "GAME_WIN",
-        winner: winner.name,
-        winningScore: String(winner.gameScore),
-        matchWins: String(winner.matchWins)
-      });
-
-      if (winner.matchWins >= this.state.matchTargetWins) {
-        this.state.phase = "MATCH_COMPLETE";
-        this.state.pendingType = "NONE";
-        this.log("INFO", `${winner.name} won the match.`, {
-          eventKind: "MATCH_WIN",
-          winner: winner.name,
-          matchWins: String(winner.matchWins)
-        });
-        return;
-      }
-
-      this.state.phase = "BETWEEN_GAMES";
-      this.state.pendingType = "START_NEXT_GAME";
-      this.state.pendingValidationMessage = null;
-      this.state.currentTrick = null;
+      this.finalizeGameWin(winner, false);
       return;
     }
 
     this.startNextGame(true);
+  }
+
+  private finalizeGameWin(winner: TeamState, byForfeit: boolean) {
+    winner.matchWins += 1;
+    this.log("INFO", `${winner.name} won the game.`, {
+      eventKind: "GAME_WIN",
+      winner: winner.name,
+      winningScore: String(winner.gameScore),
+      matchWins: String(winner.matchWins),
+      byForfeit: String(byForfeit)
+    });
+
+    if (winner.matchWins >= this.state.matchTargetWins) {
+      this.state.phase = "MATCH_COMPLETE";
+      this.state.pendingType = "NONE";
+      this.log("INFO", `${winner.name} won the match.`, {
+        eventKind: "MATCH_WIN",
+        winner: winner.name,
+        matchWins: String(winner.matchWins),
+        byForfeit: String(byForfeit)
+      });
+      return;
+    }
+
+    this.state.phase = "BETWEEN_GAMES";
+    this.state.pendingType = "START_NEXT_GAME";
+    this.state.pendingValidationMessage = null;
+    this.state.currentTrick = null;
   }
 
   private startNextFullGame(rotateDealer: boolean) {
@@ -606,31 +670,11 @@ export class BelotMatchFacade {
       this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
     }
 
+    this.clearCurrentHandState();
     this.state.phase = "TRUMP_SELECTION";
     this.state.pendingType = "NONE";
     this.state.pendingValidationMessage = null;
-    this.state.trumpSuit = null;
-    this.state.declarer = null;
-    this.state.trumpTurnOffset = 0;
     this.state.currentPlayerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
-    this.state.teamOne.trickPoints = 0;
-    this.state.teamOne.meldPoints = 0;
-    this.state.teamTwo.trickPoints = 0;
-    this.state.teamTwo.meldPoints = 0;
-    this.state.currentTrick = null;
-    this.state.lastWinningMeldSets = [];
-    this.state.declaredMeldSets = [];
-    this.state.humanMeldOffer = null;
-    this.state.pendingMeldWinner = null;
-    this.state.firstTrickAnnounced = false;
-    this.state.declarerPlayerIndex = null;
-
-    for (const player of this.state.players) {
-      player.hand = [];
-      player.belaCalled = false;
-      player.belaResolved = false;
-    }
-
     this.state.deck = createShuffledDeck(this.random);
     this.dealCards(OPENING_DEAL_SIZE);
   }
@@ -1066,6 +1110,29 @@ export class BelotMatchFacade {
 
   private otherTeam(side: TeamSide) {
     return side === "YOURS" ? this.state.teamTwo : this.state.teamOne;
+  }
+
+  private clearCurrentHandState() {
+    this.state.trumpSuit = null;
+    this.state.declarer = null;
+    this.state.declarerPlayerIndex = null;
+    this.state.trumpTurnOffset = 0;
+    this.state.currentTrick = null;
+    this.state.lastWinningMeldSets = [];
+    this.state.declaredMeldSets = [];
+    this.state.humanMeldOffer = null;
+    this.state.pendingMeldWinner = null;
+    this.state.firstTrickAnnounced = false;
+    this.state.teamOne.trickPoints = 0;
+    this.state.teamOne.meldPoints = 0;
+    this.state.teamTwo.trickPoints = 0;
+    this.state.teamTwo.meldPoints = 0;
+
+    for (const player of this.state.players) {
+      player.hand = [];
+      player.belaCalled = false;
+      player.belaResolved = false;
+    }
   }
 
   private displayedGameScore(team: TeamState) {

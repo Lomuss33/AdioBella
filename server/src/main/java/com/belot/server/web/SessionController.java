@@ -105,6 +105,18 @@ public class SessionController {
         return new SessionResponse(session.id().toString(), session.playCard(request.handIndex(), Boolean.TRUE.equals(request.callBela())));
     }
 
+    @PostMapping("/{sessionId}/forfeit")
+    public SessionResponse forfeitGame(@PathVariable UUID sessionId) {
+        GameSession session = sessions.requireSession(sessionId);
+        return new SessionResponse(session.id().toString(), session.forfeitGame());
+    }
+
+    @PostMapping("/{sessionId}/quit")
+    public SessionResponse forfeitMatch(@PathVariable UUID sessionId) {
+        GameSession session = sessions.requireSession(sessionId);
+        return new SessionResponse(session.id().toString(), session.forfeitMatch());
+    }
+
     @GetMapping(value = "/{sessionId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable UUID sessionId, @RequestParam(defaultValue = "0") long afterSequence) {
         return sessions.requireSession(sessionId).openStream(afterSequence);

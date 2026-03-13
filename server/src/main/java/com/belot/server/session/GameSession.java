@@ -84,6 +84,18 @@ public final class GameSession {
         return facade.getSnapshot();
     }
 
+    public synchronized GameSnapshot forfeitGame() {
+        facade.forfeitGame();
+        broadcastNewEvents();
+        return facade.getSnapshot();
+    }
+
+    public synchronized GameSnapshot forfeitMatch() {
+        facade.forfeitMatch();
+        broadcastNewEvents();
+        return facade.getSnapshot();
+    }
+
     public synchronized SseEmitter openStream(long afterSequence) {
         SseEmitter emitter = new SseEmitter(0L);
         emitters.add(emitter);

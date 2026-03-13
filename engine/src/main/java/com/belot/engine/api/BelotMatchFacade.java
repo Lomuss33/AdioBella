@@ -177,6 +177,64 @@ public final class BelotMatchFacade {
         processUntilHumanTurn();
     }
 
+    public synchronized void forfeitGame() {
+        ensure(state.phase != Phase.READY_TO_START, "Start the match before forfeiting a game.");
+        ensure(state.phase != Phase.BETWEEN_GAMES, "The current game is already complete.");
+        ensure(state.phase != Phase.MATCH_COMPLETE, "The match is already complete.");
+
+        clearValidation();
+
+        TeamState forfeitingTeam = state.teamOne;
+        TeamState winningTeam = state.teamTwo;
+        winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
+        clearCurrentHandState();
+
+        log("INFO", forfeitingTeam.name + " forfeited the game. " + winningTeam.name + " won by forfeit.", Map.of(
+                "eventKind", "GAME_FORFEIT",
+                "forfeitingTeam", forfeitingTeam.name,
+                "winner", winningTeam.name
+        ));
+
+        finalizeGameWin(winningTeam, true);
+    }
+
+    public synchronized void forfeitMatch() {
+        ensure(state.phase != Phase.READY_TO_START, "Start the match before forfeiting it.");
+        ensure(state.phase != Phase.MATCH_COMPLETE, "The match is already complete.");
+
+        clearValidation();
+
+        TeamState forfeitingTeam = state.teamOne;
+        TeamState winningTeam = state.teamTwo;
+        winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
+        winningTeam.matchWins = state.matchTargetWins;
+        clearCurrentHandState();
+
+        log("INFO", forfeitingTeam.name + " forfeited the match. " + winningTeam.name + " won by forfeit.", Map.of(
+                "eventKind", "MATCH_FORFEIT",
+                "forfeitingTeam", forfeitingTeam.name,
+                "winner", winningTeam.name
+        ));
+        log("INFO", winningTeam.name + " won the game.", Map.of(
+                "eventKind", "GAME_WIN",
+                "winner", winningTeam.name,
+                "winningScore", String.valueOf(winningTeam.gameScore),
+                "matchWins", String.valueOf(winningTeam.matchWins),
+                "byForfeit", "true"
+        ));
+
+        state.phase = Phase.MATCH_COMPLETE;
+        state.pendingType = ActionType.NONE;
+        state.pendingValidationMessage = null;
+        state.currentTrick = null;
+        log("INFO", winningTeam.name + " won the match.", Map.of(
+                "eventKind", "MATCH_WIN",
+                "winner", winningTeam.name,
+                "matchWins", String.valueOf(winningTeam.matchWins),
+                "byForfeit", "true"
+        ));
+    }
+
     public synchronized void reportMelds(boolean declare) {
         ensurePending(ActionType.REPORT_MELDS);
         clearValidation();
@@ -431,33 +489,39 @@ public final class BelotMatchFacade {
 
         TeamState winner = state.teamOne.gameScore >= state.teamTwo.gameScore ? state.teamOne : state.teamTwo;
         if (winner.gameScore >= state.gameTargetPoints) {
-            winner.matchWins += 1;
-            log("INFO", winner.name + " won the game.", Map.of(
-                    "eventKind", "GAME_WIN",
-                    "winner", winner.name,
-                    "winningScore", String.valueOf(winner.gameScore),
-                    "matchWins", String.valueOf(winner.matchWins)
-            ));
-
-            if (winner.matchWins >= state.matchTargetWins) {
-                state.phase = Phase.MATCH_COMPLETE;
-                state.pendingType = ActionType.NONE;
-                log("INFO", winner.name + " won the match.", Map.of(
-                        "eventKind", "MATCH_WIN",
-                        "winner", winner.name,
-                        "matchWins", String.valueOf(winner.matchWins)
-                ));
-                return;
-            }
-
-            state.phase = Phase.BETWEEN_GAMES;
-            state.pendingType = ActionType.START_NEXT_GAME;
-            state.pendingValidationMessage = null;
-            state.currentTrick = null;
+            finalizeGameWin(winner, false);
             return;
         }
 
         startNextGame(true);
+    }
+
+    private void finalizeGameWin(TeamState winner, boolean byForfeit) {
+        winner.matchWins += 1;
+        log("INFO", winner.name + " won the game.", Map.of(
+                "eventKind", "GAME_WIN",
+                "winner", winner.name,
+                "winningScore", String.valueOf(winner.gameScore),
+                "matchWins", String.valueOf(winner.matchWins),
+                "byForfeit", String.valueOf(byForfeit)
+        ));
+
+        if (winner.matchWins >= state.matchTargetWins) {
+            state.phase = Phase.MATCH_COMPLETE;
+            state.pendingType = ActionType.NONE;
+            log("INFO", winner.name + " won the match.", Map.of(
+                    "eventKind", "MATCH_WIN",
+                    "winner", winner.name,
+                    "matchWins", String.valueOf(winner.matchWins),
+                    "byForfeit", String.valueOf(byForfeit)
+            ));
+            return;
+        }
+
+        state.phase = Phase.BETWEEN_GAMES;
+        state.pendingType = ActionType.START_NEXT_GAME;
+        state.pendingValidationMessage = null;
+        state.currentTrick = null;
     }
 
     private void startNextFullGame(boolean rotateDealer) {
@@ -487,29 +551,11 @@ public final class BelotMatchFacade {
             state.dealerIndex = (state.dealerIndex + 1) % state.players.size();
         }
 
+        clearCurrentHandState();
         state.phase = Phase.TRUMP_SELECTION;
         state.pendingType = ActionType.NONE;
         state.pendingValidationMessage = null;
-        state.trumpSuit = null;
-        state.declarer = null;
-        state.trumpTurnOffset = 0;
         state.currentPlayerIndex = (state.dealerIndex + 1) % state.players.size();
-        state.teamOne.resetHandState();
-        state.teamTwo.resetHandState();
-        state.currentTrick = null;
-        state.lastWinningMeldSets = List.of();
-        state.declaredMeldSets = new ArrayList<>();
-        state.humanMeldOffer = null;
-        state.pendingMeldWinner = null;
-        state.firstTrickAnnounced = false;
-        state.declarerPlayerIndex = null;
-
-        for (PlayerState player : state.players) {
-            player.hand.clear();
-            player.belaCalled = false;
-            player.belaResolved = false;
-        }
-
         state.deck = RuleUtils.createShuffledDeck(random);
         dealCards(OPENING_DEAL_SIZE);
     }
@@ -924,6 +970,27 @@ public final class BelotMatchFacade {
 
     private TeamState otherTeam(TeamSide side) {
         return side == TeamSide.YOURS ? state.teamTwo : state.teamOne;
+    }
+
+    private void clearCurrentHandState() {
+        state.trumpSuit = null;
+        state.declarer = null;
+        state.declarerPlayerIndex = null;
+        state.trumpTurnOffset = 0;
+        state.currentTrick = null;
+        state.lastWinningMeldSets = List.of();
+        state.declaredMeldSets = new ArrayList<>();
+        state.humanMeldOffer = null;
+        state.pendingMeldWinner = null;
+        state.firstTrickAnnounced = false;
+        state.teamOne.resetHandState();
+        state.teamTwo.resetHandState();
+
+        for (PlayerState player : state.players) {
+            player.hand.clear();
+            player.belaCalled = false;
+            player.belaResolved = false;
+        }
     }
 
     private int displayedGameScore(TeamState team) {

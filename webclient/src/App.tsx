@@ -15,8 +15,10 @@ import {
 import type {
   AnimatedTrickState,
   GameEvent,
+  GameCompleteSummary,
   GameSettingsDrafts,
   GameSnapshot,
+  MatchCompleteSummary,
   MatchTargetWins,
   PlayerNameDrafts,
   PlayerView,
@@ -54,6 +56,7 @@ function App() {
   const [pendingBelaChoiceIndex, setPendingBelaChoiceIndex] = useState<number | null>(null);
   const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
   const [animatedTrick, setAnimatedTrick] = useState<AnimatedTrickState | null>(null);
+  const [sessionResetting, setSessionResetting] = useState(false);
   const lastSequenceRef = useRef(0);
   const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
@@ -316,6 +319,138 @@ function App() {
       }
       setErrorMessage(error instanceof Error ? error.message : "Unable to continue after melds.");
     }
+  }
+
+  async function handleForfeitGame() {
+    if (!sessionId || animatedTrick !== null) {
+      return;
+    }
+
+    if (!window.confirm("Forfeit the current game and give it to the opponents?")) {
+      return;
+    }
+
+    try {
+      const previousSequence = lastSequenceRef.current;
+      const response = await gateway.forfeitGame(sessionId);
+      clearAnimationTimeline();
+      pendingAnimationQueueRef.current = [];
+      animatedTrickRef.current = null;
+      setAnimatedTrick(null);
+      setSelectedHandIndex(null);
+      setPendingBelaChoiceIndex(null);
+      setHiddenHandIndex(null);
+      applySession(response);
+      await syncEvents(sessionId, previousSequence);
+    } catch (error) {
+      if (await recoverMissingSession(error)) {
+        return;
+      }
+      setErrorMessage(error instanceof Error ? error.message : "Unable to forfeit the current game.");
+    }
+  }
+
+  async function handleQuitMatch() {
+    if (!sessionId || animatedTrick !== null) {
+      return;
+    }
+
+    if (!window.confirm("Quit the current match and concede it?")) {
+      return;
+    }
+
+    try {
+      const previousSequence = lastSequenceRef.current;
+      const response = await gateway.forfeitMatch(sessionId);
+      clearAnimationTimeline();
+      pendingAnimationQueueRef.current = [];
+      animatedTrickRef.current = null;
+      setAnimatedTrick(null);
+      setSelectedHandIndex(null);
+      setPendingBelaChoiceIndex(null);
+      setHiddenHandIndex(null);
+      applySession(response);
+      await syncEvents(sessionId, previousSequence);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to quit the match.");
+    }
+  }
+
+  async function handleStartRematch() {
+    if (animatedTrick !== null) {
+      return;
+    }
+
+    try {
+      await openFreshSessionWithCurrentSetup(true);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to start the rematch.");
+    }
+  }
+
+  async function handleOpenSettingsMenu() {
+    if (animatedTrick !== null) {
+      return;
+    }
+
+    try {
+      await openFreshSessionWithCurrentSetup(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to open the settings lobby.");
+    }
+  }
+
+  async function openFreshSessionWithCurrentSetup(autoStart: boolean) {
+    setSessionResetting(true);
+    try {
+      resetClientSessionState();
+      const createdSession = await gateway.createSession();
+      const configuredSession = await gateway.updateLobbySettings(
+        createdSession.sessionId,
+        gameSettings.difficulty,
+        playerNames,
+        teamNames,
+        gameSettings.matchTargetWins,
+        gameSettings.gameLength
+      );
+
+      if (autoStart) {
+        const startedSession = await gateway.startMatch(createdSession.sessionId);
+        clearStartScreenTimer();
+        setStartScreenPhase("ready");
+        applySession(startedSession);
+        await syncEvents(createdSession.sessionId, 0);
+        setErrorMessage(null);
+        return;
+      }
+
+      clearStartScreenTimer();
+      setStartScreenPhase("ready");
+      applySession(configuredSession);
+      await syncEvents(createdSession.sessionId, 0);
+      setErrorMessage(null);
+    } finally {
+      setSessionResetting(false);
+    }
+  }
+
+  function resetClientSessionState() {
+    subscriptionRef.current?.close();
+    clearScheduledRefresh();
+    clearAnimationTimeline();
+    clearStartScreenTimer();
+    pendingAnimationQueueRef.current = [];
+    deferredSessionRef.current = null;
+    deferredRefreshSessionIdRef.current = null;
+    animatedTrickRef.current = null;
+    lastSequenceRef.current = 0;
+
+    setAnimatedTrick(null);
+    setSelectedHandIndex(null);
+    setPendingBelaChoiceIndex(null);
+    setHiddenHandIndex(null);
+    setEvents([]);
+    setSnapshot(null);
   }
 
   function handlePlayWithBela() {
@@ -613,6 +748,16 @@ function App() {
     pendingBelaChoiceIndex != null && southPlayer?.hand[pendingBelaChoiceIndex]
       ? southPlayer.hand[pendingBelaChoiceIndex]
       : null;
+  const gameCompleteSummary = sessionResetting ? null : latestGameCompleteSummary(snapshot, events);
+  const matchCompleteSummary = sessionResetting ? null : latestMatchCompleteSummary(snapshot, events);
+  const canQuitMatch = snapshot !== null && !snapshot.matchComplete && animatedTrick === null;
+  const canForfeitGame =
+    snapshot !== null &&
+    snapshot.score.gameNumber > 0 &&
+    !snapshot.matchComplete &&
+    snapshot.pendingAction.type !== "START_MATCH" &&
+    snapshot.pendingAction.type !== "START_NEXT_GAME" &&
+    animatedTrick === null;
 
   return (
     <main className="app-shell">
@@ -628,6 +773,10 @@ function App() {
           animatedTrick={animatedTrick}
           highlightedSeat={highlightedSeat}
           handLocked={handLocked}
+          canForfeitGame={canForfeitGame}
+          canQuitMatch={canQuitMatch}
+          onForfeitGame={handleForfeitGame}
+          onQuitMatch={handleQuitMatch}
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
@@ -636,11 +785,14 @@ function App() {
           playerNames={playerNames}
           teamNames={teamNames}
           gameSettings={gameSettings}
+          gameCompleteSummary={gameCompleteSummary}
+          matchCompleteSummary={matchCompleteSummary}
           onPlayerNameChange={handlePlayerNameChange}
           onTeamNameChange={handleTeamNameChange}
           onGameSettingsChange={handleGameSettingsChange}
-          gameWinMessage={latestGameWinMessage(events)}
           onStart={handleStartMatch}
+          onStartRematch={handleStartRematch}
+          onOpenSettingsMenu={handleOpenSettingsMenu}
           onChooseTrump={handleChooseTrump}
           onReportMelds={handleReportMelds}
           onAcknowledgeMelds={handleAcknowledgeMelds}
@@ -745,9 +897,90 @@ function isTableTheme(value: string | null): value is TableTheme {
   return value === "GREEN" || value === "DARK_BLUE" || value === "CHERRY_RED" || value === "WOODY_BROWN" || value === "FINE_BLACK";
 }
 
-function latestGameWinMessage(events: GameEvent[]) {
+function latestGameCompleteSummary(snapshot: GameSnapshot | null, events: GameEvent[]): GameCompleteSummary | null {
+  if (!snapshot || snapshot.pendingAction.type !== "START_NEXT_GAME") {
+    return null;
+  }
+
   const latest = [...events].reverse().find((event) => event.payload.eventKind === "GAME_WIN");
-  return latest?.message ?? null;
+  const teamOne = {
+    name: snapshot.score.teamOneName,
+    gamePoints: snapshot.score.teamOneGamePoints,
+    matchWins: snapshot.score.teamOneMatchScore
+  };
+  const teamTwo = {
+    name: snapshot.score.teamTwoName,
+    gamePoints: snapshot.score.teamTwoGamePoints,
+    matchWins: snapshot.score.teamTwoMatchScore
+  };
+
+  const eventWinnerName = latest?.payload.winner;
+  const winner =
+    eventWinnerName === teamOne.name
+      ? teamOne
+      : eventWinnerName === teamTwo.name
+        ? teamTwo
+        : teamOne.gamePoints >= teamTwo.gamePoints
+          ? teamOne
+          : teamTwo;
+  const loser = winner.name === teamOne.name ? teamTwo : teamOne;
+
+  return {
+    gameNumber: snapshot.score.gameNumber,
+    winnerName: winner.name,
+    loserName: loser.name,
+    winnerGamePoints: winner.gamePoints,
+    loserGamePoints: loser.gamePoints,
+    winnerMatchWins: winner.matchWins,
+    loserMatchWins: loser.matchWins,
+    matchTargetWins: snapshot.score.matchTargetWins,
+    nextGameTargetPoints: snapshot.score.gameTargetPoints,
+    byForfeit: latest?.payload.byForfeit === "true"
+  };
+}
+
+function latestMatchCompleteSummary(snapshot: GameSnapshot | null, events: GameEvent[]): MatchCompleteSummary | null {
+  if (!snapshot?.matchComplete) {
+    return null;
+  }
+
+  const latestMatch = [...events].reverse().find((event) => event.payload.eventKind === "MATCH_WIN");
+  const latestGame = [...events].reverse().find((event) => event.payload.eventKind === "GAME_WIN");
+  const teamOne = {
+    name: snapshot.score.teamOneName,
+    gamePoints: snapshot.score.teamOneGamePoints,
+    matchWins: snapshot.score.teamOneMatchScore
+  };
+  const teamTwo = {
+    name: snapshot.score.teamTwoName,
+    gamePoints: snapshot.score.teamTwoGamePoints,
+    matchWins: snapshot.score.teamTwoMatchScore
+  };
+
+  const eventWinnerName = latestMatch?.payload.winner;
+  const winner =
+    eventWinnerName === teamOne.name
+      ? teamOne
+      : eventWinnerName === teamTwo.name
+        ? teamTwo
+        : teamOne.matchWins >= teamTwo.matchWins
+          ? teamOne
+          : teamTwo;
+  const loser = winner.name === teamOne.name ? teamTwo : teamOne;
+  const finalGameWinnerPoints = winner.name === teamOne.name ? teamOne.gamePoints : teamTwo.gamePoints;
+  const finalGameLoserPoints = winner.name === teamOne.name ? teamTwo.gamePoints : teamOne.gamePoints;
+
+  return {
+    winnerName: winner.name,
+    loserName: loser.name,
+    winnerMatchWins: winner.matchWins,
+    loserMatchWins: loser.matchWins,
+    matchTargetWins: snapshot.score.matchTargetWins,
+    finalGameWinnerPoints,
+    finalGameLoserPoints,
+    finalGameByForfeit: latestGame?.payload.byForfeit === "true",
+    gameNumber: snapshot.score.gameNumber
+  };
 }
 
 function delay(ms: number) {

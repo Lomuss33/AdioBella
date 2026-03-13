@@ -82,6 +82,22 @@ export const browserGateway: GameGateway = {
     };
   },
 
+  async forfeitGame(sessionId: string) {
+    const session = requireSession(sessionId);
+    return {
+      sessionId,
+      snapshot: session.forfeitGame()
+    };
+  },
+
+  async forfeitMatch(sessionId: string) {
+    const session = requireSession(sessionId);
+    return {
+      sessionId,
+      snapshot: session.forfeitMatch()
+    };
+  },
+
   subscribe(sessionId: string, afterSequence: number, handlers) {
     const session = requireSession(sessionId);
     return session.subscribe(afterSequence, (event: GameEvent) => {

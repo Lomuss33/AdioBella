@@ -69,6 +69,24 @@ Then open:
 http://localhost:28081
 ```
 
+For live development with frontend hot reload and backend auto-recompile/restart:
+
+```bash
+./gradlew liveGame
+```
+
+Then open:
+
+```text
+http://localhost:5173
+```
+
+If you want different ports:
+
+```bash
+./gradlew liveGame -PserverPort=28081 -PclientPort=5174
+```
+
 ## Frontend Commands
 
 Run the frontend tests:

@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
-import type { CardView, GameSettingsDrafts, MeldSetView, MeldWinnerView, PendingAction, PlayerNameDrafts, TeamNameDrafts } from "../types";
+import type {
+  CardView,
+  GameCompleteSummary,
+  GameSettingsDrafts,
+  MatchCompleteSummary,
+  MeldSetView,
+  MeldWinnerView,
+  PendingAction,
+  PlayerNameDrafts,
+  TeamNameDrafts
+} from "../types";
 import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 
@@ -10,11 +20,14 @@ interface ActionPanelProps {
   playerNames: PlayerNameDrafts;
   teamNames: TeamNameDrafts;
   gameSettings: GameSettingsDrafts;
-  gameWinMessage: string | null;
+  gameCompleteSummary: GameCompleteSummary | null;
+  matchCompleteSummary: MatchCompleteSummary | null;
   onPlayerNameChange: (seat: keyof PlayerNameDrafts, value: string) => void;
   onTeamNameChange: (team: keyof TeamNameDrafts, value: string) => void;
   onGameSettingsChange: (patch: Partial<GameSettingsDrafts>) => void;
   onStart: () => void;
+  onStartRematch: () => void;
+  onOpenSettingsMenu: () => void;
   onChooseTrump: (choice: string) => void;
   onReportMelds: (declare: boolean) => void;
   onAcknowledgeMelds: () => void;
@@ -30,11 +43,14 @@ function ActionPanel({
   playerNames,
   teamNames,
   gameSettings,
-  gameWinMessage,
+  gameCompleteSummary,
+  matchCompleteSummary,
   onPlayerNameChange,
   onTeamNameChange,
   onGameSettingsChange,
   onStart,
+  onStartRematch,
+  onOpenSettingsMenu,
   onChooseTrump,
   onReportMelds,
   onAcknowledgeMelds,
@@ -48,8 +64,9 @@ function ActionPanel({
   const isReportMelds = pendingAction?.type === "REPORT_MELDS";
   const isAcknowledgeMelds = pendingAction?.type === "ACKNOWLEDGE_MELDS";
   const isBelaChoice = pendingBelaChoiceCard !== null;
+  const isMatchComplete = matchCompleteSummary !== null;
   const isBootLoading = isStart && startScreenPhase === "boot-loading";
-  const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice;
+  const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
 
   if (!isPopupVisible) {
     return null;
@@ -57,6 +74,8 @@ function ActionPanel({
 
   const title = isStart
     ? "Start the match"
+    : isMatchComplete
+      ? "Match complete"
     : isNextGame
       ? "Game complete"
       : isTrumpChoice
@@ -66,8 +85,10 @@ function ActionPanel({
           : "Bela";
   const subtitle = isStart
     ? "Set the table, the pace, and the people before the first deal."
+    : isMatchComplete
+      ? matchCompleteSubtitle(matchCompleteSummary)
     : isNextGame
-      ? gameWinMessage ?? "That game is done. Take a breath and deal the next one."
+      ? gameCompleteWinnerMessage(gameCompleteSummary)
       : isTrumpChoice
         ? pendingAction?.prompt || "Choose the trump suit or skip."
         : isReportMelds
@@ -79,7 +100,7 @@ function ActionPanel({
   return (
     <div
       className={`action-overlay ${
-        isTrumpChoice ? "action-overlay-trump" : isNextGame ? "action-overlay-next-game" : "action-overlay-start"
+        isTrumpChoice ? "action-overlay-trump" : isNextGame || isMatchComplete ? "action-overlay-next-game" : "action-overlay-start"
       }`}
     >
       <div
@@ -229,15 +250,27 @@ function ActionPanel({
               ) : null}
               {isNextGame ? (
                 <div className="between-games-summary">
-                  <div className="between-games-chip">next stop</div>
-                  <p>
-                    First to {gameSettings.matchTargetWins} game{gameSettings.matchTargetWins === 1 ? "" : "s"} wins the match.
-                  </p>
-                  <p>The next game plays to {gameSettings.gameLength === "SHORT" ? 501 : 1001} points.</p>
+                  {gameCompleteSummary ? <GameCompleteSummaryPanel summary={gameCompleteSummary} /> : null}
+                </div>
+              ) : null}
+              {isMatchComplete ? (
+                <div className="between-games-summary">
+                  <div className="between-games-chip">match result</div>
+                  {matchCompleteSummary ? <MatchCompleteSummaryPanel summary={matchCompleteSummary} /> : null}
                 </div>
               ) : null}
             </div>
             <div className={`action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
+              {isMatchComplete ? (
+                <>
+                  <button type="button" className="action-button" onClick={onOpenSettingsMenu}>
+                    Settings
+                  </button>
+                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>
+                    Revenge
+                  </button>
+                </>
+              ) : null}
               {isNextGame ? (
                 <button type="button" className="action-button action-button-primary" onClick={onStart}>
                   Deal the next game
@@ -296,24 +329,111 @@ function ActionPanel({
   );
 }
 
+function gameCompleteWinnerMessage(summary: GameCompleteSummary | null) {
+  if (!summary) {
+    return "The game is over.";
+  }
+
+  return summary.byForfeit ? `${summary.winnerName} won the game by forfeit.` : `${summary.winnerName} won the game.`;
+}
+
+function matchCompleteSubtitle(summary: MatchCompleteSummary | null) {
+  if (!summary) {
+    return "The match is over. Set the next table when you are ready.";
+  }
+
+  return `${summary.winnerName} win the match ${summary.winnerMatchWins}-${summary.loserMatchWins}.`;
+}
+
+function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary }) {
+  return (
+    <div className="game-complete-grid">
+      <section className="game-complete-box" aria-label="Match and game settings">
+        <div className="game-complete-box-title">Settings</div>
+        <div className="game-complete-box-row">
+          <span>Match length</span>
+          <strong>
+            First to {summary.matchTargetWins} game{summary.matchTargetWins === 1 ? "" : "s"}
+          </strong>
+        </div>
+        <div className="game-complete-box-row">
+          <span>Game length</span>
+          <strong>{summary.nextGameTargetPoints} points</strong>
+        </div>
+      </section>
+      <section className="game-complete-box" aria-label="Current standings">
+        <div className="game-complete-box-title">Standings</div>
+        <div className="game-complete-score-rows">
+          <div className="game-complete-score-row game-complete-score-row-winner">
+            <span>{summary.winnerName}</span>
+            <strong>
+              {summary.winnerMatchWins} MP · {summary.winnerGamePoints} GP
+            </strong>
+          </div>
+          <div className="game-complete-score-row">
+            <span>{summary.loserName}</span>
+            <strong>
+              {summary.loserMatchWins} MP · {summary.loserGamePoints} GP
+            </strong>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary }) {
+  return (
+    <div className="between-games-result-grid">
+      <div className="between-games-outcome">
+        <p className="between-games-outcome-line">
+          <strong>{summary.winnerName}</strong>
+          {" win the match"}
+        </p>
+      </div>
+      <div className="match-complete-grid" aria-label="Final match score">
+        <div className="match-complete-team match-complete-team-winner">{summary.winnerName}</div>
+        <div className="match-complete-team">{summary.loserName}</div>
+        <div className="match-complete-score match-complete-score-winner">{summary.winnerMatchWins}</div>
+        <div className="match-complete-score">{summary.loserMatchWins}</div>
+      </div>
+      <div className="between-games-matchline">
+        Final game: {summary.finalGameWinnerPoints}-{summary.finalGameLoserPoints}
+        {summary.finalGameByForfeit ? " by forfeit." : "."}
+      </div>
+      <div className="between-games-matchline">
+        Match target: first to {summary.matchTargetWins} game{summary.matchTargetWins === 1 ? "" : "s"}.
+      </div>
+    </div>
+  );
+}
+
 function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
   if (!meldSet) {
     return <p className="panel-caption">No melds available.</p>;
   }
 
   return (
-    <div className="meld-popup-stack">
-      <div className="meld-summary-line">
+    <div className="meld-popup-stack meld-popup-player-block">
+      <div className="meld-detail-row">
         <span className="panel-caption">player</span>
+        <span className="meld-detail-separator" aria-hidden="true">
+          {" : "}
+        </span>
         <strong>{meldSet.playerName}</strong>
-        <span className="meld-points-chip">{meldSet.totalPoints}</span>
+        <span className="meld-detail-separator" aria-hidden="true">
+          {" : "}
+        </span>
+        <strong>{meldSet.totalPoints}</strong>
       </div>
       {meldSet.melds.map((meld) => (
         <div key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
-          <div className="meld-summary-line">
+          <div className="meld-detail-row">
             <span className="panel-caption">meld</span>
-            <strong>{meld.label}</strong>
-            <span className="meld-points-chip">{meld.points}</span>
+            <span className="meld-detail-separator" aria-hidden="true">
+              {" : "}
+            </span>
+            <strong>{formatMeldLabel(meld.label)}</strong>
           </div>
           <div className="meld-card-row">
             {meld.cards.map((card) => (
@@ -333,15 +453,22 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
 
   return (
     <div className="meld-popup-stack">
-      <div className="meld-summary-line">
+      <div className="meld-detail-row">
         <span className="panel-caption">team</span>
-        <strong>{meldWinner.teamName} took melds</strong>
+        <span className="meld-detail-separator" aria-hidden="true">
+          {" : "}
+        </span>
+        <strong>{meldWinner.teamName}</strong>
       </div>
       {meldWinner.players.map((meldSet) => (
         <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} />
       ))}
     </div>
   );
+}
+
+function formatMeldLabel(label: string) {
+  return label.toLowerCase();
 }
 
 interface TeamSettingsRowProps {

@@ -171,6 +171,29 @@ button {
   flex-wrap: wrap;
 }
 
+.score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.score-header .score-label {
+  min-width: 0;
+  justify-self: start;
+  text-align: left;
+}
+
+.score-header .trump-line {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .trump-suit-symbol {
   font-size: 0.9rem;
   line-height: 1;
@@ -1680,21 +1703,25 @@ button {
 .trump-controls .suit-choice-button {
   min-width: 0;
   width: 100%;
-  padding: 5px 3px;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 7px;
+  align-items: center;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .trump-controls .suit-choice-visual {
-  width: 24px;
-  height: 24px;
+  width: clamp(30px, 4vw, 48px);
+  height: clamp(30px, 4vw, 48px);
 }
 
 .trump-controls .suit-choice-visual img {
-  width: 16px;
-  height: 16px;
+  width: clamp(22px, 3vw, 36px);
+  height: clamp(22px, 3vw, 36px);
 }
 
 .trump-controls .suit-choice-label {
-  font-size: 0.64rem;
+  font-size: clamp(0.62rem, 1.4vw, 0.82rem);
 }
 
 .action-button {
@@ -2519,24 +2546,6 @@ button {
 
   .trump-controls {
     gap: 3px;
-  }
-
-  .trump-controls .suit-choice-button {
-    padding: 4px 2px;
-  }
-
-  .trump-controls .suit-choice-visual {
-    width: 22px;
-    height: 22px;
-  }
-
-  .trump-controls .suit-choice-visual img {
-    width: 14px;
-    height: 14px;
-  }
-
-  .trump-controls .suit-choice-label {
-    font-size: 0.58rem;
   }
 
   .table-middle-row {
@@ -3490,7 +3499,7 @@ button {
   align-self: stretch;
 }
 
-@media (orientation: portrait), (max-width: 920px) {
+@media (orientation: portrait) {
   :root {
     --compact-top-height: clamp(98px, 20vw, 132px);
     --compact-layout-gap: clamp(4px, 1vw, 7px);
@@ -3715,10 +3724,10 @@ button {
   }
 }
 
-@media (orientation: landscape) and (min-width: 921px) {
+@media (orientation: landscape) {
   :root {
-    --status-band-height: clamp(64px, 6vw, 84px);
-    --side-panel-width: clamp(88px, 10vw, 148px);
+    --status-band-height: clamp(56px, 6vw, 84px);
+    --side-panel-width: clamp(44px, 10vw, 148px);
     --north-panel-width: clamp(116px, 12vw, 182px);
     --match-data-width: clamp(126px, 14vw, 220px);
     --game-data-width: clamp(136px, 15vw, 240px);
@@ -3834,5 +3843,365 @@ button {
     max-width: 100%;
     justify-self: center;
     margin-bottom: var(--south-hand-lift);
+  }
+}
+
+/* Large landscape screens need a larger visual scale without affecting compact modes. */
+@media (orientation: landscape) and (min-width: 1280px) {
+  :root {
+    font-size: clamp(14px, 0.95vw, 20px);
+    --status-band-height: clamp(82px, 6.5vw, 124px);
+    --side-panel-width: clamp(150px, 11vw, 280px);
+    --north-panel-width: clamp(190px, 13vw, 330px);
+    --match-data-width: clamp(240px, 16vw, 440px);
+    --game-data-width: clamp(260px, 17vw, 480px);
+    --table-center-width: min(60vw, 1600px);
+    --trick-card-width: clamp(4.5rem, 5.4vw, 10rem);
+    --trick-card-height: clamp(6.4rem, 7.4vw, 13rem);
+    --trick-card-corner-size: clamp(0.9rem, 1.1vw, 1.35rem);
+    --trick-card-center-size: clamp(2rem, 2.7vw, 3.8rem);
+    --trick-offset-y: clamp(5.6rem, 7.5vh, 12rem);
+    --trick-offset-x: clamp(7.5rem, 11.5vw, 17rem);
+    --trick-entry-offset-y: clamp(8.5rem, 13vh, 18rem);
+    --trick-entry-offset-x: clamp(11rem, 17vw, 23rem);
+  }
+
+  .table-surface {
+    gap: clamp(8px, 0.8vw, 14px);
+  }
+
+  .table-top-row {
+    gap: clamp(10px, 0.9vw, 16px);
+    min-height: clamp(96px, 8.5vh, 176px);
+    padding-top: clamp(2px, 0.35vw, 6px);
+  }
+
+  .table-top-row > .seat-panel,
+  .table-top-row > .match-data-card,
+  .table-top-row > .game-data-card {
+    min-height: clamp(86px, 8vh, 164px);
+    padding: clamp(10px, 0.9vw, 18px) clamp(12px, 1.1vw, 22px);
+  }
+
+  .table-top-row .match-data-card .panel-caption,
+  .table-top-row .game-data-card .panel-caption {
+    font-size: clamp(0.68rem, 0.7vw, 0.96rem);
+  }
+
+  .table-top-row .game-data-card strong {
+    font-size: clamp(1rem, 1.25vw, 1.5rem);
+    line-height: 1.05;
+  }
+
+  .table-top-row .seat-panel strong,
+  .table-middle-row .seat-panel strong {
+    font-size: clamp(0.92rem, 1vw, 1.25rem);
+  }
+
+  .table-top-row .seat-panel small,
+  .table-middle-row .seat-panel small,
+  .table-middle-row .seat-status-line {
+    font-size: clamp(0.7rem, 0.72vw, 0.98rem);
+  }
+
+  .table-middle-row {
+    gap: clamp(10px, 1vw, 18px);
+  }
+
+  .table-middle-row > .seat-west,
+  .table-middle-row > .seat-east {
+    min-height: clamp(136px, 14vh, 230px);
+    padding: clamp(8px, 0.8vw, 14px);
+    gap: clamp(2px, 0.35vw, 5px);
+  }
+
+  .table-middle-row > .trick-pool-shell {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .table-middle-row > .trick-pool-shell > .trick-pool {
+    min-height: clamp(280px, 45vh, 680px);
+    padding: clamp(10px, 1vw, 18px);
+  }
+
+  .table-middle-row .trick-cards {
+    min-height: clamp(220px, 38vh, 600px);
+  }
+
+  .player-hand-area .card-fan-row {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: clamp(8px, 0.8vw, 16px);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .table-bottom-row {
+    --status-band-height: clamp(82px, 6.5vw, 124px);
+  }
+
+  .table-status-controls-band > .score-bar > .score-item {
+    padding: clamp(4px, 0.4vw, 7px) clamp(6px, 0.6vw, 11px);
+    align-content: start;
+  }
+
+  .table-status-controls-band .score-item strong {
+    font-size: clamp(1.04rem, 1.15vw, 1.5rem);
+    line-height: 1.05;
+  }
+
+  .table-status-controls-band .score-item small,
+  .table-status-controls-band .score-label {
+    font-size: clamp(0.72rem, 0.78vw, 1rem);
+  }
+
+  .table-status-controls-band .match-corner-button {
+    font-size: clamp(0.88rem, 0.95vw, 1.25rem);
+  }
+}
+
+/* Keep the three landscape header panels as one aligned band at every wide width. */
+@media (orientation: landscape) {
+  :root {
+    --landscape-top-band-height: clamp(60px, 10vh, 176px);
+  }
+
+  .table-top-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(clamp(84px, 12vw, 180px), 0.82fr)
+      minmax(0, 1fr);
+    grid-template-areas: "match north game";
+    grid-template-rows: var(--landscape-top-band-height);
+    grid-auto-rows: var(--landscape-top-band-height);
+    align-items: stretch;
+    gap: 6px;
+    min-height: var(--landscape-top-band-height);
+    padding: 2px var(--frame-box-inset) 0;
+  }
+
+  .table-top-row > .match-data-card,
+  .table-top-row > .seat-north,
+  .table-top-row > .game-data-card {
+    grid-row: 1;
+    align-self: stretch;
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .table-top-row > .match-data-card {
+    grid-area: match;
+  }
+
+  .table-top-row > .seat-north {
+    display: grid;
+    grid-area: north;
+  }
+
+  .table-top-row > .game-data-card {
+    grid-area: game;
+  }
+
+  .table-top-row > .seat-north {
+    align-content: center;
+    padding: clamp(10px, 1vw, 18px);
+    gap: clamp(3px, 0.35vw, 6px);
+  }
+
+  .table-top-row > .match-data-card,
+  .table-top-row > .game-data-card {
+    align-content: center;
+    padding: clamp(10px, 1vw, 18px) clamp(14px, 1.2vw, 24px);
+    gap: clamp(4px, 0.4vw, 7px);
+  }
+
+  .table-top-row > .game-data-card > .game-data-grid {
+    width: 100%;
+    justify-self: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(8px, 0.8vw, 14px);
+  }
+
+  .table-top-row > .game-data-card .game-data-section {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-top-row .seat-direction-label {
+    font-size: clamp(0.7rem, 0.78vw, 1rem);
+  }
+
+  .table-top-row .seat-panel strong {
+    font-size: clamp(1.05rem, 1.15vw, 1.5rem);
+    line-height: 1.08;
+  }
+
+  .table-top-row .seat-panel small,
+  .table-top-row .seat-status-line {
+    font-size: clamp(0.78rem, 0.82vw, 1.08rem);
+    line-height: 1.1;
+  }
+
+  .table-top-row .match-data-card .panel-caption,
+  .table-top-row .game-data-card .panel-caption {
+    font-size: clamp(0.72rem, 0.78vw, 1.04rem);
+    line-height: 1.1;
+  }
+
+  .table-top-row .data-label {
+    font-size: clamp(0.66rem, 0.7vw, 0.94rem);
+  }
+
+  .table-top-row .data-value {
+    font-size: clamp(0.78rem, 0.84vw, 1.12rem);
+    line-height: 1.05;
+  }
+
+  .table-top-row .game-data-card strong {
+    font-size: clamp(1.08rem, 1.3vw, 1.58rem);
+    line-height: 1.08;
+  }
+
+  .player-hand-area .hand-slot-empty::before {
+    content: "";
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 7.1;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .table-middle-row .trick-points-chip {
+    top: calc(100% - clamp(1.25rem, 3vh, 3rem));
+  }
+}
+
+.score-item > .score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.score-item > .score-header > .score-label {
+  justify-self: start;
+  text-align: left;
+}
+
+.score-item > .score-header > .trump-line {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (orientation: landscape) {
+  .trick-cards .playing-card-face {
+    width: calc(var(--trick-card-width) * 1.2);
+    height: calc(var(--trick-card-height) * 1.2);
+  }
+
+  .table-status-controls-band .score-item strong {
+    max-width: 100%;
+    font-size: clamp(1.2rem, 1.45vw, 1.9rem);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .table-status-controls-band .score-item small,
+  .table-status-controls-band .score-label {
+    font-size: clamp(0.82rem, 1vw, 1.2rem);
+  }
+
+  .table-status-controls-band .match-corner-button {
+    height: 70%;
+    align-self: center;
+  }
+}
+
+/* Keep the points popup centered over the playable table in both viewport modes. */
+@media (orientation: portrait), (orientation: landscape) {
+  .table-surface .table-middle-row .trick-points-chip {
+    left: 50%;
+    top: 50%;
+  }
+}
+
+/* Compact trump selection uses the same dense square rhythm as landscape. */
+@media (max-width: 920px) {
+  .action-overlay-trump {
+    padding: 4px;
+  }
+
+  .action-overlay-trump .action-popup {
+    width: min(430px, 100%);
+    max-width: 100%;
+    padding: 6px 8px;
+    gap: 5px;
+  }
+
+  .action-overlay-trump .action-popup-header {
+    gap: 2px;
+  }
+
+  .action-overlay-trump .action-popup-body {
+    gap: 5px;
+  }
+
+  .action-overlay-trump .trump-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .action-overlay-trump .trump-controls .suit-choice-button {
+    aspect-ratio: 1;
+    min-height: 0;
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  .action-overlay-trump .trump-controls .suit-choice-visual {
+    width: clamp(30px, 8vw, 42px);
+    height: clamp(30px, 8vw, 42px);
+  }
+
+  .action-overlay-trump .trump-controls .suit-choice-visual img {
+    width: clamp(22px, 6vw, 32px);
+    height: clamp(22px, 6vw, 32px);
+  }
+
+  .action-overlay-trump .trump-controls .suit-choice-label {
+    font-size: clamp(0.65rem, 2.2vw, 0.82rem);
+  }
+
+  .action-overlay-trump .trump-controls .suit-choice-skip-visual {
+    font-size: clamp(0.68rem, 2.4vw, 0.86rem);
+  }
+
+  .table-status-controls-band .score-item > .score-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-status-controls-band .score-item > .score-header > .score-label {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .table-status-controls-band .score-item > .score-header > .trump-line {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    text-align: right;
   }
 }

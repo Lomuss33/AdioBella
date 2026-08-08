@@ -13,18 +13,20 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
   return (
     <section className="score-bar">
       <div className="score-item score-prompt">
-        <span className="score-label">Status</span>
+        <div className="score-header">
+          <span className="score-label">Status</span>
+          <small className="trump-line">
+            trump{" "}
+            {trump ? (
+              <>
+                <span className={`trump-suit-symbol ${trump.className}`}>{trump.symbol}</span> {trump.label}
+              </>
+            ) : (
+              "pending"
+            )}
+          </small>
+        </div>
         <strong>{statusMessage}</strong>
-        <small className="trump-line">
-          trump{" "}
-          {trump ? (
-            <>
-              <span className={`trump-suit-symbol ${trump.className}`}>{trump.symbol}</span> {trump.label}
-            </>
-          ) : (
-            "pending"
-          )}
-        </small>
         {errorMessage ? <small className="error-line">{errorMessage}</small> : null}
       </div>
     </section>

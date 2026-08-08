@@ -11,16 +11,38 @@ function GameDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
         <section className="game-data-section">
           <span className="panel-caption">enemy</span>
           <strong>{score?.teamTwoName ?? "Them"}</strong>
-          <small>wins {score?.teamTwoMatchScore ?? 0}/{matchTargetWins}</small>
-          <small>points {score?.teamTwoGamePoints ?? 0}/{gameTargetPoints}</small>
-          <small>melds {score?.teamTwoMeldPoints ?? 0}</small>
+          <div className="data-list">
+            <div className="data-row">
+              <span className="data-label">Wins</span>
+              <span className="data-value">{score?.teamTwoMatchScore ?? 0}/{matchTargetWins}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Points</span>
+              <span className="data-value">{score?.teamTwoGamePoints ?? 0}/{gameTargetPoints}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Melds</span>
+              <span className="data-value">{score?.teamTwoMeldPoints ?? 0}</span>
+            </div>
+          </div>
         </section>
         <section className="game-data-section">
           <span className="panel-caption">your team</span>
           <strong>{score?.teamOneName ?? "Us"}</strong>
-          <small>wins {score?.teamOneMatchScore ?? 0}/{matchTargetWins}</small>
-          <small>points {score?.teamOneGamePoints ?? 0}/{gameTargetPoints}</small>
-          <small>melds {score?.teamOneMeldPoints ?? 0}</small>
+          <div className="data-list">
+            <div className="data-row">
+              <span className="data-label">Wins</span>
+              <span className="data-value">{score?.teamOneMatchScore ?? 0}/{matchTargetWins}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Points</span>
+              <span className="data-value">{score?.teamOneGamePoints ?? 0}/{gameTargetPoints}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Melds</span>
+              <span className="data-value">{score?.teamOneMeldPoints ?? 0}</span>
+            </div>
+          </div>
         </section>
       </div>
     </section>

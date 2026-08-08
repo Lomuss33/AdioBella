@@ -17,21 +17,51 @@ function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
       <div className="match-data-layout">
         <section className="match-data-section">
           <span className="panel-caption">match</span>
-          <small>mode: {difficultyLabel}</small>
-          <small>match: first to {matchTargetWins}</small>
-          <small>race: {gameTargetPoints}</small>
-          <small>game: #{gameNumber}</small>
-          <small>swing: {gameGapPercent}%</small>
+          <div className="data-list">
+            <div className="data-row">
+              <span className="data-label">Mode</span>
+              <span className="data-value">{difficultyLabel}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Match</span>
+              <span className="data-value">first to {matchTargetWins}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Race</span>
+              <span className="data-value">{gameTargetPoints}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Game</span>
+              <span className="data-value">#{gameNumber}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">Swing</span>
+              <span className="data-value">{gameGapPercent}%</span>
+            </div>
+          </div>
         </section>
         <section className="match-data-zvanje">
           <span className="panel-caption">melds</span>
-          {melds.length === 0 ? <small>melds: none this game</small> : null}
-          {meldTeamName ? <small>team: {meldTeamName} took melds</small> : null}
-          {melds.map((meld) => (
-            <small key={`${meld.playerId}-${meld.labels.join("-")}-${meld.belaPoints}`}>
-              {formatMeld(meld)}
-            </small>
-          ))}
+          <div className="data-list">
+            {melds.length === 0 ? (
+              <div className="data-row">
+                <span className="data-label">Melds</span>
+                <span className="data-value">none this game</span>
+              </div>
+            ) : null}
+            {meldTeamName ? (
+              <div className="data-row">
+                <span className="data-label">Team</span>
+                <span className="data-value">{meldTeamName} took melds</span>
+              </div>
+            ) : null}
+            {melds.map((meld) => (
+              <div className="data-row" key={`${meld.playerId}-${meld.labels.join("-")}-${meld.belaPoints}`}>
+                <span className="data-label">Meld</span>
+                <span className="data-value">{formatMeld(meld)}</span>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </section>

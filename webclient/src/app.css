@@ -18,6 +18,7 @@
   --trick-entry-offset-y: 7.8rem;
   --trick-entry-offset-x: 14.6rem;
   --trick-center-x: 50%;
+  --table-stage-width: 100%;
   --page-glow: rgba(213, 182, 101, 0.22);
   --page-top: #10231b;
   --page-bottom: #07120d;
@@ -109,7 +110,7 @@ button {
 
 .table-stage {
   position: relative;
-  width: min(100%, 1000px);
+  width: min(100%, var(--table-stage-width));
   margin-inline: auto;
   display: grid;
   align-content: start;
@@ -119,7 +120,7 @@ button {
 .after-table {
   display: grid;
   gap: 0;
-  width: min(100%, 1000px);
+  width: min(100%, var(--table-stage-width));
   margin-inline: auto;
   margin-top: -1px;
   scroll-snap-align: start;
@@ -136,8 +137,7 @@ button {
 
 .score-item,
 .action-bar,
-.terminal-panel,
-.match-corner-controls {
+.terminal-panel {
   border: 1px solid rgba(246, 237, 216, 0.14);
   border-radius: 16px;
   background: rgba(8, 20, 15, 0.86);
@@ -382,18 +382,34 @@ button {
   right: var(--frame-box-inset);
   bottom: var(--frame-box-inset);
   display: grid;
-  gap: 8px;
-  width: min(100%, 176px);
-  padding: 10px 12px;
+  gap: 3px;
+  width: 118px;
+  padding: 0;
   z-index: 3;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  align-content: start;
+  grid-auto-rows: 29px;
 }
 
 .match-corner-button {
   width: 100%;
-  min-height: 33px;
+  min-width: 0;
+  height: 29px;
+  min-height: 29px;
+  padding: 0 9px;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   transition:
     transform 150ms ease,
     box-shadow 150ms ease,
@@ -434,13 +450,15 @@ button {
 
 .match-data-card,
 .game-data-card {
-  padding: 8px 8px 9px;
-  border-radius: 14px;
-  border: 1px solid rgba(246, 237, 216, 0.14);
-  background: rgba(6, 17, 12, 0.82);
+  padding: 6px 10px 7px;
+  border-radius: 15px;
+  border: 1px solid rgba(214, 186, 116, 0.22);
+  background:
+    linear-gradient(135deg, rgba(214, 186, 116, 0.08), transparent 44%),
+    rgba(6, 17, 12, 0.88);
   display: grid;
   justify-items: start;
-  gap: 6px;
+  gap: 2px;
   text-align: left;
   container-type: inline-size;
 }
@@ -462,41 +480,78 @@ button {
 .match-data-section,
 .game-data-section {
   display: grid;
-  gap: 3px;
-  padding-bottom: 6px;
+  min-width: 0;
+  gap: 2px;
+  padding-bottom: 0;
 }
 
 .match-data-zvanje {
   display: grid;
-  gap: 3px;
-  padding-left: 8px;
-  border-left: 1px solid rgba(246, 237, 216, 0.12);
+  min-width: 0;
+  gap: 2px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(214, 186, 116, 0.24);
 }
 
-.match-data-card small,
-.game-data-card small {
+.data-list {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.data-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  min-width: 0;
+  gap: 6px;
+  line-height: 0.95;
+}
+
+.data-label {
+  color: #91a894;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-value {
   max-width: 100%;
-  font-size: clamp(0.58rem, 4.9cqi, 0.7rem);
-  line-height: 1.14;
+  min-width: 0;
+  justify-self: end;
+  color: #f3ead4;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 0.95;
+  text-align: right;
   overflow-wrap: anywhere;
 }
 
-.match-data-card strong,
-.game-data-card strong {
-  max-width: 100%;
-  font-size: clamp(0.78rem, 6.6cqi, 0.92rem);
-  line-height: 1.08;
-  font-family: Georgia, "Times New Roman", serif;
-  overflow-wrap: anywhere;
+.match-data-zvanje .data-value {
+  color: #e0c77f;
 }
 
 .match-data-card .panel-caption,
 .game-data-card .panel-caption {
-  justify-self: center;
-  text-align: center;
+  justify-self: start;
+  color: #d6ba74;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
   max-width: 100%;
-  font-size: clamp(0.6rem, 5.1cqi, 0.7rem);
-  line-height: 1.08;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.game-data-card strong {
+  max-width: 100%;
+  color: #f7efd9;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.8rem;
+  line-height: 0.95;
   overflow-wrap: anywhere;
 }
 
@@ -2089,6 +2144,8 @@ button {
     justify-items: center;
     text-align: center;
     gap: 3px;
+    align-content: start;
+    height: 100%;
   }
 
   .score-item strong {
@@ -2163,12 +2220,13 @@ button {
   }
 
   .table-bottom-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 2.35fr) minmax(0, 0.95fr);
     grid-template-areas:
-      "hand"
-      "status";
+      "hand hand"
+      "status controls";
     justify-items: stretch;
-    gap: 5px;
+    align-items: start;
+    gap: 4px 6px;
     min-height: 0;
     width: 100%;
     justify-self: stretch;
@@ -2183,12 +2241,41 @@ button {
   }
 
   .match-corner-controls {
+    grid-area: controls;
     position: static;
     justify-self: end;
-    align-self: end;
-    width: min(100%, 196px);
-    margin-right: var(--frame-box-inset);
-    margin-bottom: var(--frame-box-inset);
+    align-self: start;
+    width: 118px;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    gap: 3px;
+    align-content: start;
+    grid-auto-rows: 29px;
+  }
+
+  .match-corner-button {
+    width: 100%;
+    min-width: 0;
+    height: 29px;
+    min-height: 29px;
+    padding: 0 9px;
+    font-size: 0.76rem;
+    line-height: 1;
+    border-radius: 10px;
+    justify-self: stretch;
+  }
+
+  .match-corner-button-warning {
+    border-color: rgba(244, 218, 157, 0.82);
+    color: #2a1b04;
+    background: linear-gradient(180deg, #f7e39f 0%, #d7aa29 100%);
+  }
+
+  .match-corner-button-danger {
+    border-color: rgba(255, 170, 160, 0.78);
+    color: #340905;
+    background: linear-gradient(180deg, #f0b8ae 0%, #bf4a41 100%);
   }
 
   .table-top-row {
@@ -2456,6 +2543,7 @@ button {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     justify-items: stretch;
+    align-items: start;
     gap: 5px;
     width: 100%;
     justify-self: stretch;
@@ -2476,9 +2564,11 @@ button {
   .trick-pool-shell {
     grid-column: 1;
     grid-row: 1;
-    min-height: clamp(280px, 38dvh, 390px);
+    min-height: 0;
     width: 100%;
     justify-self: stretch;
+    align-self: start;
+    margin-bottom: 0;
   }
 
   .seat-east {
@@ -2509,6 +2599,12 @@ button {
 
   .compact-mobile-player-row-team {
     grid-row: 4;
+    align-items: start;
+    align-content: start;
+  }
+
+  .compact-mobile-player-row-team .seat-panel {
+    align-self: start;
   }
 
   .compact-mobile-player-row {
@@ -2521,12 +2617,13 @@ button {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    align-items: center;
+    align-items: start;
+    align-content: start;
     width: 100%;
     min-width: 0;
-    min-height: 92px;
-    padding: 7px 8px 8px;
-    gap: 4px;
+    min-height: 0;
+    padding: 3px 6px 4px;
+    gap: 2px;
     justify-self: stretch;
   }
 
@@ -2544,8 +2641,9 @@ button {
 
   .compact-mobile-player-row .seat-main-copy {
     display: grid;
-    gap: 3px;
+    gap: 1px;
     min-width: 0;
+    align-self: start;
     text-align: center;
   }
 
@@ -2556,8 +2654,8 @@ button {
   }
 
   .compact-mobile-player-row .seat-panel strong {
-    font-size: 0.98rem;
-    line-height: 1.08;
+    font-size: 0.88rem;
+    line-height: 1.02;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2565,8 +2663,8 @@ button {
 
   .compact-mobile-player-row .seat-panel small {
     display: inline-block;
-    font-size: 0.7rem;
-    line-height: 1.08;
+    font-size: 0.62rem;
+    line-height: 1.02;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2575,22 +2673,22 @@ button {
   .compact-mobile-player-row .seat-badges {
     justify-content: center;
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
     align-self: center;
   }
 
   .compact-mobile-player-row .seat-badge {
-    min-width: 4.5rem;
-    padding: 3px 6px;
-    font-size: 0.54rem;
-    line-height: 1.08;
+    min-width: 4rem;
+    padding: 1px 5px;
+    font-size: 0.5rem;
+    line-height: 1.02;
     flex: 0 0 auto;
   }
 
   .compact-mobile-player-row .seat-badge-placeholder {
-    min-width: 1rem;
-    padding: 1px 2px;
+    min-width: 0.8rem;
+    padding: 0 2px;
   }
 
   .south-inline-info {
@@ -2598,16 +2696,16 @@ button {
   }
 
   .trick-cards {
-    min-height: clamp(210px, 28dvh, 280px);
+    min-height: clamp(178px, 24dvh, 232px);
   }
 
   .trick-pool {
-    min-height: clamp(238px, 33dvh, 338px);
-    padding: 10px 9px;
+    min-height: clamp(206px, 28dvh, 282px);
+    padding: 8px 9px;
   }
 
   .trick-points-chip {
-    top: calc(100% + 0.82rem);
+    top: calc(100% + 1.55rem);
   }
 
   .score-bar,
@@ -2618,11 +2716,38 @@ button {
 
   .score-bar {
     position: static;
+    grid-area: status;
     justify-self: stretch;
+    align-self: stretch;
+    height: 100%;
+    width: 100%;
+    flex-basis: auto;
   }
 
   .table-bottom-row {
+    grid-template-columns: minmax(0, 2.35fr) minmax(0, 0.95fr);
+    grid-template-areas:
+      "hand hand"
+      "status controls";
+    justify-items: stretch;
+    align-items: start;
+    gap: 4px 6px;
+    min-height: 0;
+    width: 100%;
+    justify-self: stretch;
+    padding-inline: var(--frame-box-inset);
     grid-row: 5;
+  }
+
+  .match-corner-controls {
+    grid-area: controls;
+    position: static;
+    justify-self: end;
+    align-self: start;
+    width: 118px;
+    padding: 0;
+    gap: 3px;
+    grid-auto-rows: 29px;
   }
 }
 
@@ -2710,6 +2835,7 @@ button {
     grid-row: auto;
     width: min(100%, var(--table-center-width));
     justify-self: center;
+    margin-bottom: 0;
   }
 
   .seat-east {
@@ -2789,5 +2915,434 @@ button {
 
   .player-hand-area .card-fan-row {
     gap: 3px;
+  }
+}
+
+@media (min-width: 1440px) and (min-height: 900px) and (orientation: landscape) {
+  :root {
+    --table-stage-width: 100%;
+    --frame-gold-inset: 9px;
+    --frame-box-gap: 7px;
+    --south-hand-lift: 12px;
+    --side-panel-width: 138px;
+    --north-panel-width: 168px;
+    --match-data-width: 184px;
+    --game-data-width: 198px;
+    --table-center-width: 620px;
+    --trick-card-width: clamp(3.25rem, 2.95vw, 4.95rem);
+    --trick-card-height: clamp(4.65rem, 4.1vw, 6.95rem);
+    --trick-card-corner-size: 0.82rem;
+    --trick-card-center-size: 1.82rem;
+    --trick-offset-y: 4.15rem;
+    --trick-offset-x: 9.85rem;
+    --trick-entry-offset-y: 8.45rem;
+    --trick-entry-offset-x: 15.2rem;
+  }
+
+  .table-surface {
+    gap: 8px;
+  }
+
+  .table-top-row {
+    gap: 10px;
+    min-height: 72px;
+  }
+
+  .table-middle-row {
+    gap: 14px;
+  }
+
+  .trick-pool {
+    min-height: 208px;
+    padding: 8px;
+  }
+
+  .table-bottom-row {
+    min-height: 144px;
+  }
+
+  .player-hand-area {
+    margin-bottom: 12px;
+  }
+
+  .player-hand-area .card-fan-row {
+    grid-template-columns: repeat(8, minmax(0, clamp(4.25rem, 4.9vw, 5.45rem)));
+    gap: 10px;
+  }
+
+  .match-corner-controls {
+    width: 118px;
+    padding: 0;
+  }
+
+  .score-bar {
+    width: min(100%, clamp(164px, 12vw, 210px));
+  }
+
+  .action-popup {
+    width: min(760px, calc(100vw - 28px));
+    max-width: calc(100vw - 28px);
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .start-popup-content {
+    width: min(100%, 620px);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 2200px) and (min-height: 1100px) and (orientation: landscape) {
+  :root {
+    --table-stage-width: 100%;
+    --frame-gold-inset: 10px;
+    --frame-box-gap: 8px;
+    --south-hand-lift: 14px;
+    --side-panel-width: 148px;
+    --north-panel-width: 182px;
+    --match-data-width: 200px;
+    --game-data-width: 214px;
+    --table-center-width: 760px;
+    --trick-card-width: clamp(3.45rem, 2.75vw, 5.35rem);
+    --trick-card-height: clamp(4.85rem, 4vw, 7.35rem);
+    --trick-card-corner-size: 0.86rem;
+    --trick-card-center-size: 1.96rem;
+    --trick-offset-y: 4.55rem;
+    --trick-offset-x: 10.85rem;
+    --trick-entry-offset-y: 9.3rem;
+    --trick-entry-offset-x: 16.8rem;
+  }
+
+  .table-surface {
+    gap: 10px;
+  }
+
+  .table-top-row {
+    gap: 12px;
+    min-height: 76px;
+  }
+
+  .table-middle-row {
+    gap: 16px;
+  }
+
+  .trick-pool {
+    min-height: 232px;
+    padding: 10px;
+  }
+
+  .table-bottom-row {
+    min-height: 158px;
+  }
+
+  .player-hand-area {
+    margin-bottom: 14px;
+  }
+
+  .player-hand-area .card-fan-row {
+    grid-template-columns: repeat(8, minmax(0, clamp(4.5rem, 4.5vw, 6rem)));
+    gap: 12px;
+  }
+
+  .match-corner-controls {
+    width: 118px;
+    padding: 0;
+  }
+
+  .score-bar {
+    width: min(100%, clamp(176px, 11vw, 226px));
+  }
+
+  .action-popup {
+    width: min(820px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .start-popup-content {
+    width: min(100%, 680px);
+    gap: 12px;
+  }
+}
+
+@media (min-width: 1280px) and (min-height: 720px) and (orientation: landscape) {
+  :root {
+    --table-ui-scale: clamp(1.5, calc((100svh - 30px) / 460px), 2);
+    --table-stage-width: 100%;
+    --match-data-width: clamp(188px, 12vw, 240px);
+    --game-data-width: clamp(200px, 13vw, 252px);
+  }
+
+  .table-stage,
+  .after-table {
+    zoom: var(--table-ui-scale);
+  }
+
+  /* Zoom does not reduce viewport units, so preserve a one-screen playfield. */
+  .table-panel,
+  .table-surface {
+    min-height: calc((100svh - 30px) / var(--table-ui-scale));
+  }
+
+  .table-bottom-row {
+    grid-template-columns: minmax(136px, 1fr) minmax(0, var(--table-center-width)) minmax(142px, 1fr);
+    grid-template-areas: "status hand controls";
+    align-items: end;
+    column-gap: clamp(8px, 1vw, 16px);
+    min-height: 132px;
+    padding-inline: 0;
+  }
+
+  .player-hand-area {
+    grid-area: hand;
+    width: 100%;
+    max-width: var(--table-center-width);
+  }
+
+  .score-bar {
+    position: static;
+    grid-area: status;
+    justify-self: start;
+    align-self: end;
+    width: min(100%, 136px);
+    padding: 8px 9px;
+    gap: 5px;
+  }
+
+  .score-item {
+    min-height: 88px;
+    padding: 8px 9px;
+    gap: 2px;
+  }
+
+  .score-item strong {
+    font-size: 0.78rem;
+    line-height: 1.12;
+  }
+
+  .score-item small,
+  .score-item .score-label {
+    font-size: 0.58rem;
+    line-height: 1.12;
+  }
+
+  .match-corner-controls {
+    position: static;
+    grid-area: controls;
+    justify-self: end;
+    align-self: start;
+    width: 118px;
+    padding: 0;
+    gap: 3px;
+    align-content: start;
+    grid-auto-rows: 29px;
+  }
+
+  .match-corner-button {
+    width: 100%;
+    min-width: 0;
+    height: 29px;
+    min-height: 29px;
+    padding: 0 9px;
+    border-radius: 10px;
+    font-size: 0.76rem;
+    line-height: 1;
+    justify-self: stretch;
+  }
+
+  .match-corner-button-warning {
+    border-color: rgba(244, 218, 157, 0.82);
+    color: #2a1b04;
+    background: linear-gradient(180deg, #f7e39f 0%, #d7aa29 100%);
+  }
+
+  .match-corner-button-danger {
+    border-color: rgba(255, 170, 160, 0.78);
+    color: #340905;
+    background: linear-gradient(180deg, #f0b8ae 0%, #bf4a41 100%);
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .app-shell {
+    padding: 4px;
+  }
+
+  .table-surface {
+    padding: 6px;
+  }
+
+  .table-top-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 130px;
+    grid-auto-rows: 130px;
+    gap: 6px;
+    padding: 6px 4px 0;
+  }
+
+  .match-data-card,
+  .game-data-card {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .match-data-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    grid-template-rows: 1fr;
+    gap: 8px;
+    height: 100%;
+  }
+
+  .game-data-card .game-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+    gap: 8px;
+    height: 100%;
+  }
+
+  .match-data-section,
+  .game-data-section {
+    justify-items: start;
+    align-content: start;
+    gap: 4px;
+    padding: 0;
+    text-align: left;
+  }
+
+  .match-data-zvanje {
+    padding-top: 0;
+    padding-left: 8px;
+    border-top: 0;
+    border-left: 1px solid rgba(214, 186, 116, 0.24);
+    overflow: hidden;
+  }
+
+  .data-list {
+    width: 100%;
+    gap: 3px;
+  }
+
+  .data-row {
+    gap: 5px;
+    line-height: 1.05;
+  }
+
+  .data-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.08em;
+  }
+
+  .data-value {
+    font-size: 0.68rem;
+    line-height: 1.05;
+  }
+
+  .match-data-card .panel-caption,
+  .game-data-card .panel-caption {
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+  }
+
+  .game-data-card strong {
+    font-size: 0.94rem;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 920px) and (orientation: landscape) {
+  .app-shell {
+    padding: 4px;
+  }
+
+  .table-surface {
+    padding: 6px;
+  }
+
+  .table-top-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 104px;
+    grid-auto-rows: 104px;
+    gap: 6px;
+    padding: 6px 4px 0;
+  }
+
+  .table-top-row > .seat-north {
+    display: none;
+  }
+
+  .match-data-card,
+  .game-data-card {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 7px 9px;
+    gap: 3px;
+    overflow: hidden;
+  }
+
+  .match-data-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    grid-template-rows: 1fr;
+    gap: 7px;
+    height: 100%;
+  }
+
+  .game-data-card .game-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+    gap: 7px;
+    height: 100%;
+  }
+
+  .match-data-section,
+  .game-data-section {
+    justify-items: start;
+    align-content: start;
+    gap: 2px;
+    padding: 0;
+    text-align: left;
+  }
+
+  .match-data-zvanje {
+    padding-top: 0;
+    padding-left: 7px;
+    border-top: 0;
+    border-left: 1px solid rgba(214, 186, 116, 0.24);
+  }
+
+  .data-list {
+    width: 100%;
+    gap: 2px;
+  }
+
+  .data-row {
+    gap: 4px;
+    line-height: 1;
+  }
+
+  .data-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+
+  .data-value {
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  .match-data-card .panel-caption,
+  .game-data-card .panel-caption {
+    font-size: 0.56rem;
+    letter-spacing: 0.15em;
+  }
+
+  .game-data-card strong {
+    font-size: 0.84rem;
+    line-height: 1;
   }
 }

@@ -105,6 +105,12 @@ function TableLayout({
         </div>
         <div className="table-bottom-row">
           <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
+          <MatchCornerControls
+            canForfeitGame={canForfeitGame}
+            canQuitMatch={canQuitMatch}
+            onForfeitGame={onForfeitGame}
+            onQuitMatch={onQuitMatch}
+          />
           <PlayerHand
             player={playersBySeat.SOUTH}
             pendingType={snapshot?.pendingAction.type}
@@ -117,12 +123,6 @@ function TableLayout({
             onPlayCard={onPlayCard}
           />
         </div>
-        <MatchCornerControls
-          canForfeitGame={canForfeitGame}
-          canQuitMatch={canQuitMatch}
-          onForfeitGame={onForfeitGame}
-          onQuitMatch={onQuitMatch}
-        />
       </div>
     </section>
   );

@@ -104,13 +104,6 @@ function TableLayout({
           />
         </div>
         <div className="table-bottom-row">
-          <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
-          <MatchCornerControls
-            canForfeitGame={canForfeitGame}
-            canQuitMatch={canQuitMatch}
-            onForfeitGame={onForfeitGame}
-            onQuitMatch={onQuitMatch}
-          />
           <PlayerHand
             player={playersBySeat.SOUTH}
             pendingType={snapshot?.pendingAction.type}
@@ -122,6 +115,15 @@ function TableLayout({
             showTrumpCaller={declarerSeat === "SOUTH"}
             onPlayCard={onPlayCard}
           />
+          <div className="table-status-controls-band">
+            <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
+            <MatchCornerControls
+              canForfeitGame={canForfeitGame}
+              canQuitMatch={canQuitMatch}
+              onForfeitGame={onForfeitGame}
+              onQuitMatch={onQuitMatch}
+            />
+          </div>
         </div>
       </div>
     </section>

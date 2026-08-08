@@ -2,6 +2,7 @@
   position: relative;
   width: clamp(4rem, 5.4vw, 4.7rem);
   height: clamp(5.75rem, 7.5vw, 6.7rem);
+  container-type: inline-size;
   border-radius: 0.68rem;
   border: 1px solid rgba(22, 31, 19, 0.18);
   background: linear-gradient(180deg, #fffdfa 0%, #f4ecdf 100%);
@@ -66,6 +67,31 @@
   background:
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.14), transparent 42%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+@supports (font-size: 1cqw) {
+  .playing-card-corner {
+    font-size: 24cqw;
+  }
+
+  .playing-card-corner-top {
+    top: 9.5cqw;
+    left: 10.75cqw;
+  }
+
+  .playing-card-corner-bottom {
+    right: 10.75cqw;
+    bottom: 9.5cqw;
+  }
+
+  .playing-card-center {
+    font-size: 51cqw;
+  }
+
+  .playing-card-back-mark {
+    inset: 14.5cqw;
+    border-radius: 14.5cqw;
+  }
 }
 
 .playing-card-shell.winning-card .playing-card-face {

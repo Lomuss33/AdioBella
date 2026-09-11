@@ -45,7 +45,7 @@ function PlayerHand({
   });
 
   return (
-    <div className="player-hand-area">
+    <div className="player-hand-area" aria-label="Your hand">
       <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
         <div className="south-inline-status-row">
           <span className="south-inline-side south-inline-left">
@@ -68,7 +68,7 @@ function PlayerHand({
         <div className="south-inline-main">
           <span className="south-inline-seat">{player.seat}</span>
           <span className="south-inline-separator">:</span>
-          <strong>{player.name}</strong>
+          <strong title={player.name}>{player.name}</strong>
           <span className="south-inline-separator">:</span>
           <span>{player.team}</span>
         </div>
@@ -76,7 +76,7 @@ function PlayerHand({
       <div className="card-fan-row" data-card-count={visibleCards.length}>
         {slots.map((slot, slotIndex) =>
           slot && slot.card ? (
-            <div key={`slot-${slotIndex}-${slot.card.label}`} className="hand-slot">
+            <div key={`card-${slot.card.suit}-${slot.card.rank}-${slot.card.label}`} className="hand-slot">
               <PlayingCard
                 card={slot.card}
                 disabled={!slot.card.playable || pendingType !== "PLAY_CARD" || locked}

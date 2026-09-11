@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type {
   CardView,
   GameCompleteSummary,
@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
+import { usePopupDialog } from "../lib/usePopupDialog";
 
 interface ActionPanelProps {
   pendingAction?: PendingAction;
@@ -67,6 +68,14 @@ function ActionPanel({
   const isMatchComplete = matchCompleteSummary !== null;
   const isBootLoading = isStart && startScreenPhase === "boot-loading";
   const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
+  const dialogRef = usePopupDialog(isPopupVisible);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isPopupVisible) return;
+    contentRef.current?.scrollTo?.(0, 0);
+    contentRef.current?.focus({ preventScroll: true });
+  }, [isPopupVisible, isBootLoading, pendingAction?.type, isBelaChoice, isMatchComplete]);
 
   if (!isPopupVisible) {
     return null;
@@ -84,7 +93,7 @@ function ActionPanel({
           ? "Melds"
           : "Bela";
   const subtitle = isStart
-    ? "Set the table, the pace, and the people before the first deal."
+    ? "Your table. Your match."
     : isMatchComplete
       ? matchCompleteSubtitle(matchCompleteSummary)
     : isNextGame
@@ -98,20 +107,19 @@ function ActionPanel({
             : "Call Bela with this card or play it quietly.";
 
   return (
-    <div
-      className={`action-overlay ${
-        isTrumpChoice ? "action-overlay-trump" : isNextGame || isMatchComplete ? "action-overlay-next-game" : "action-overlay-start"
-      }`}
+    <dialog
+      ref={dialogRef}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""}`}
+      aria-label={title}
+      aria-modal="true"
+      onCancel={(event) => event.preventDefault()}
     >
       <div
         className={
           isBootLoading
-            ? "action-popup-loading"
-            : `action-popup ${isStart ? "action-popup-start" : ""}`
+            ? "popup-card popup-card-loading"
+            : "popup-card"
         }
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
       >
         {isBootLoading ? (
           <div className="start-loading-screen" aria-label="Loading table" role="status">
@@ -123,18 +131,19 @@ function ActionPanel({
           </div>
         ) : (
           <>
-            <div className={isStart ? "start-popup-content" : ""}>
+            <div ref={contentRef} tabIndex={-1} className="popup-content">
               <div className="action-popup-header action-popup-header-start">
-                <span className="action-popup-ornament" aria-hidden="true" />
+                <div className="popup-eyebrow"><span aria-hidden="true">♠</span> BELOT <span aria-hidden="true">♦</span></div>
                 <h2 className="action-popup-title">{title}</h2>
                 <p className="action-popup-subtitle">{subtitle}</p>
                 <span className="action-popup-ornament" aria-hidden="true" />
-                {errorMessage ? <p className="error-line">{errorMessage}</p> : null}
+                {errorMessage ? <p className="error-line" role="alert">{errorMessage}</p> : null}
               </div>
               {isStart ? (
                 <div className="action-popup-body">
                   <div className="team-settings-grid">
                     <TeamSettingsRow
+                      side="your"
                       heading="Us"
                       teamLabel="your team"
                       teamValue={teamNames.yourTeam}
@@ -147,6 +156,7 @@ function ActionPanel({
                       onSecondPlayerChange={(value) => onPlayerNameChange("NORTH", value)}
                     />
                     <TeamSettingsRow
+                      side="opponent"
                       heading="Them"
                       teamLabel="enemy team"
                       teamValue={teamNames.enemyTeam}
@@ -168,6 +178,7 @@ function ActionPanel({
                           type="button"
                           className={`setting-pill ${gameSettings.matchTargetWins === value ? "selected" : ""}`}
                           onClick={() => onGameSettingsChange({ matchTargetWins: value })}
+                          aria-pressed={gameSettings.matchTargetWins === value}
                         >
                           first to {value}
                         </button>
@@ -184,6 +195,7 @@ function ActionPanel({
                           type="button"
                           className={`setting-pill ${gameSettings.gameLength === option.value ? "selected" : ""}`}
                           onClick={() => onGameSettingsChange({ gameLength: option.value })}
+                          aria-pressed={gameSettings.gameLength === option.value}
                         >
                           {option.label}
                         </button>
@@ -203,6 +215,7 @@ function ActionPanel({
                           type="button"
                           className={`setting-pill setting-pill-theme setting-pill-theme-${theme.value.toLowerCase()} ${gameSettings.tableTheme === theme.value ? "selected" : ""}`}
                           onClick={() => onGameSettingsChange({ tableTheme: theme.value })}
+                          aria-pressed={gameSettings.tableTheme === theme.value}
                         >
                           {theme.label}
                         </button>
@@ -218,16 +231,12 @@ function ActionPanel({
                           type="button"
                           className={`setting-pill setting-pill-difficulty setting-pill-difficulty-${mode.toLowerCase()} ${gameSettings.difficulty === mode ? "selected" : ""}`}
                           onClick={() => onGameSettingsChange({ difficulty: mode })}
+                          aria-pressed={gameSettings.difficulty === mode}
                         >
                           {mode.toLowerCase()}
                         </button>
                       ))}
                     </SettingGroup>
-                    <div className="action-controls action-controls-start">
-                      <button type="button" className="action-button action-button-primary" onClick={onStart}>
-                        Start the match
-                      </button>
-                    </div>
                   </div>
                 </div>
               ) : null}
@@ -244,7 +253,7 @@ function ActionPanel({
               {isBelaChoice ? (
                 <div className="action-popup-body meld-popup-body bela-popup-body">
                   <div className="meld-card-row meld-card-row-single">
-                    <PlayingCard card={pendingBelaChoiceCard} />
+                    <PlayingCard card={pendingBelaChoiceCard} disabled />
                   </div>
                 </div>
               ) : null}
@@ -260,7 +269,12 @@ function ActionPanel({
                 </div>
               ) : null}
             </div>
-            <div className={`action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
+            <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
+              {isStart ? (
+                <button type="button" className="action-button action-button-primary" onClick={onStart}>
+                  Start the match <span aria-hidden="true">→</span>
+                </button>
+              ) : null}
               {isMatchComplete ? (
                 <>
                   <button type="button" className="action-button" onClick={onOpenSettingsMenu}>
@@ -325,7 +339,7 @@ function ActionPanel({
           </>
         )}
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -437,7 +451,7 @@ function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
           </div>
           <div className="meld-card-row">
             {meld.cards.map((card) => (
-              <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} />
+              <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
             ))}
           </div>
         </div>
@@ -472,6 +486,7 @@ function formatMeldLabel(label: string) {
 }
 
 interface TeamSettingsRowProps {
+  side: "your" | "opponent";
   heading: string;
   teamLabel: string;
   teamValue: string;
@@ -485,6 +500,7 @@ interface TeamSettingsRowProps {
 }
 
 function TeamSettingsRow({
+  side,
   heading,
   teamLabel,
   teamValue,
@@ -497,7 +513,7 @@ function TeamSettingsRow({
   onSecondPlayerChange
 }: TeamSettingsRowProps) {
   return (
-    <section className="team-settings-row">
+    <section className="team-settings-row" data-team={side}>
       <div className="team-settings-label">
         <span className="panel-caption">team</span>
         <strong>{heading}</strong>
@@ -530,7 +546,7 @@ function SettingGroup({
   className?: string;
 }) {
   return (
-    <section className={`setting-group ${boxed ? "setting-group-boxed" : ""} ${className}`.trim()}>
+    <section data-setting={label} className={`setting-group ${boxed ? "setting-group-boxed" : ""} ${className}`.trim()}>
       <span className="panel-caption">{label}</span>
       <div className="setting-pill-row">{children}</div>
     </section>

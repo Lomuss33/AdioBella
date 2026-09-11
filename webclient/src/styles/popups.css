@@ -1,0 +1,273 @@
+/* Popup-only layout: independent of the table's scale and orientation rules. */
+.belot-dialog {
+  --popup-gold: #f1cc83;
+  --popup-text: #f5f3ff;
+  --popup-muted: #b8bed3;
+  --popup-line: rgba(164, 176, 224, .24);
+  --section-accent: #baa7f5;
+  --section-surface: #29223f;
+  --section-ink: #1e1536;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+  border: 0;
+  background: transparent;
+  color: var(--popup-text);
+  font: 16px/1.5 "Trebuchet MS", sans-serif;
+  overflow: hidden;
+}
+
+.belot-dialog[open] { display: grid; place-items: center; }
+.belot-dialog::backdrop { background: rgba(5, 8, 20, .8); backdrop-filter: blur(9px); }
+.belot-dialog *, .belot-dialog *::before, .belot-dialog *::after { box-sizing: border-box; }
+
+.belot-dialog .popup-card {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 620px);
+  min-width: 0;
+  max-height: 100%;
+  border: 1px solid var(--popup-line);
+  border-radius: 14px;
+  background: radial-gradient(ellipse at 0% 0%, #35416840, transparent 55%), radial-gradient(ellipse at 100% 100%, #51376126, transparent 55%), #141a29;
+  box-shadow: 0 32px 100px #0009, inset 0 2px 0 #d8c5ff35;
+  overflow: hidden;
+  animation: popup-arrive 200ms ease-out;
+}
+
+.belot-dialog-setup .popup-card { width: min(100%, 900px); }
+.belot-dialog .popup-content {
+  min-height: 0;
+  min-width: 0;
+  padding: clamp(10px, 1.5vw, 18px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #7d83ab transparent;
+  scrollbar-gutter: auto;
+  overflow-wrap: anywhere;
+  outline: none;
+}
+
+.belot-dialog .action-popup-header { gap: 4px; margin-bottom: 12px; }
+.belot-dialog .popup-eyebrow { display: flex; align-items: center; gap: 10px; color: var(--popup-gold); font-size: 10px; font-weight: 700; letter-spacing: .22em; }
+.belot-dialog .popup-eyebrow span { font-size: 17px; letter-spacing: 0; }
+.belot-dialog .popup-eyebrow span:first-child { color: #98b9ff; }
+.belot-dialog .popup-eyebrow span:last-child { color: #f5a1b5; }
+.belot-dialog .action-popup-title { color: var(--popup-text); font: 500 clamp(23px, 2.5vw, 30px)/1.15 Georgia, serif; letter-spacing: -.025em; text-wrap: balance; }
+.belot-dialog .action-popup-subtitle { color: var(--popup-muted); font-size: 13px; line-height: 1.35; max-width: 60ch; text-wrap: pretty; }
+.belot-dialog .action-popup-ornament { display: none; }
+.belot-dialog .action-popup-body { gap: 12px; }
+.belot-dialog .panel-caption { color: var(--popup-muted); font-size: 12px; line-height: 1.5; letter-spacing: .06em; }
+
+.belot-dialog .team-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.belot-dialog .team-settings-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+}
+.belot-dialog [data-team="your"] { --section-accent: #7ae0c1; --section-surface: #153e3c; --section-ink: #0d302a; }
+.belot-dialog [data-team="opponent"] { --section-accent: #f2a0b4; --section-surface: #402738; --section-ink: #361726; }
+.belot-dialog .team-settings-row .panel-caption { color: var(--section-accent); }
+.belot-dialog .team-settings-label { display: none; }
+.belot-dialog .team-settings-label > .panel-caption { display: none; }
+.belot-dialog .team-settings-label strong { color: var(--popup-gold); font: 500 22px/1.2 Georgia, serif; }
+.belot-dialog .team-name-field { grid-column: auto; }
+.belot-dialog .name-setting-field { text-align: left; gap: 3px; min-width: 0; }
+.belot-dialog .name-setting-field input {
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--section-accent) 35%, transparent);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(135deg, var(--section-surface), color-mix(in srgb, var(--section-surface) 60%, #141a29));
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--section-accent) 65%, transparent);
+  color: var(--popup-text);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.belot-dialog .name-setting-field input:hover { border-color: var(--section-accent); }
+.belot-dialog .settings-stack { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.belot-dialog .setting-group { gap: 4px; min-width: 0; }
+.belot-dialog [data-setting="match length"] { --section-accent: #91b9ff; --section-surface: #223453; --section-ink: #102849; }
+.belot-dialog [data-setting="game length"] { --section-accent: #f1ca87; --section-surface: #3c3222; --section-ink: #33240d; }
+.belot-dialog [data-setting="table color"] { --section-accent: #c6a7f6; }
+.belot-dialog [data-setting="difficulty"] { --section-accent: #e9b4e0; }
+.belot-dialog .setting-group > .panel-caption { color: var(--section-accent); font-weight: 700; }
+.belot-dialog .setting-group-boxed { padding: 0; border: 0; background: none; }
+.belot-dialog .setting-pill-row { width: 100%; gap: 4px; }
+.belot-dialog .setting-pill {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--section-accent) 32%, transparent);
+  border-radius: 8px;
+  background: var(--section-surface);
+  color: var(--section-accent);
+  font: 500 13px/1.3 "Trebuchet MS", sans-serif;
+  box-shadow: none;
+  cursor: pointer;
+}
+.belot-dialog .setting-pill.selected {
+  border-color: var(--section-accent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--section-accent) 76%, white), var(--section-accent));
+  color: var(--section-ink);
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 #fff6, inset 0 -3px 0 #0002, 0 2px 8px #0003;
+}
+.belot-dialog .setting-pill-difficulty-easy { --section-accent: #7ae0c1; --section-surface: #153e3c; --section-ink: #0d302a; }
+.belot-dialog .setting-pill-difficulty-normal { --section-accent: #f1ca87; --section-surface: #3c3222; --section-ink: #33240d; }
+.belot-dialog .setting-pill-difficulty-hard { --section-accent: #f6a199; --section-surface: #492a31; --section-ink: #3b1720; }
+.belot-dialog .setting-pill-theme { flex-basis: 0; display: flex; gap: 5px; justify-content: center; align-items: center; }
+.belot-dialog .setting-pill-theme::before { content: ""; width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: var(--swatch); box-shadow: 0 0 0 1px #ffffff60; }
+.belot-dialog .setting-pill-theme-green { --swatch: #48c592; --section-accent: #8ee4b8; --section-surface: #183e31; --section-ink: #102e21; }
+.belot-dialog .setting-pill-theme-dark_blue { --swatch: #729cef; --section-accent: #a0c1ff; --section-surface: #24385b; --section-ink: #15284b; }
+.belot-dialog .setting-pill-theme-cherry_red { --swatch: #e86c8c; --section-accent: #ffa5be; --section-surface: #49283b; --section-ink: #3b1628; }
+.belot-dialog .setting-pill-theme-woody_brown { --swatch: #d6a165; --section-accent: #e8c297; --section-surface: #3f3328; --section-ink: #332417; }
+.belot-dialog .setting-pill-theme-fine_black { --swatch: #9ca9bc; --section-accent: #d0d8e6; --section-surface: #252d3b; --section-ink: #1a2230; }
+.belot-dialog .start-action-row { display: block; }
+.belot-dialog .start-difficulty-group { max-width: 400px; margin-inline: auto; }
+
+.belot-dialog .popup-footer {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  margin: 0;
+  gap: 6px;
+  border-top: 0;
+  background: linear-gradient(90deg, #21324c40, #161b2e60, #3e294240);
+  align-items: stretch;
+}
+.belot-dialog .action-button {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1 1 150px;
+  max-width: 320px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--popup-line);
+  background: #263652;
+  color: #c8dcff;
+  font: 600 15px/1.4 "Trebuchet MS", sans-serif;
+  overflow-wrap: anywhere;
+}
+.belot-dialog .action-button-primary { color: #352409; background: linear-gradient(135deg, #ffe8b6, #edbd69); border-color: #f2ce92; box-shadow: inset 0 1px 0 #fff8, 0 4px 16px #0003; }
+.belot-dialog .action-button-safe { color: #0e3027; background: linear-gradient(135deg, #b2f2d7, #71d5b3); border-color: #86ddbd; }
+.belot-dialog .action-button-danger { color: #ffc3cc; background: #502936; border-color: #b4657b; }
+.belot-dialog .action-button-primary > span { margin-left: 14px; }
+.belot-dialog :is(button, input):focus-visible { outline: 3px solid #f4ddb0; outline-offset: 3px; }
+.belot-dialog button:disabled { opacity: .55; cursor: default; }
+.belot-dialog button { touch-action: manipulation; }
+.belot-dialog .error-line { font-size: 14px; padding: 10px; border: 1px solid #d9958050; border-radius: 8px; background: #8e342520; }
+
+.belot-dialog .trump-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.belot-dialog .trump-controls .suit-choice-button { min-width: 0; width: 100%; min-height: 72px; aspect-ratio: auto; padding: 7px 5px; grid-template-rows: auto auto; gap: 4px; border-radius: 8px; background: linear-gradient(145deg, #fff9e9, #dfd7c2); border: 1px solid #ead8af; box-shadow: 0 3px 8px #0003; }
+.belot-dialog .trump-controls [data-suit="CLUBS"] { background: linear-gradient(145deg, #e0f7eb, #a6d6c3); border-color: #8fccb2; color: #163e30; }
+.belot-dialog .trump-controls [data-suit="DIAMONDS"] { background: linear-gradient(145deg, #fff1d5, #f0ce9e); border-color: #e3bc86; color: #69351c; }
+.belot-dialog .trump-controls [data-suit="HEARTS"] { background: linear-gradient(145deg, #ffe6ec, #efb0c1); border-color: #e798ad; color: #76273c; }
+.belot-dialog .trump-controls [data-suit="SPADES"] { background: linear-gradient(145deg, #e6eeff, #afc8ef); border-color: #93b3e3; color: #203d64; }
+.belot-dialog .trump-controls .suit-choice-visual { width: 36px; height: 36px; background: none; }
+.belot-dialog .trump-controls .suit-choice-visual img { width: 32px; height: 32px; }
+.belot-dialog .trump-controls .suit-choice-label { font-size: 12px; overflow-wrap: anywhere; }
+.belot-dialog .trump-controls .suit-choice-skip { grid-column: 1 / -1; min-height: 44px; background: transparent; color: var(--popup-muted); border-color: var(--popup-line); display: flex; justify-content: center; }
+.belot-dialog .suit-choice-skip-visual { display: none; }
+
+.belot-dialog .meld-popup-stack { gap: 10px; width: 100%; }
+.belot-dialog .meld-popup-player-block { padding: 0; border: 0; border-radius: 0; background: none; }
+.belot-dialog .meld-combination-block { gap: 5px; margin-top: 8px; }
+.belot-dialog .meld-popup-player-block > .meld-detail-row { color: #d4b4ff; background: linear-gradient(90deg, transparent, #49376470, transparent); }
+.belot-dialog .meld-popup-player-block > .meld-detail-row .panel-caption { color: #c6aadf; }
+.belot-dialog .meld-popup-player-block > .meld-detail-row strong:last-child { color: #f1cc83; }
+.belot-dialog .meld-combination-block .meld-detail-row { color: #a5cafa; }
+.belot-dialog .meld-popup-stack > .meld-detail-row { color: #8ee4c2; }
+.belot-dialog .meld-detail-row { font-size: 15px; gap: 8px; }
+.belot-dialog .meld-card-row { gap: 3px; flex-wrap: nowrap; }
+.belot-dialog .meld-card-row .playing-card-shell { flex: 0 1 48px; width: 48px; height: auto; aspect-ratio: 9 / 13; min-width: 0; pointer-events: none; opacity: 1; }
+.belot-dialog .meld-card-row .playing-card-face { width: 100%; height: 100%; }
+.belot-dialog .meld-card-row .playing-card-corner { font-size: clamp(10px, 25cqw, 13px); }
+.belot-dialog .meld-card-row .playing-card-center { font-size: clamp(16px, 50cqw, 26px); }
+.belot-dialog .between-games-summary { padding: 0; border: 0; border-radius: 0; background: none; gap: 8px; }
+.belot-dialog .between-games-result-grid { width: 100%; gap: 8px; }
+.belot-dialog .between-games-chip { margin-inline: auto; font-size: 11px; }
+.belot-dialog .game-complete-grid { width: 100%; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.belot-dialog .game-complete-box { min-width: 0; min-height: 0; padding: 0; gap: 8px; border: 0; border-radius: 0; background: none; }
+.belot-dialog .game-complete-box-title { font-size: 12px; letter-spacing: .1em; }
+.belot-dialog .game-complete-box:first-child .game-complete-box-title { color: #a3c5ff; }
+.belot-dialog .game-complete-box:last-child .game-complete-box-title { color: #d5b1fb; }
+.belot-dialog .game-complete-score-row { background: linear-gradient(90deg, transparent, #33436955, transparent); }
+.belot-dialog .game-complete-score-row-winner { background: linear-gradient(90deg, transparent, #80602e55, transparent); }
+.belot-dialog :is(.game-complete-box-row, .game-complete-score-row) span { font-size: 12px; letter-spacing: 0; text-transform: none; }
+.belot-dialog :is(.game-complete-box-row, .game-complete-score-row) strong { font-size: 18px; line-height: 1.4; }
+.belot-dialog :is(.between-games-outcome-line, .between-games-matchline) { font-size: 14px; line-height: 1.5; }
+.belot-dialog .between-games-outcome strong { font-size: 20px; }
+.belot-dialog .match-complete-grid { padding: 6px 0; border: 0; border-radius: 0; background: none; gap: 6px 12px; }
+.belot-dialog .match-complete-team { font-size: 13px; min-width: 0; }
+.belot-dialog .match-complete-score { font-size: 44px; }
+.belot-dialog .match-complete-team, .belot-dialog .match-complete-score { color: #b4caff; }
+.belot-dialog .match-complete-team-winner, .belot-dialog .match-complete-score-winner { color: #f4d391; }
+.belot-dialog .popup-card-loading { width: auto; border: 0; background: none; box-shadow: none; padding: 40px; }
+
+@media (max-width: 540px) {
+  .belot-dialog .popup-card { border-radius: 10px; }
+  .belot-dialog .popup-content { padding: 10px 8px; }
+  .belot-dialog .action-popup-header { margin-bottom: 10px; }
+  .belot-dialog .popup-eyebrow { display: none; }
+  .belot-dialog .team-settings-grid { grid-template-columns: 1fr; gap: 8px; }
+  .belot-dialog .settings-stack { gap: 8px; }
+  .belot-dialog .setting-pill { font-size: 12px; padding: 5px 3px; }
+  .belot-dialog .setting-pill-theme { flex-direction: column; gap: 3px; font-size: 11px; }
+  .belot-dialog .panel-caption { font-size: 11px; letter-spacing: .02em; }
+  .belot-dialog .popup-footer { padding: 4px 8px 8px; }
+  .belot-dialog .action-button { flex-basis: 100px; padding-inline: 12px; }
+  .belot-dialog .trump-controls { gap: 6px; }
+  .belot-dialog .trump-controls .suit-choice-button { min-height: 64px; padding: 6px 3px; gap: 4px; }
+  .belot-dialog .trump-controls .suit-choice-skip { min-height: 44px; }
+}
+
+@media (max-height: 500px) {
+  .belot-dialog .popup-content { padding: 8px; }
+  .belot-dialog .action-popup-header { gap: 3px; margin-bottom: 8px; }
+  .belot-dialog .action-popup-title { font-size: 23px; }
+  .belot-dialog .popup-eyebrow, .belot-dialog .action-popup-ornament { display: none; }
+  .belot-dialog .popup-footer { padding: 4px 8px 8px; }
+  .belot-dialog .trump-controls { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .belot-dialog .trump-controls .suit-choice-button { min-height: 60px; padding: 5px 3px; }
+  .belot-dialog .trump-controls .suit-choice-skip { grid-column: auto; }
+}
+
+/* Use available width to save vertical space on laptops and phone landscape. */
+@media (min-width: 600px) {
+  .belot-dialog-setup .action-popup-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 16px; }
+  .belot-dialog-setup .team-settings-grid { grid-column: 1 / -1; }
+  .belot-dialog-setup .settings-stack { display: contents; }
+  .belot-dialog-setup .setting-group-wide { grid-column: 1; }
+  .belot-dialog-setup .start-action-row { grid-column: 2; }
+  .belot-dialog .start-difficulty-group { max-width: none; }
+}
+
+@media (max-height: 500px) and (min-width: 600px) {
+  .belot-dialog-setup .popup-card { width: min(100%, 1040px); }
+  .belot-dialog-setup .action-popup-body { gap: 7px 12px; }
+  .belot-dialog .action-popup-header { margin-bottom: 6px; }
+}
+
+@media (hover: hover) {
+  .belot-dialog button:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }
+}
+@keyframes popup-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .belot-dialog *, .belot-dialog *::before, .belot-dialog *::after { animation: none !important; transition: none !important; }
+  .belot-dialog button:not(:disabled):hover { transform: none; }
+}

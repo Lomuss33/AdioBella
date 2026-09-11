@@ -40,6 +40,8 @@ The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/
 | Card labels and asset mapping | [cardPresentation.ts](../webclient/src/lib/cardPresentation.ts) |
 | Card appearance | [PlayingCard.tsx](../webclient/src/components/PlayingCard.tsx), [playing-cards.css](../webclient/src/styles/playing-cards.css) |
 | App layout and themes | [app.css](../webclient/src/app.css) |
+| Active table and terminal layout | [table.css](../webclient/src/styles/table.css); one responsive seat layout, theme-colored felt, and team-colored scores |
+| Responsive popups and confirmations | [popups.css](../webclient/src/styles/popups.css), [usePopupDialog.ts](../webclient/src/lib/usePopupDialog.ts), [ConfirmPopup.tsx](../webclient/src/components/ConfirmPopup.tsx) |
 | Runtime selection and Pages path | [.env.pages](../webclient/.env.pages), [vite.config.ts](../webclient/vite.config.ts) |
 | Frontend packaging into Spring Boot | [server/build.gradle.kts](../server/build.gradle.kts) |
 

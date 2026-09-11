@@ -26,8 +26,8 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
             )}
           </small>
         </div>
-        <strong>{statusMessage}</strong>
-        {errorMessage ? <small className="error-line">{errorMessage}</small> : null}
+        <strong role="status" aria-live="polite">{statusMessage}</strong>
+        {errorMessage ? <small className="error-line" role="alert">{errorMessage}</small> : null}
       </div>
     </section>
   );
@@ -60,14 +60,14 @@ function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedT
 
   if (animatedTrick) {
     if (animatedTrick.phase === "placing") {
-      return "Wait while the cards are being played.";
+      return "Cards are being played…";
     }
 
     if (winningPlayer && southPlayer && winningPlayer.team === southPlayer.team) {
-      return "Celebrate. Your team takes this trick.";
+      return "Your team wins the trick.";
     }
 
-    return "Congratulate them. They take this trick.";
+    return "Opponents win the trick.";
   }
 
   switch (snapshot.pendingAction.type) {
@@ -83,8 +83,8 @@ function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedT
       return "Review the melds and continue.";
     case "PLAY_CARD":
       return snapshot.pendingAction.actingPlayerId === southPlayer?.id
-        ? "Play a legal card."
-        : "Wait while the others are throwing.";
+        ? "Your turn — choose a highlighted card."
+        : "Waiting for the next player…";
     default:
       return snapshot.pendingAction.prompt || "The table is ready.";
   }

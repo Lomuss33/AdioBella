@@ -31,6 +31,8 @@ Start the match when ready.
 
 The three AI players take their turns automatically. Cards may be temporarily unavailable while an action or trick animation finishes.
 
+Your team is marked in teal and opponents in rose. Open **Meld details** near the scores for declaration totals. The **Game Terminal** header collapses or expands history; it sits beside the table on wide screens and below it on smaller screens. When reading older entries, use **Latest rounds** or **Latest results** to return to the newest events.
+
 **Forfeit game** concedes the current game. **Quit match** concedes the match. Use these controls when you intend to give up the corresponding result.
 
 ## Sessions and settings

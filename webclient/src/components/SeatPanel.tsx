@@ -1,19 +1,21 @@
-import type { PlayerView } from "../types";
+import type { PlayerView, Seat } from "../types";
 
 interface SeatPanelProps {
   player?: PlayerView;
+  seat?: Seat;
   winnerGlow?: boolean;
   showDealer?: boolean;
   showTrumpCaller?: boolean;
 }
 
-function SeatPanel({ player, winnerGlow, showDealer, showTrumpCaller }: SeatPanelProps) {
+function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: SeatPanelProps) {
   if (!player) {
-    return <div className="seat-panel seat-loading">Loading seat...</div>;
+    return <div className={`seat-panel seat-${(seat ?? "NORTH").toLowerCase()} seat-loading`}>Loading seat…</div>;
   }
 
   return (
     <div
+      data-team={player.seat === "NORTH" || player.seat === "SOUTH" ? "your" : "opponent"}
       className={[
         "seat-panel",
         `seat-${player.seat.toLowerCase()}`,
@@ -23,10 +25,10 @@ function SeatPanel({ player, winnerGlow, showDealer, showTrumpCaller }: SeatPane
         .filter(Boolean)
         .join(" ")}
     >
-      <span className="panel-caption seat-direction-label">{player.seat}</span>
+      <span className="panel-caption seat-direction-label">{player.seat}{player.currentTurn ? " · playing" : ""}</span>
       <div className="seat-main-copy">
-        <strong>{player.name}</strong>
-        <small>{player.team}</small>
+        <strong title={player.name}>{player.name}</strong>
+        <small title={player.team}>{player.team} · {player.handSize} cards</small>
       </div>
       <div className="seat-badges">
         <span className={`seat-badge ${showDealer ? "" : "seat-badge-placeholder"}`.trim()} aria-hidden={showDealer ? undefined : true}>

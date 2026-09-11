@@ -9,7 +9,7 @@ function SuitChoiceButton({ choice, onChoose }: SuitChoiceButtonProps) {
   const suit = toSuitPresentation(choice);
 
   return (
-    <button type="button" className="suit-choice-button" onClick={() => onChoose(choice)} aria-label={suit.label}>
+    <button type="button" className="suit-choice-button" data-suit={choice} onClick={() => onChoose(choice)} aria-label={suit.label}>
       <div className={`suit-choice-visual ${suit.className}`}>
         <img src={suit.assetSrc} alt={suit.assetAlt} />
       </div>

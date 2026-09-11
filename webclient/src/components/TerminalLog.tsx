@@ -1,52 +1,45 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GameEvent } from "../types";
 
 function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComplete?: boolean }) {
-  const roundLinesRef = useRef<HTMLDivElement | null>(null);
-  const matchLinesRef = useRef<HTMLDivElement | null>(null);
   const orderedEvents = useMemo(
-    () => [...events].sort((left, right) => left.sequence - right.sequence),
+    () => [...new Map(events.map((event) => [event.sequence, event])).values()].sort((left, right) => left.sequence - right.sequence),
     [events]
   );
   const roundGroups = useMemo(() => buildRoundGroups(orderedEvents), [orderedEvents]);
   const matchEvents = useMemo(() => buildMatchFeed(orderedEvents), [orderedEvents]);
 
-  useEffect(() => {
-    if (roundLinesRef.current) {
-      roundLinesRef.current.scrollTop = 0;
-    }
-    if (matchLinesRef.current) {
-      matchLinesRef.current.scrollTop = 0;
-    }
-  }, [roundGroups, matchEvents]);
+  const rounds = useFeedScroll(roundGroups);
+  const matches = useFeedScroll(matchEvents);
 
   return (
-    <section className="terminal-panel">
-      <div className="terminal-header">
-        <h1>Game Terminal</h1>
+    <details className="terminal-panel" open>
+      <summary className="terminal-header">
+        <h2>Game Terminal</h2>
         <span>{matchComplete ? "Match complete" : "Live feed"}</span>
-      </div>
+      </summary>
       <div className="terminal-grid">
         <section className="terminal-section">
           <div className="terminal-subheader">
             <span className="panel-caption">Round Feed</span>
             <span>{roundGroups.length} rounds</span>
+            {rounds.readingOlder ? <button type="button" className="terminal-latest" onClick={rounds.latest}>Latest rounds ↑</button> : null}
           </div>
-          <div ref={roundLinesRef} className="terminal-lines">
+          <div ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" tabIndex={0} aria-label="Round history">
             {roundGroups.length === 0 ? <div className="terminal-empty">No round events yet.</div> : null}
             {roundGroups.map((group) => (
               <section key={group.key} className="terminal-round-group">
-                <div className="terminal-round-title">
+                <div className="terminal-round-title" data-history-key={group.key}>
                   game {group.gameNumber} round {group.roundNumber}
                 </div>
                 {group.plays.map((event) => (
-                  <div key={event.sequence} className="terminal-play-row">
+                  <div key={event.sequence} data-history-key={`event-${event.sequence}`} className="terminal-play-row">
                     <span className="terminal-seq">#{event.sequence}</span>
                     <span>{event.message}</span>
                   </div>
                 ))}
                 {group.winner ? (
-                  <div className="terminal-round-winner">
+                  <div className="terminal-round-winner" data-history-key={`event-${group.winner.sequence}`}>
                     <span className="terminal-seq">#{group.winner.sequence}</span>
                     <span>
                       <strong>round winner</strong> {group.winner.message}
@@ -61,11 +54,12 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
           <div className="terminal-subheader">
             <span className="panel-caption">Match Feed</span>
             <span>{matchEvents.length} updates</span>
+            {matches.readingOlder ? <button type="button" className="terminal-latest" onClick={matches.latest}>Latest results ↑</button> : null}
           </div>
-          <div ref={matchLinesRef} className="terminal-lines">
+          <div ref={matches.ref} onScroll={matches.capture} className="terminal-lines" tabIndex={0} aria-label="Match history">
             {matchEvents.length === 0 ? <div className="terminal-empty">No game or match winners yet.</div> : null}
             {matchEvents.map((event) => (
-              <div key={event.sequence} className={matchRowClassName(event)}>
+              <div key={event.sequence} data-history-key={`event-${event.sequence}`} className={matchRowClassName(event)}>
                 <span className="terminal-seq">#{event.sequence}</span>
                 <span>{event.message}</span>
               </div>
@@ -73,7 +67,7 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
           </div>
         </section>
       </div>
-    </section>
+    </details>
   );
 }
 
@@ -83,6 +77,42 @@ interface RoundGroup {
   roundNumber: number;
   plays: GameEvent[];
   winner: GameEvent | null;
+}
+
+// Anchor the visible entry when new events are inserted above a reader.
+function useFeedScroll(items: readonly unknown[]) {
+  const ref = useRef<HTMLDivElement>(null);
+  const anchor = useRef<{ key: string; offset: number } | null>(null);
+  const [readingOlder, setReadingOlder] = useState(false);
+  const capture = () => {
+    const pane = ref.current;
+    if (!pane || pane.clientHeight === 0) return;
+    const older = pane.scrollTop > 8;
+    setReadingOlder(older);
+    if (!older) { anchor.current = null; return; }
+    const top = pane.getBoundingClientRect().top;
+    const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
+      .find((element) => element.getBoundingClientRect().bottom > top);
+    anchor.current = row ? { key: row.dataset.historyKey!, offset: row.getBoundingClientRect().top - top } : null;
+  };
+  useLayoutEffect(() => {
+    const pane = ref.current;
+    if (!pane || pane.clientHeight === 0) return;
+    const saved = anchor.current;
+    if (saved) {
+      const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
+        .find((element) => element.dataset.historyKey === saved.key);
+      if (row) pane.scrollTop += row.getBoundingClientRect().top - pane.getBoundingClientRect().top - saved.offset;
+      else pane.scrollTop = 0;
+    } else pane.scrollTop = 0;
+    capture();
+  }, [items]);
+  const latest = () => {
+    if (ref.current) ref.current.scrollTop = 0;
+    anchor.current = null;
+    setReadingOlder(false);
+  };
+  return { ref, capture, readingOlder, latest };
 }
 
 function buildRoundGroups(events: GameEvent[]) {
@@ -140,7 +170,7 @@ function buildMatchFeed(events: GameEvent[]) {
 
 function matchRowClassName(event: GameEvent) {
   const message = event.message.toLowerCase();
-  if (message.includes("won the match") || message.includes("won the game")) {
+  if (message.includes("won the match")) {
     return "terminal-line terminal-match-winner";
   }
   return "terminal-line terminal-game-winner";

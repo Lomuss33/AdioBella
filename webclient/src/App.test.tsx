@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import type { SessionResponse } from "./types";
@@ -86,7 +86,7 @@ test("renders the table and terminal", async () => {
   render(<App />);
 
   await waitFor(() => expect(screen.getByText("Game Terminal")).toBeInTheDocument());
-  expect(screen.getByRole("status", { name: "Loading table" })).toBeInTheDocument();
+  expect(await screen.findByRole("status", { name: "Loading table" })).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
   expect(screen.getByDisplayValue("You")).toBeInTheDocument();
   expect(screen.getByDisplayValue("Ti")).toBeInTheDocument();
@@ -161,7 +161,6 @@ test("quit match ends the current match and shows the match-complete popup", asy
     }
   };
 
-  vi.spyOn(window, "confirm").mockReturnValue(true);
   const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     if (url.endsWith("/api/sessions/session-1/quit") || url === "/api/sessions/session-1/quit") {
@@ -207,6 +206,14 @@ test("quit match ends the current match and shows the match-complete popup", asy
 
   const quitButton = await screen.findByRole("button", { name: "Quit match" });
   await userEvent.click(quitButton);
+  const cancelledConfirmation = await screen.findByRole("dialog", { name: "Leave this match?" });
+  await userEvent.click(within(cancelledConfirmation).getByRole("button", { name: "Keep playing" }));
+  expect(screen.queryByRole("dialog", { name: "Leave this match?" })).not.toBeInTheDocument();
+  expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/quit"))).toBe(false);
+  await userEvent.click(quitButton);
+  const confirmation = await screen.findByRole("dialog", { name: "Leave this match?" });
+  expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/quit"))).toBe(false);
+  await userEvent.click(within(confirmation).getByRole("button", { name: "Quit match" }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
     "/api/sessions/session-1/quit",

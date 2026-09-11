@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
+import ConfirmPopup from "./components/ConfirmPopup";
 import TableLayout from "./components/TableLayout";
 import TerminalLog from "./components/TerminalLog";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
@@ -41,6 +42,7 @@ const THEME_META_COLOR: Record<TableTheme, string> = {
 };
 
 function App() {
+  const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
   const gateway = getGameGateway();
   const persistSession = shouldPersistSession();
   const bootstrapStartedRef = useRef(false);
@@ -326,10 +328,6 @@ function App() {
       return;
     }
 
-    if (!window.confirm("Forfeit the current game and give it to the opponents?")) {
-      return;
-    }
-
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.forfeitGame(sessionId);
@@ -352,10 +350,6 @@ function App() {
 
   async function handleQuitMatch() {
     if (!sessionId || animatedTrick !== null) {
-      return;
-    }
-
-    if (!window.confirm("Quit the current match and concede it?")) {
       return;
     }
 
@@ -760,7 +754,7 @@ function App() {
     animatedTrick === null;
 
   return (
-    <main className="app-shell">
+    <main className="app-shell game-layout">
       <div className="table-stage">
         <TableLayout
           snapshot={snapshot}
@@ -775,8 +769,8 @@ function App() {
           handLocked={handLocked}
           canForfeitGame={canForfeitGame}
           canQuitMatch={canQuitMatch}
-          onForfeitGame={handleForfeitGame}
-          onQuitMatch={handleQuitMatch}
+          onForfeitGame={() => setConfirmExit("game")}
+          onQuitMatch={() => setConfirmExit("match")}
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
@@ -804,6 +798,11 @@ function App() {
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} />
       </section>
+      {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {
+        setConfirmExit(null);
+        if (confirmExit === "game") void handleForfeitGame();
+        else void handleQuitMatch();
+      }} /> : null}
     </main>
   );
 }

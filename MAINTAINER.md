@@ -1,172 +1,39 @@
-# Maintainer Guide
+# Maintainer guide
 
-## Purpose
+[README](README.md) · [User guide](USERGUIDE.md) · [Documentation index](docs/README.md)
 
-This document explains how the current Belot application is structured and where to change things safely.
+Use this guide when reviewing, integrating, or releasing changes. Setup and commands live in [Development](docs/development.md); implementation boundaries live in [Architecture](docs/architecture.md).
 
-## Architecture
+## Review a change
 
-### Engine
+1. Confirm the change has a clear purpose and preserves unrelated work.
+2. For rules or session changes, review both the Java implementation and the browser implementation. Check snapshots, pending actions, scoring, and events for equivalent behavior.
+3. For API changes, review the controller, Java view models, TypeScript types, and both gateways together.
+4. Run the relevant checks in [Development](docs/development.md), and record results and any untested behavior in the pull request.
+5. For visible gameplay changes, exercise the affected flow in both runtimes, including unavailable actions and error states.
 
-- path: `engine/src/main/java/com/belot/engine/api`
-- entrypoint: `BelotMatchFacade`
-- responsibility:
-  - own match state
-  - validate player actions
-  - produce snapshots and event records
-- rule:
-  - keep engine free of UI and Spring dependencies
+Keep Java rules independent of React and Spring. Route UI game operations through `GameGateway`. Keep card presentation mapping centralized. See [Architecture](docs/architecture.md) for source entry points.
 
-### Server
+## Integrate and deploy
 
-- path: `server/src/main/java/com/belot/server`
-- responsibilities:
-  - create and store in-memory sessions
-  - expose REST commands
-  - expose SSE event stream
-  - serve built frontend assets
+Use a focused feature branch and a pull request describing the problem, resulting behavior, and validation. Review the diff before merging.
 
-Important files:
+Merging or pushing to `main` triggers the Pages deployment workflow. That workflow builds the browser client but does **not** run the Java or frontend test suites. Complete applicable checks before merging.
 
-- `server/.../session/GameSession.java`
-- `server/.../session/GameSessionRegistry.java`
-- `server/.../web/SessionController.java`
+Follow [Deployment](docs/deployment.md) for Pages configuration, local packaging, and deployment troubleshooting.
 
-### Frontend
+## Keep documentation current
 
-- path: `webclient/src`
-- responsibilities:
-  - render the table
-  - render terminal log
-  - call REST commands
-  - subscribe to SSE updates
+Keep only these Markdown entry points at the repository root:
 
-Important files:
+- [README.md](README.md): project overview and quickest route to play or develop.
+- [USERGUIDE.md](USERGUIDE.md): player-facing instructions.
+- [MAINTAINER.md](MAINTAINER.md): review and maintenance responsibilities.
 
-- `src/App.tsx`
-- `src/components/*`
-- `src/lib/sessionApi.ts`
-- `src/lib/eventStream.ts`
-- `src/lib/cardPresentation.ts`
-- `src/styles/playing-cards.css`
+Keep detailed documentation in `docs/`, linked from its [index](docs/README.md). Update the owning page in the same change as the behavior it describes. Use relative links, short headings, and executable commands with an explicit working directory. Link to existing guidance instead of duplicating it.
 
-## Runtime Flow
+AI assistants enter through the README link to [AI development guidance](docs/ai-development.md); keep that page aligned with the shared workflow. Historical material in [the archive](docs/archive/README.md) is background, not current project policy.
 
-1. Browser creates or restores a session.
-2. Browser sends commands by REST.
-3. Server forwards commands into `BelotMatchFacade`.
-4. Engine returns updated snapshot state and appends events.
-5. Browser listens to SSE for terminal updates.
-6. Browser refreshes the snapshot on a short debounce after events.
+## Current maintenance constraints
 
-## Ports And Startup
-
-Default:
-
-```bash
-./gradlew runGame
-```
-
-Custom port:
-
-```bash
-./gradlew runGame -PserverPort=28081
-```
-
-To find a conflicting process on Windows:
-
-```powershell
-netstat -ano | findstr :8080
-Get-Process -Id <PID>
-Stop-Process -Id <PID> -Force
-```
-
-## Card CSS Integration
-
-The current card styling is a local adaptation of the class model used by `selfthinker/CSS-Playing-Cards`.
-
-Expected card classes:
-
-- container: `playingCards`
-- card shell: `card`
-- suit classes:
-  - `clubs`
-  - `diams`
-  - `hearts`
-  - `spades`
-- rank classes:
-  - `rank-7`
-  - `rank-8`
-  - `rank-9`
-  - `rank-10`
-  - `rank-j`
-  - `rank-q`
-  - `rank-k`
-  - `rank-a`
-- hidden card:
-  - `card back`
-
-If you change card rendering, keep these class names stable unless you intentionally rewrite the card presentation layer.
-
-## Placeholder Asset Naming
-
-Card assets:
-
-- `webclient/src/assets/cards/face-placeholder.svg`
-- `webclient/src/assets/cards/back.svg`
-
-Suit assets:
-
-- `webclient/src/assets/suits/clubs.svg`
-- `webclient/src/assets/suits/diamonds.svg`
-- `webclient/src/assets/suits/hearts.svg`
-- `webclient/src/assets/suits/spades.svg`
-
-Visible card labels under cards must stay lowercase:
-
-- `10c`
-- `ad`
-- `7s`
-
-Suit labels under trump controls must stay lowercase full names:
-
-- `clubs`
-- `diamonds`
-- `hearts`
-- `spades`
-
-## Safe Extension Rules
-
-- Do not put UI logic into the Java engine.
-- Do not serialize engine internals directly from Spring controllers.
-- Prefer extending DTOs over exposing internal engine structures.
-- Keep card/suit asset mapping in `cardPresentation.ts`, not scattered through components.
-- Keep API calls in `sessionApi.ts`.
-- Keep SSE behavior in `eventStream.ts`.
-
-## Testing Checklist
-
-Before merge:
-
-```bash
-./gradlew build
-./gradlew :engine:test
-./gradlew :server:test
-cd webclient
-npm test
-```
-
-Manual checks:
-
-- start the app on default or custom port
-- start a match
-- choose trump
-- play several cards
-- verify table cards, hidden opponent cards, and terminal behavior
-
-## Known Limitations
-
-- single-player only
-- in-memory session registry only
-- placeholder art only
-- no persistence
+Both game implementations require maintenance; there is no automatic translation between Java and TypeScript. Sessions are in memory, and some artwork remains placeholder material. Avoid documenting multiplayer, durable storage, or automated test gates as existing features.

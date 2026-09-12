@@ -26,7 +26,7 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
             )}
           </small>
         </div>
-        <strong role="status" aria-live="polite">{statusMessage}</strong>
+        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
         {errorMessage ? <small className="error-line" role="alert">{errorMessage}</small> : null}
       </div>
     </section>

@@ -70,7 +70,7 @@ function PlayerHand({
           <span className="south-inline-separator">:</span>
           <strong title={player.name}>{player.name}</strong>
           <span className="south-inline-separator">:</span>
-          <span>{player.team}</span>
+          <span title={player.team}>{player.team}</span>
         </div>
       </div>
       <div className="card-fan-row" data-card-count={visibleCards.length}>

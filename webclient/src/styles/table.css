@@ -3,6 +3,7 @@
   --game-text: #f3f1fb;
   --game-muted: #b5bfd0;
   --game-line: #a3b5d42e;
+  --arena-height: calc(100dvh - max(4px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
@@ -19,7 +20,7 @@
   zoom: 1; transform: none; scroll-snap-align: none; align-self: start;
 }
 .table-arena {
-  --trick-card-width: clamp(44px, 5vw, 76px);
+  --trick-card-width: clamp(62px, 6vw, 88px);
   --trick-card-height: calc(var(--trick-card-width) * 1.42);
   --trick-offset-y: calc(var(--trick-card-height) * .6);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
@@ -30,7 +31,8 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 8px;
   min-width: 0;
-  min-height: min(820px, calc(100svh - 8px));
+  height: var(--arena-height);
+  min-height: 560px;
   padding: clamp(8px, 1vw, 14px);
   border: 1px solid #b9c5df38;
   border-radius: 16px;
@@ -54,10 +56,10 @@
 .table-arena .data-value { color: #f8f6ff; font-size: 13px; line-height: 1.35; font-variant-numeric: tabular-nums; }
 .table-arena .data-row:nth-child(2) .data-value { color: var(--team-color); font-weight: 700; }
 .table-arena .match-data-card { display: block; grid-area: auto; width: 100%; max-width: none; min-width: 0; padding: 8px; border: 0; border-radius: 8px; background: #151f32dd; container-type: normal; color: #bfd4f6; }
-.table-arena .match-data-card summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 40px; cursor: pointer; list-style: none; font-size: 12px; }
+.table-arena .match-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 40px; font-size: 12px; }
 .table-arena summary::-webkit-details-marker { display: none; }
 .table-arena .match-summary-title { color: #f0d09a; font-weight: 700; }
-.table-arena .match-details-label { color: #d2b3f7; }
+.table-arena .match-details-label { color: #d2b3f7; background: #342c4e; border: 1px solid #a388cf55; border-radius: 6px; padding: 5px 8px; min-height: 32px; font: inherit; cursor: pointer; }
 .table-arena .match-details-label::after { content: " +"; }
 .table-arena .match-data-card[open] .match-details-label::after { content: " −"; }
 .table-arena .match-meld-details { margin-top: 6px; display: grid; gap: 6px; font-size: 12px; color: #d4c5ed; overflow-wrap: anywhere; }
@@ -79,9 +81,9 @@
 .table-arena .seat-badge-placeholder, .table-arena .south-inline-badge-placeholder { display: none; }
 
 .table-arena .trick-pool-shell { grid-area: trick; width: 100%; max-width: 720px; min-width: 0; margin: 0; justify-self: center; padding: 0; }
-.table-arena .trick-pool { min-height: 0; padding: 12px 0 20px; display: block; border: 0; border-radius: 0; background: none; overflow: visible; backdrop-filter: none; }
+.table-arena .trick-pool { min-height: 0; padding: 18px 6px 24px; display: block; border: 1px solid #dfcc9659; border-radius: 38%; background: radial-gradient(ellipse at center, #ffffff08, #07141050); box-shadow: inset 0 0 24px #0003, 0 5px 16px #0002; overflow: visible; backdrop-filter: none; }
 .table-arena .trick-cards { min-height: calc(var(--trick-card-height) * 2.4 + 28px); width: 100%; }
-.table-arena .trick-pool > .panel-caption { top: 0; left: 50%; transform: translateX(-50%); color: #c3cfca; background: transparent; font-size: 10px; letter-spacing: .14em; white-space: nowrap; }
+.table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: #e4d6b3; background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
 .table-arena .trick-cards .playing-card-face { width: var(--trick-card-width); height: var(--trick-card-height); }
 .table-arena .trick-cards .playing-card-shell { width: var(--trick-card-width); height: var(--trick-card-height); }
 .table-arena .trick-owner { color: #d4dfd9; font: 10px/1.2 "Trebuchet MS", sans-serif; letter-spacing: .06em; }
@@ -90,7 +92,7 @@
 .table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: #39280b; background: #f2d398; border: 0; box-shadow: 0 3px 8px #0003; }
 .table-arena .trick-points-chip[class*="collect-"] { opacity: 0; }
 
-.table-arena .player-hand-area { grid-area: auto; width: min(100%, 840px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
+.table-arena .player-hand-area { grid-area: auto; width: min(100%, 600px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
 .table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(8, minmax(0, 1fr)); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
 .table-arena .hand-slot { min-width: 0; }
 .table-arena .hand-slot-empty::before { content: ""; display: block; width: 100%; aspect-ratio: 5 / 7.1; }
@@ -153,7 +155,7 @@
 .game-layout .terminal-lines:focus-visible { outline: 2px solid #a6c6ff; outline-offset: 2px; }
 
 @media (max-width: 700px) {
-  .table-arena { --trick-card-width: clamp(42px, 10vw, 58px); border-radius: 12px; padding: 6px; gap: 6px; }
+  .table-arena { --trick-card-width: clamp(56px, 14vw, 70px); border-radius: 12px; padding: 6px; gap: 6px; }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .table-arena .arena-play { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; gap: 6px; }
   .table-arena .seat-panel { padding: 5px; align-self: start; }
@@ -164,16 +166,16 @@
   .table-arena .game-data-section .data-list { display: flex; flex-wrap: wrap; gap: 3px 12px; }
   .table-arena .data-row { display: flex; gap: 4px; }
   .table-arena .match-data-card { padding: 3px 6px; }
-  .table-arena .match-data-card summary { font-size: 11px; gap: 3px 8px; min-height: 32px; }
+  .table-arena .match-summary { font-size: 11px; gap: 3px 8px; min-height: 32px; }
   .table-arena .arena-status { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .table-arena .match-corner-controls { justify-content: flex-end; }
   .table-arena .match-corner-button { font-size: 11px; min-height: 36px; }
-  .table-arena .player-hand-area { width: 100%; }
+  .table-arena .player-hand-area { width: min(100%, 600px); }
   .game-layout .terminal-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .game-layout .terminal-lines { max-height: 200px; }
 }
 @media (max-height: 500px) and (min-width: 600px) {
-  .table-arena { --trick-card-width: 36px; min-height: 0; gap: 4px; }
+  .table-arena { --trick-card-width: 52px; min-height: 0; gap: 4px; }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1.5fr) minmax(180px, 1fr); }
   .table-arena .arena-play { grid-template-columns: minmax(70px, 1fr) minmax(180px, 2fr) minmax(70px, 1fr); grid-template-areas: ". north ." "west trick east"; gap: 3px; }
   .table-arena .seat-panel { padding: 3px 6px; }
@@ -186,6 +188,94 @@
   .game-layout .terminal-lines { max-height: 300px; }
   .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100dvh - 8px); overflow-y: auto; scrollbar-width: thin; }
 }
+/* Swap only the annotated panels: opponents | match details | your team. */
+@media (min-width: 701px) {
+  .table-arena .arena-header { grid-template-columns: minmax(0, 1fr) minmax(180px, 1.2fr) minmax(0, 1fr); }
+  .table-arena .arena-header > .game-data-card,
+  .table-arena .arena-header .game-data-grid { display: contents; }
+  .table-arena .arena-header [data-team="opponent"] { grid-column: 1; grid-row: 1; }
+  .table-arena .arena-header > .match-data-card { grid-column: 2; grid-row: 1; }
+  .table-arena .arena-header [data-team="your"] { grid-column: 3; grid-row: 1; }
+}
+/* Fit the header, play area and hand into one visible viewport. */
+.table-arena .arena-header { min-height: 0; }
+.table-arena .arena-play { min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.table-arena .arena-bottom { min-height: 0; gap: 5px; }
+.table-arena .game-data-section { padding: 5px 8px; }
+.table-arena .game-data-section > strong,
+.table-arena .seat-main-copy strong,
+.table-arena .seat-main-copy small {
+  display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.table-arena .game-data-section .data-list { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.table-arena .game-data-section .data-row { display: flex; gap: 4px; }
+.table-arena .seat-panel { padding: 4px 6px; gap: 2px; }
+.table-arena .seat-badges { min-height: 15px; }
+.table-arena .trick-pool-shell {
+  height: 100%; min-height: 0; align-self: stretch;
+  container-type: size;
+}
+.table-arena .trick-pool {
+  --trick-card-width: max(32px, min(88px, calc((100cqh - 58px) / 2.84), calc((100cqw - 24px) / 3.8)));
+  --trick-card-height: calc(var(--trick-card-width) * 1.42);
+  --trick-offset-y: calc(var(--trick-card-height) * .5);
+  --trick-offset-x: calc(var(--trick-card-width) * 1.4);
+  --trick-entry-offset-y: calc(var(--trick-card-height) * .8);
+  --trick-entry-offset-x: calc(var(--trick-card-width) * 1.8);
+  position: absolute; inset: 0; height: 100%; padding: 20px 6px 24px;
+}
+.table-arena .trick-cards { height: 100%; min-height: 0; }
+.table-arena .trick-points-chip { bottom: 3px; }
+.table-arena .player-hand-area { width: min(100%, 600px, calc(var(--arena-height) * .82)); padding-top: 0; gap: 3px; }
+.table-arena .player-hand-area .card-fan-row { gap: 4px; }
+.table-arena .south-inline-info { flex-wrap: nowrap; }
+.table-arena .south-inline-main { flex-wrap: nowrap; min-width: 0; }
+.table-arena .south-inline-main strong,
+.table-arena .south-inline-main > span:last-child { min-width: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.table-arena .south-inline-status-row { flex-shrink: 0; }
+.table-arena .score-item { padding: 5px 8px; }
+.table-arena .score-item > strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.table-arena .score-item .error-line { max-height: 36px; overflow-y: auto; }
+
+@media (max-width: 700px) {
+  .table-arena .arena-header { gap: 3px; }
+  .table-arena .arena-status { grid-template-columns: minmax(0, 1fr) 96px; align-items: stretch; }
+  .table-arena .match-corner-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .table-arena .match-corner-button { min-height: 32px; padding: 4px 5px; }
+  .table-arena .score-header { gap: 1px 5px; }
+  .table-arena .score-item strong { font-size: 12px; }
+  .table-arena .game-data-section .data-label { font-size: 10px; }
+  .table-arena .game-data-section .data-value { font-size: 12px; }
+}
+
+/* Phone landscape uses width for the hand instead of adding another tall row. */
+@media (max-height: 500px) and (min-width: 600px) {
+  .table-arena {
+    min-height: 350px; padding: 5px; gap: 5px;
+    grid-template-columns: minmax(0, 1fr) clamp(190px, 30vw, 280px);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .table-arena .arena-header { grid-column: 1 / -1; grid-row: 1; }
+  .table-arena .arena-play { grid-column: 1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; }
+  .table-arena .arena-bottom { grid-column: 2; grid-row: 2; align-content: center; }
+  .table-arena .player-hand-area { width: min(100%, 192px); }
+  .table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .table-arena .arena-status { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .table-arena .match-corner-controls { display: flex; flex-wrap: nowrap; justify-content: stretch; }
+  .table-arena .match-corner-button { flex: 1; min-height: 32px; padding: 4px; font-size: 11px; }
+  .table-arena .score-item { padding: 3px 6px; }
+  .table-arena .score-item > strong { font-size: 12px; line-height: 1.25; }
+  .table-arena .seat-main-copy small { display: none; }
+  .table-arena .seat-badges { min-height: 0; }
+  .table-arena .south-inline-seat, .table-arena .south-inline-separator,
+  .table-arena .south-inline-main > span:last-child { display: none; }
+}
+
+/* Below usable dimensions, permit page scrolling rather than clipping play. */
+@media (max-width: 279px) {
+  .table-arena { min-width: 280px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .table-arena *, .table-arena *::before, .table-arena *::after { animation: none !important; transition: none !important; }
 }

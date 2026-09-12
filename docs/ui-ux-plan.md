@@ -12,6 +12,8 @@ The popup palette now uses a midnight-blue base with teal for your team, rose fo
 
 The table/terminal pass replaces duplicate seat layouts with one responsive arena, places scores ahead of expandable meld details, bounds card sizing, removes overlapping absolute status/control placement, and carries team colors into seats and scores. History can collapse, moves beside the table on wide screens, and preserves the visible entry while new events arrive. Game and match winners now receive separate colors. No tests, builds, or browser checks were run for this pass, per the continuing instruction.
 
+The viewport-fit follow-up gives the table a dynamic viewport height budget with safe-area spacing. The remaining play area sizes its trick cards through a size container; the hand also scales with the height budget. Short landscape views place a two-row hand beside the play area. Long names truncate with full labels retained, and meld details now open in a portal-based dialog rather than expanding the header. A minimum usable table size allows scrolling on exceptionally small views. This follow-up was not tested or built, as requested.
+
 Prior-pass validation (before the compact layout changes): both frontend builds and the 26 existing frontend tests passed. Chromium checks covered 10 popup states across 10 viewport sizes (320px to 3440px wide, including a 256px-high viewport). Keyboard containment, confirmation cancellation, action callbacks, and reduced-motion styling were checked. Native mobile keyboards and Safari/Firefox still need device/browser verification.
 
 ## Outcome

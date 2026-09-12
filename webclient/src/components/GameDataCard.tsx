@@ -10,7 +10,7 @@ function GameDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
       <div className="game-data-grid">
         <section className="game-data-section" data-team="opponent">
           <span className="panel-caption">enemy</span>
-          <strong>{score?.teamTwoName ?? "Them"}</strong>
+          <strong title={score?.teamTwoName ?? "Them"}>{score?.teamTwoName ?? "Them"}</strong>
           <div className="data-list">
             <div className="data-row">
               <span className="data-label">Wins</span>
@@ -28,7 +28,7 @@ function GameDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
         </section>
         <section className="game-data-section" data-team="your">
           <span className="panel-caption">your team</span>
-          <strong>{score?.teamOneName ?? "Us"}</strong>
+          <strong title={score?.teamOneName ?? "Us"}>{score?.teamOneName ?? "Us"}</strong>
           <div className="data-list">
             <div className="data-row">
               <span className="data-label">Wins</span>

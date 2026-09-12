@@ -3,9 +3,9 @@
   width: clamp(4rem, 5.4vw, 4.7rem);
   height: clamp(5.75rem, 7.5vw, 6.7rem);
   container-type: inline-size;
-  border-radius: 0.68rem;
+  border-radius: 10% / 7%;
   border: 1px solid rgba(22, 31, 19, 0.18);
-  background: linear-gradient(180deg, #fffdfa 0%, #f4ecdf 100%);
+  background: linear-gradient(180deg, var(--card-paper) 0%, var(--card-paper-edge) 100%);
   box-shadow:
     0 0.22rem 0.55rem rgba(0, 0, 0, 0.18),
     inset 0 0 0 0.1rem rgba(255, 255, 255, 0.76);
@@ -14,21 +14,22 @@
 
 .playing-card-face.hearts,
 .playing-card-face.diams {
-  color: #aa2d2d;
+  color: var(--card-red);
 }
 
 .playing-card-face.spades,
 .playing-card-face.clubs {
-  color: #162319;
+  color: var(--card-black);
 }
 
 .playing-card-corner {
   position: absolute;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  align-items: baseline;
+  gap: .04em;
   line-height: 1;
   font-weight: 700;
-  font-size: 0.72rem;
+  font-size: 1rem;
   letter-spacing: 0.01em;
 }
 
@@ -48,14 +49,14 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1.78rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
 .playing-card-face.back {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    linear-gradient(180deg, #3d1830 0%, #1f0a1f 100%);
+    linear-gradient(180deg, #29312c 0%, #121a16 100%);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
@@ -71,21 +72,21 @@
 
 @supports (font-size: 1cqw) {
   .playing-card-corner {
-    font-size: 24cqw;
+    font-size: 30cqw;
   }
 
   .playing-card-corner-top {
-    top: 9.5cqw;
-    left: 10.75cqw;
+    top: 6cqw;
+    left: 6cqw;
   }
 
   .playing-card-corner-bottom {
-    right: 10.75cqw;
-    bottom: 9.5cqw;
+    right: 6cqw;
+    bottom: 6cqw;
   }
 
   .playing-card-center {
-    font-size: 51cqw;
+    font-size: 60cqw;
   }
 
   .playing-card-back-mark {
@@ -95,7 +96,8 @@
 }
 
 .playing-card-shell.winning-card .playing-card-face {
-  box-shadow:
-    0 0 0 0.16rem rgba(214, 186, 116, 0.95),
-    0 0 1rem rgba(214, 186, 116, 0.4);
+  box-shadow: 0 0 0 2px var(--ui-gold), 0 5px 12px rgb(0 0 0 / 24%);
 }
+
+.playing-card-rank { font-variant-numeric: lining-nums; letter-spacing: -.055em; }
+.playing-card-corner-suit { font-size: .78em; }

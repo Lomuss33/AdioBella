@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import "./styles/tokens.css";
 import "./app.css";
 import "./styles/playing-cards.css";
 import "./styles/table.css";

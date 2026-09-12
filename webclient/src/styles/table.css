@@ -1,8 +1,8 @@
 /* One table layout, with its own dimensions rather than viewport-wide zoom. */
 .app-shell.game-layout {
-  --game-text: #f3f1fb;
-  --game-muted: #b5bfd0;
-  --game-line: #a3b5d42e;
+  --game-text: var(--ui-text);
+  --game-muted: var(--ui-muted);
+  --game-line: var(--ui-line);
   --arena-height: calc(100dvh - max(4px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -12,7 +12,7 @@
   width: 100%;
   min-height: 100dvh;
   color: var(--game-text);
-  font: 14px/1.4 "Trebuchet MS", sans-serif;
+  font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
   scroll-snap-type: none;
 }
 .game-layout .table-stage, .game-layout .after-table {
@@ -20,7 +20,8 @@
   zoom: 1; transform: none; scroll-snap-align: none; align-self: start;
 }
 .table-arena {
-  --trick-card-width: clamp(62px, 6vw, 88px);
+  --trick-card-max: 88px;
+  --trick-card-width: clamp(62px, 6vw, var(--trick-card-max));
   --trick-card-height: calc(var(--trick-card-width) * 1.42);
   --trick-offset-y: calc(var(--trick-card-height) * .6);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
@@ -34,138 +35,137 @@
   height: var(--arena-height);
   min-height: 560px;
   padding: clamp(8px, 1vw, 14px);
-  border: 1px solid #b9c5df38;
+  border: 1px solid color-mix(in srgb, var(--ui-muted) 21.96%, transparent);
   border-radius: 16px;
   background: radial-gradient(ellipse at center, var(--felt-center), var(--felt-edge));
-  box-shadow: inset 0 1px 0 #ffffff12, 0 10px 32px #0003;
-}
+  box-shadow: var(--ui-shadow);
+ border-color: var(--ui-line); }
 .table-arena .arena-header { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 12px; align-items: start; }
 .table-arena .arena-play { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(200px, 2.8fr) minmax(80px, 1fr); grid-template-areas: ". north ." "west trick east"; grid-template-rows: auto 1fr; align-items: center; gap: 6px 10px; min-width: 0; }
 .table-arena .arena-bottom { display: grid; gap: 8px; min-width: 0; }
 .table-arena .arena-status { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-.table-arena [data-team="your"] { --team-color: #8be4c6; --team-surface: #133b38; }
-.table-arena [data-team="opponent"] { --team-color: #f3acbf; --team-surface: #452936; }
+.table-arena [data-team="your"] { --team-color: var(--ui-team-your); --team-surface: var(--ui-glass); }
+.table-arena [data-team="opponent"] { --team-color: var(--ui-team-opponent); --team-surface: var(--ui-glass); }
 .table-arena .game-data-card { display: block; grid-area: auto; width: 100%; max-width: none; padding: 0; border: 0; border-radius: 0; background: none; container-type: normal; }
 .table-arena .game-data-grid { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.table-arena .game-data-section { padding: 8px 10px; border-radius: 10px; background: var(--team-surface); box-shadow: inset 0 2px 0 var(--team-color); gap: 3px; min-width: 0; }
+.table-arena .game-data-section { padding: 8px 10px; border-radius: 10px; background: var(--ui-glass); box-shadow: inset 0 1px 0 var(--ui-highlight); gap: 3px; min-width: 0; }
 .table-arena .game-data-section > .panel-caption { color: var(--team-color); font-size: 11px; line-height: 1.4; letter-spacing: .08em; }
-.table-arena .game-data-section > strong { font: 600 clamp(16px, 1.4vw, 22px)/1.2 Georgia, serif; color: #fff6f0; white-space: normal; overflow-wrap: anywhere; }
+.table-arena .game-data-section > strong { font: 600 clamp(16px, 1.4vw, 22px)/1.2 Georgia, serif; color: var(--ui-text); white-space: normal; overflow-wrap: anywhere; }
 .table-arena .data-list { gap: 3px; }
 .table-arena .data-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; line-height: 1.35; }
-.table-arena .data-label { color: #c9ced8; font-size: 11px; line-height: 1.35; letter-spacing: .03em; white-space: normal; }
-.table-arena .data-value { color: #f8f6ff; font-size: 13px; line-height: 1.35; font-variant-numeric: tabular-nums; }
+.table-arena .data-label { color: var(--ui-muted); font-size: 11px; line-height: 1.35; letter-spacing: .03em; white-space: normal; }
+.table-arena .data-value { color: var(--ui-text); font-size: 13px; line-height: 1.35; font-variant-numeric: tabular-nums; }
 .table-arena .data-row:nth-child(2) .data-value { color: var(--team-color); font-weight: 700; }
-.table-arena .match-data-card { display: block; grid-area: auto; width: 100%; max-width: none; min-width: 0; padding: 8px; border: 0; border-radius: 8px; background: #151f32dd; container-type: normal; color: #bfd4f6; }
+.table-arena .match-data-card { display: block; grid-area: auto; width: 100%; max-width: none; min-width: 0; padding: 8px; border: 0; border-radius: 8px; background: var(--ui-glass); container-type: normal; color: var(--ui-muted); }
 .table-arena .match-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 40px; font-size: 12px; }
 .table-arena summary::-webkit-details-marker { display: none; }
-.table-arena .match-summary-title { color: #f0d09a; font-weight: 700; }
-.table-arena .match-details-label { color: #d2b3f7; background: #342c4e; border: 1px solid #a388cf55; border-radius: 6px; padding: 5px 8px; min-height: 32px; font: inherit; cursor: pointer; }
+.table-arena .match-summary-title { color: var(--ui-text); font-weight: 700; }
+.table-arena .match-details-label { color: var(--ui-text); background: var(--ui-control); border: 1px solid color-mix(in srgb, var(--ui-muted) 33.33%, transparent); border-radius: 6px; padding: 5px 8px; min-height: 32px; font: inherit; cursor: pointer;  border-color: var(--ui-line); }
 .table-arena .match-details-label::after { content: " +"; }
 .table-arena .match-data-card[open] .match-details-label::after { content: " −"; }
-.table-arena .match-meld-details { margin-top: 6px; display: grid; gap: 6px; font-size: 12px; color: #d4c5ed; overflow-wrap: anywhere; }
+.table-arena .match-meld-details { margin-top: 6px; display: grid; gap: 6px; font-size: 12px; color: var(--ui-muted); overflow-wrap: anywhere; }
 .table-arena .match-meld-details p { margin: 0; }
 .table-arena .match-meld-details > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; }
 
-.table-arena .seat-panel { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; width: 100%; max-width: 220px; min-width: 0; min-height: 0; height: auto; margin: 0; padding: 7px 8px; gap: 3px; justify-self: center; align-self: center; align-content: center; border: 1px solid transparent; border-radius: 10px; background: color-mix(in srgb, var(--team-surface, #22354b) 85%, transparent); box-shadow: inset 0 -2px 0 var(--team-color, #9cb9ed); backdrop-filter: none; }
+.table-arena .seat-panel { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; position: relative; isolation: isolate; overflow: hidden; width: 100%; max-width: 220px; min-width: 0; min-height: 0; height: auto; margin: 0; padding: 7px 8px; gap: 3px; justify-self: center; align-self: center; align-content: center; border: 1px solid transparent; border-radius: 10px; background: var(--ui-glass); box-shadow: inset 0 1px 0 var(--ui-highlight); backdrop-filter: none; }
 .table-arena .seat-north { grid-area: north; }
 .table-arena .seat-west { grid-area: west; }
 .table-arena .seat-east { grid-area: east; }
 .table-arena .seat-direction-label { color: var(--team-color); font-size: 10px; letter-spacing: .08em; opacity: 1; }
 .table-arena .seat-main-copy { min-width: 0; width: 100%; }
 .table-arena .seat-main-copy strong { font-size: 14px; line-height: 1.25; width: 100%; overflow-wrap: anywhere; }
-.table-arena .seat-main-copy small { color: #c8ceda; font-size: 11px; line-height: 1.3; width: 100%; overflow-wrap: anywhere; }
-.table-arena .seat-active { border-color: var(--team-color); box-shadow: inset 0 -2px 0 var(--team-color), 0 0 12px #ffffff12; }
-.table-arena .seat-winner-glow { border-color: #f2ca83; box-shadow: 0 0 0 2px #f2ca8350; }
-.table-arena .seat-badge { min-width: 0; padding: 1px 5px; font-size: 10px; line-height: 1.3; color: #f0d09a; border: 0; background: #65502466; }
-.table-arena .seat-badge-trump { color: #d6b4ff; background: #533e6d66; }
+.table-arena .seat-main-copy small { color: var(--ui-muted); font-size: 11px; line-height: 1.3; width: 100%; overflow-wrap: anywhere; }
+.table-arena .seat-active { border-color: var(--ui-gold); box-shadow: inset 0 1px 0 var(--ui-highlight); }
+.table-arena .seat-winner-glow { border-color: var(--ui-gold-light); box-shadow: inset 0 0 0 1px var(--ui-gold); }
+.table-arena .seat-badge { min-width: 0; padding: 1px 5px; font-size: 10px; line-height: 1.3; color: var(--ui-muted); border: 0; background: var(--ui-control); }
+.table-arena .seat-badge-trump { color: var(--ui-gold-light); background: var(--ui-control); }
 .table-arena .seat-badge-placeholder, .table-arena .south-inline-badge-placeholder { display: none; }
 
 .table-arena .trick-pool-shell { grid-area: trick; width: 100%; max-width: 720px; min-width: 0; margin: 0; justify-self: center; padding: 0; }
-.table-arena .trick-pool { min-height: 0; padding: 18px 6px 24px; display: block; border: 1px solid #dfcc9659; border-radius: 38%; background: radial-gradient(ellipse at center, #ffffff08, #07141050); box-shadow: inset 0 0 24px #0003, 0 5px 16px #0002; overflow: visible; backdrop-filter: none; }
+.table-arena .trick-pool { min-height: 0; padding: 18px 6px 24px; display: block; border: 1px solid color-mix(in srgb, var(--ui-muted) 34.90%, transparent); border-radius: 38%; background: radial-gradient(ellipse at center, var(--ui-highlight), rgb(0 0 0 / 12%)); box-shadow: inset 0 0 24px rgb(0 0 0 / 12%); overflow: visible; backdrop-filter: none;  border-color: color-mix(in srgb, var(--ui-gold) 24%, transparent); }
 .table-arena .trick-cards { min-height: calc(var(--trick-card-height) * 2.4 + 28px); width: 100%; }
-.table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: #e4d6b3; background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
+.table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: var(--ui-muted); background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
 .table-arena .trick-cards .playing-card-face { width: var(--trick-card-width); height: var(--trick-card-height); }
 .table-arena .trick-cards .playing-card-shell { width: var(--trick-card-width); height: var(--trick-card-height); }
-.table-arena .trick-owner { color: #d4dfd9; font: 10px/1.2 "Trebuchet MS", sans-serif; letter-spacing: .06em; }
-.table-arena .trick-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; font: 28px/1 Georgia, serif; color: #a1bfce45; pointer-events: none; }
-.table-arena .trick-empty span { color: #e8adb345; }
-.table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: #39280b; background: #f2d398; border: 0; box-shadow: 0 3px 8px #0003; }
+.table-arena .trick-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; font: 28px/1 Georgia, serif; color: color-mix(in srgb, var(--ui-muted) 27.06%, transparent); pointer-events: none; }
+.table-arena .trick-empty span { color: color-mix(in srgb, var(--ui-muted) 27.06%, transparent); }
+.table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: var(--ui-gold-light); background: var(--ui-solid); border: 0; box-shadow: var(--ui-shadow); }
 .table-arena .trick-points-chip[class*="collect-"] { opacity: 0; }
 
 .table-arena .player-hand-area { grid-area: auto; width: min(100%, 600px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
-.table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(8, minmax(0, 1fr)); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
+.table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(8, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .82)))); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
 .table-arena .hand-slot { min-width: 0; }
 .table-arena .hand-slot-empty::before { content: ""; display: block; width: 100%; aspect-ratio: 5 / 7.1; }
 .table-arena .player-hand-area .playing-card-shell { width: 100%; min-width: 0; height: auto; touch-action: manipulation; }
 .table-arena .player-hand-area .playing-card-face { width: 100%; height: auto; aspect-ratio: 5 / 7.1; }
-.table-arena .playing-card-shell.legal-choice .playing-card-face { box-shadow: 0 0 0 2px #85e3c1, 0 4px 10px #0004; }
-.table-arena .playing-card-shell.blocked-choice { opacity: .64; }
+.table-arena .playing-card-shell.legal-choice .playing-card-face { box-shadow: 0 0 0 1px var(--ui-gold), 0 4px 10px rgb(0 0 0 / 24%); }
+.table-arena .playing-card-shell.blocked-choice { opacity: .78; }
 .table-arena .playing-card-shell.blocked-choice .playing-card-face { filter: saturate(.65); }
-.table-arena .playing-card-shell:focus-visible .playing-card-face { outline: 3px solid #f4d28f; outline-offset: 2px; }
+.table-arena .playing-card-shell:focus-visible .playing-card-face { outline: 3px solid var(--ui-focus); outline-offset: 2px; }
 .table-arena .south-inline-info { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; padding: 0; }
 .table-arena .south-inline-status-row { width: auto; display: flex; gap: 4px; order: 2; }
-.table-arena .south-inline-main { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; font-size: 12px; line-height: 1.35; white-space: normal; letter-spacing: 0; color: #8be4c6; }
+.table-arena .south-inline-main { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; font-size: 12px; line-height: 1.35; white-space: normal; letter-spacing: 0; color: var(--ui-text); }
 .table-arena .south-inline-main strong { font-size: 14px; letter-spacing: 0; overflow-wrap: anywhere; }
 .table-arena .south-inline-main > span { overflow-wrap: anywhere; }
-.table-arena .south-inline-seat, .table-arena .south-inline-separator { font-size: 10px; color: #b0c6c0; }
+.table-arena .south-inline-seat, .table-arena .south-inline-separator { font-size: 10px; color: var(--ui-muted); }
 .table-arena .south-inline-badge { font-size: 10px; padding: 1px 5px; min-width: 0; }
 .table-arena .score-bar { position: static; grid-area: auto; width: 100%; padding: 0; margin: 0; min-width: 0; background: none; border: 0; }
-.table-arena .score-item { padding: 7px 10px; background: #172338e8; border: 0; border-radius: 8px; box-shadow: none; gap: 3px; min-width: 0; }
+.table-arena .score-item { padding: 7px 10px; background: var(--ui-glass); border: 0; border-radius: 8px; box-shadow: none; gap: 3px; min-width: 0; }
 .table-arena .score-header { flex-wrap: wrap; gap: 2px 10px; }
-.table-arena .score-label { color: #a6c6ff; font-size: 10px; letter-spacing: .08em; }
-.table-arena .score-item strong { font: 600 14px/1.35 "Trebuchet MS", sans-serif; overflow-wrap: anywhere; }
+.table-arena .score-label { color: var(--ui-muted); font-size: 10px; letter-spacing: .08em; }
+.table-arena .score-item strong { font: 600 14px/1.35 "Segoe UI", system-ui, sans-serif; overflow-wrap: anywhere; }
 .table-arena .score-item small { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
-.table-arena .score-item .trump-line { color: #e7c990; white-space: normal; flex-wrap: wrap; }
+.table-arena .score-item .trump-line { color: var(--ui-muted); white-space: normal; flex-wrap: wrap; }
 .table-arena .trump-suit-symbol { font-size: 16px; }
 .table-arena .match-corner-controls { position: static; grid-area: auto; width: auto; display: flex; flex-wrap: wrap; gap: 6px; grid-auto-rows: auto; }
-.table-arena .match-corner-button { width: auto; height: auto; min-height: 40px; padding: 7px 10px; font-size: 12px; line-height: 1.2; border: 1px solid #ffffff20; border-radius: 8px; white-space: normal; }
-.table-arena .match-corner-button-warning { color: #edcd94; background: #473820; }
-.table-arena .match-corner-button-danger { color: #f6b4c5; background: #472735; }
-.game-layout :is(summary, button):focus-visible { outline: 2px solid #f4d28f; outline-offset: 3px; }
+.table-arena .match-corner-button { width: auto; height: auto; min-height: 40px; padding: 7px 10px; font-size: 12px; line-height: 1.2; border: 1px solid color-mix(in srgb, var(--ui-text) 12.55%, transparent); border-radius: 8px; white-space: normal; }
+.table-arena .match-corner-button-warning { color: var(--ui-warning); background: var(--ui-glass); }
+.table-arena .match-corner-button-danger { color: var(--ui-danger); background: var(--ui-glass); }
+.game-layout :is(summary, button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
 
 /* Terminal is secondary to play, with a bounded, independently scrollable feed. */
-.game-layout .terminal-panel { display: block; width: 100%; padding: 10px; border: 1px solid var(--game-line); border-radius: 12px; background: #141b2a; box-shadow: 0 8px 24px #0003; }
+.game-layout .terminal-panel { display: block; width: 100%; padding: 10px; border: 1px solid var(--game-line); border-radius: 12px; background: var(--ui-glass); box-shadow: var(--ui-shadow);  backdrop-filter: blur(var(--ui-blur));  -webkit-backdrop-filter: blur(var(--ui-blur)); }
 .game-layout .terminal-header { display: flex; flex-wrap: wrap; gap: 6px 12px; min-height: 38px; cursor: pointer; list-style: none; }
 .game-layout .terminal-header::-webkit-details-marker { display: none; }
-.game-layout .terminal-header h2 { margin: 0; font: 500 20px/1.25 Georgia, serif; color: #e8dcfb; }
-.game-layout .terminal-header > span { font-size: 11px; color: #99d8c2; }
-.game-layout .terminal-header > span::after { content: " +"; color: #c9b1ee; }
+.game-layout .terminal-header h2 { margin: 0; font: 500 20px/1.25 Georgia, serif; color: var(--ui-text); }
+.game-layout .terminal-header > span { font-size: 11px; color: var(--ui-muted); }
+.game-layout .terminal-header > span::after { content: " +"; color: var(--ui-muted); }
 .game-layout .terminal-panel[open] .terminal-header > span::after { content: " −"; }
 .game-layout .terminal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
 .game-layout .terminal-section { gap: 6px; min-width: 0; }
-.game-layout .terminal-subheader { flex-wrap: wrap; gap: 4px 8px; font-size: 11px; line-height: 1.3; color: #aab8d2; }
-.game-layout .terminal-subheader .panel-caption { color: #a6c6ff; font-size: 11px; letter-spacing: .08em; }
-.game-layout .terminal-section + .terminal-section .panel-caption { color: #d1b0f4; }
-.game-layout .terminal-lines { display: block; max-height: 260px; min-height: 54px; overflow: auto; overflow-anchor: none; padding-right: 3px; font: 12px/1.5 "Trebuchet MS", sans-serif; scrollbar-color: #7884a5 #151d2b; scrollbar-width: thin; overscroll-behavior: contain; }
+.game-layout .terminal-subheader { flex-wrap: wrap; gap: 4px 8px; font-size: 11px; line-height: 1.3; color: var(--ui-muted); }
+.game-layout .terminal-subheader .panel-caption { color: var(--ui-muted); font-size: 11px; letter-spacing: .08em; }
+.game-layout .terminal-section + .terminal-section .panel-caption { color: var(--ui-muted); }
+.game-layout .terminal-lines { display: block; max-height: 260px; min-height: 54px; overflow: auto; overflow-anchor: none; padding-right: 3px; font: 12px/1.5 "Segoe UI", system-ui, sans-serif; scrollbar-color: var(--ui-muted) var(--ui-solid); scrollbar-width: thin; overscroll-behavior: contain; }
 .game-layout .terminal-lines::-webkit-scrollbar { width: 6px; }
-.game-layout .terminal-lines::-webkit-scrollbar-thumb { background: #7884a5; border: 0; }
+.game-layout .terminal-lines::-webkit-scrollbar-thumb { background: var(--ui-muted); border: 0; }
 .game-layout .terminal-lines::-webkit-scrollbar-track { background: transparent; }
 .game-layout .terminal-round-group { padding: 0; margin-bottom: 12px; border: 0; border-radius: 0; background: none; gap: 3px; }
-.game-layout .terminal-round-title { color: #a8c6f6; font-size: 10px; letter-spacing: .05em; padding-bottom: 3px; }
+.game-layout .terminal-round-title { color: var(--ui-muted); font-size: 10px; letter-spacing: .05em; padding-bottom: 3px; }
 .game-layout .terminal-play-row, .game-layout .terminal-round-winner, .game-layout .terminal-line { grid-template-columns: minmax(32px, max-content) minmax(0, 1fr); gap: 8px; padding: 5px 7px; border: 0; border-radius: 5px; font-size: 12px; overflow-wrap: anywhere; }
 .game-layout .terminal-line { margin-bottom: 5px; }
-.game-layout .terminal-play-row { color: #d2def2; background: #24344b80; }
-.game-layout .terminal-round-winner { color: #a7e7d0; background: #1a403b; }
-.game-layout .terminal-round-winner strong { color: #a7e7d0; font-size: 10px; letter-spacing: .04em; }
-.game-layout .terminal-game-winner { color: #d9b7fc; background: #37294a; }
-.game-layout .terminal-match-winner { color: #f4d596; background: #443723; }
-.game-layout .terminal-seq { color: #a1afc3; font: 10px/1.5 Consolas, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.game-layout .terminal-empty { background: transparent; padding: 10px 0; color: #aeb9cc; font-size: 12px; }
-.game-layout .terminal-latest { color: #bee1ff; background: #233958; border: 1px solid #638bc766; border-radius: 6px; padding: 4px 8px; min-height: 32px; cursor: pointer; font-size: 11px; }
-.game-layout .terminal-lines:focus-visible { outline: 2px solid #a6c6ff; outline-offset: 2px; }
+.game-layout .terminal-play-row { color: var(--ui-text); background: var(--ui-control); }
+.game-layout .terminal-round-winner { color: var(--ui-gold-light); background: var(--ui-selected); }
+.game-layout .terminal-round-winner strong { color: var(--ui-gold-light); font-size: 10px; letter-spacing: .04em; }
+.game-layout .terminal-game-winner { color: var(--ui-gold-light); background: var(--ui-selected); }
+.game-layout .terminal-match-winner { color: var(--ui-gold-light); background: var(--ui-selected); }
+.game-layout .terminal-seq { color: var(--ui-muted); font: 10px/1.5 Consolas, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.game-layout .terminal-empty { background: transparent; padding: 10px 0; color: var(--ui-muted); font-size: 12px; }
+.game-layout .terminal-latest { color: var(--ui-text); background: var(--ui-control); border: 1px solid color-mix(in srgb, var(--ui-muted) 40.00%, transparent); border-radius: 6px; padding: 4px 8px; min-height: 32px; cursor: pointer; font-size: 11px;  border-color: var(--ui-line); }
+.game-layout .terminal-lines:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 
 @media (max-width: 700px) {
-  .table-arena { --trick-card-width: clamp(56px, 14vw, 70px); border-radius: 12px; padding: 6px; gap: 6px; }
+  .table-arena { --trick-card-max: clamp(44px, 14vw, 58px); border-radius: 12px; padding: 6px; gap: 6px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .table-arena .arena-play { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; gap: 6px; }
-  .table-arena .seat-panel { padding: 5px; align-self: start; }
+  .table-arena .seat-panel { padding: 5px; align-self: start;     }
   .table-arena .seat-main-copy strong { font-size: 12px; }
   .table-arena .seat-main-copy small { font-size: 10px; }
   .table-arena .seat-direction-label { font-size: 9px; letter-spacing: .02em; }
-  .table-arena .game-data-section { padding: 6px 8px; }
+  .table-arena .game-data-section { padding: 6px 8px;     }
   .table-arena .game-data-section .data-list { display: flex; flex-wrap: wrap; gap: 3px 12px; }
   .table-arena .data-row { display: flex; gap: 4px; }
-  .table-arena .match-data-card { padding: 3px 6px; }
+  .table-arena .match-data-card { padding: 3px 6px;  background: var(--ui-glass);  color: var(--ui-muted); }
   .table-arena .match-summary { font-size: 11px; gap: 3px 8px; min-height: 32px; }
   .table-arena .arena-status { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .table-arena .match-corner-controls { justify-content: flex-end; }
@@ -175,15 +175,15 @@
   .game-layout .terminal-lines { max-height: 200px; }
 }
 @media (max-height: 500px) and (min-width: 600px) {
-  .table-arena { --trick-card-width: 52px; min-height: 0; gap: 4px; }
+  .table-arena { --trick-card-max: 52px; min-height: 0; gap: 4px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1.5fr) minmax(180px, 1fr); }
   .table-arena .arena-play { grid-template-columns: minmax(70px, 1fr) minmax(180px, 2fr) minmax(70px, 1fr); grid-template-areas: ". north ." "west trick east"; gap: 3px; }
-  .table-arena .seat-panel { padding: 3px 6px; }
+  .table-arena .seat-panel { padding: 3px 6px;     }
   .table-arena .player-hand-area { width: min(100%, 470px); }
   .table-arena .arena-status { grid-template-columns: minmax(0, 1fr) auto; }
 }
 @media (min-width: 1400px) and (min-height: 650px) {
-  .app-shell.game-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); max-width: 2200px; margin-inline: auto; }
+  .app-shell.game-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); max-width: 2200px; margin-inline: auto;  --game-text: var(--ui-text);  --game-muted: var(--ui-muted);  --game-line: var(--ui-line); }
   .game-layout .terminal-grid { grid-template-columns: minmax(0, 1fr); }
   .game-layout .terminal-lines { max-height: 300px; }
   .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100dvh - 8px); overflow-y: auto; scrollbar-width: thin; }
@@ -201,7 +201,7 @@
 .table-arena .arena-header { min-height: 0; }
 .table-arena .arena-play { min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
 .table-arena .arena-bottom { min-height: 0; gap: 5px; }
-.table-arena .game-data-section { padding: 5px 8px; }
+.table-arena .game-data-section { padding: 5px 8px;     }
 .table-arena .game-data-section > strong,
 .table-arena .seat-main-copy strong,
 .table-arena .seat-main-copy small {
@@ -209,31 +209,35 @@
 }
 .table-arena .game-data-section .data-list { display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .table-arena .game-data-section .data-row { display: flex; gap: 4px; }
-.table-arena .seat-panel { padding: 4px 6px; gap: 2px; }
+.table-arena .seat-panel { padding: 4px 6px; gap: 2px;     }
 .table-arena .seat-badges { min-height: 15px; }
 .table-arena .trick-pool-shell {
   height: 100%; min-height: 0; align-self: stretch;
   container-type: size;
 }
 .table-arena .trick-pool {
-  --trick-card-width: max(32px, min(88px, calc((100cqh - 58px) / 2.84), calc((100cqw - 24px) / 3.8)));
+  /* Share the responsive cap with card faces and animation offsets.
+     Reserve vertical space for padding and the ownership marker. */
+  --trick-card-width: max(32px, min(var(--trick-card-max), calc((100cqh - 66px) / 2.84), calc((100cqw - 24px) / 3.8)));
   --trick-card-height: calc(var(--trick-card-width) * 1.42);
   --trick-offset-y: calc(var(--trick-card-height) * .5);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
   --trick-entry-offset-y: calc(var(--trick-card-height) * .8);
   --trick-entry-offset-x: calc(var(--trick-card-width) * 1.8);
   position: absolute; inset: 0; height: 100%; padding: 20px 6px 24px;
-}
+ border-color: color-mix(in srgb, var(--ui-gold) 24%, transparent);  background: radial-gradient(ellipse at center, var(--ui-highlight), rgb(0 0 0 / 12%));  box-shadow: inset 0 0 24px rgb(0 0 0 / 12%); }
 .table-arena .trick-cards { height: 100%; min-height: 0; }
-.table-arena .trick-points-chip { bottom: 3px; }
+/* Measurable even before the first card is played; never occupies layout space. */
+.table-arena .trick-size-guide { position: absolute; width: var(--trick-card-width); height: 0; visibility: hidden; pointer-events: none; }
+.table-arena .trick-points-chip { bottom: 3px;  color: var(--ui-gold-light);  background: var(--ui-solid);  box-shadow: var(--ui-shadow); }
 .table-arena .player-hand-area { width: min(100%, 600px, calc(var(--arena-height) * .82)); padding-top: 0; gap: 3px; }
 .table-arena .player-hand-area .card-fan-row { gap: 4px; }
 .table-arena .south-inline-info { flex-wrap: nowrap; }
-.table-arena .south-inline-main { flex-wrap: nowrap; min-width: 0; }
+.table-arena .south-inline-main { flex-wrap: nowrap; min-width: 0;  color: var(--ui-text); }
 .table-arena .south-inline-main strong,
 .table-arena .south-inline-main > span:last-child { min-width: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 .table-arena .south-inline-status-row { flex-shrink: 0; }
-.table-arena .score-item { padding: 5px 8px; }
+.table-arena .score-item { padding: 5px 8px;  background: var(--ui-glass); }
 .table-arena .score-item > strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .table-arena .score-item .error-line { max-height: 36px; overflow-y: auto; }
 
@@ -254,16 +258,16 @@
     min-height: 350px; padding: 5px; gap: 5px;
     grid-template-columns: minmax(0, 1fr) clamp(190px, 30vw, 280px);
     grid-template-rows: auto minmax(0, 1fr);
-  }
+      }
   .table-arena .arena-header { grid-column: 1 / -1; grid-row: 1; }
   .table-arena .arena-play { grid-column: 1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; }
   .table-arena .arena-bottom { grid-column: 2; grid-row: 2; align-content: center; }
   .table-arena .player-hand-area { width: min(100%, 192px); }
-  .table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .table-arena .player-hand-area .card-fan-row { grid-template-columns: repeat(4, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .82)))); gap: 4px; }
   .table-arena .arena-status { grid-template-columns: minmax(0, 1fr); gap: 3px; }
   .table-arena .match-corner-controls { display: flex; flex-wrap: nowrap; justify-content: stretch; }
   .table-arena .match-corner-button { flex: 1; min-height: 32px; padding: 4px; font-size: 11px; }
-  .table-arena .score-item { padding: 3px 6px; }
+  .table-arena .score-item { padding: 3px 6px;  background: var(--ui-glass); }
   .table-arena .score-item > strong { font-size: 12px; line-height: 1.25; }
   .table-arena .seat-main-copy small { display: none; }
   .table-arena .seat-badges { min-height: 0; }
@@ -273,7 +277,84 @@
 
 /* Below usable dimensions, permit page scrolling rather than clipping play. */
 @media (max-width: 279px) {
-  .table-arena { min-width: 280px; }
+  .table-arena { min-width: 280px;     }
+}
+
+/* Seat decoration sits behind the copy and consumes no layout space. */
+.table-arena .seat-panel > .seat-marker {
+  position: absolute;
+  inset: -20% 0 auto;
+  width: 100%;
+  height: 140%;
+  opacity: .14;
+  z-index: 0;
+  pointer-events: none;
+}
+.table-arena .seat-panel > .seat-main-copy,
+.table-arena .seat-panel > .seat-badges { position: relative; z-index: 1; }
+/* Position is a miniature table, with directional motion toward its center. */
+.table-arena .seat-marker {
+  display: block;
+  width: 20px;
+  height: 18px;
+  flex: 0 0 20px;
+  justify-self: center;
+  align-self: center;
+  overflow: visible;
+  color: var(--team-color, var(--ui-muted));
+}
+.seat-marker-table {
+  fill: var(--ui-control);
+  stroke: var(--ui-muted);
+  stroke-opacity: .4;
+  stroke-width: 1;
+}
+.seat-marker-places { fill: var(--ui-muted); opacity: .35; }
+.seat-marker-dot { fill: currentColor; }
+.seat-marker-pointer {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .65;
+}
+.seat-marker-trail {
+  fill: none;
+  stroke: var(--ui-gold-light);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.seat-marker-halo {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.table-arena .seat-marker-active,
+.table-arena .seat-marker-winner { color: var(--ui-gold-light); }
+.seat-marker-active .seat-marker-pointer,
+.seat-marker-winner .seat-marker-pointer { opacity: 1; stroke-width: 2; }
+.seat-marker-active .seat-marker-table,
+.seat-marker-winner .seat-marker-table { stroke: var(--ui-gold); stroke-opacity: .8; }
+.seat-marker-active .seat-marker-trail { animation: seat-cue-inward 1600ms ease-out 2; }
+.seat-marker-active .seat-marker-halo { opacity: .55; animation: seat-cue-ring 1600ms ease-out 2; }
+.seat-marker-winner .seat-marker-halo { opacity: .8; animation: seat-cue-ring 800ms ease-out 1; }
+.table-arena .south-inline-main { align-items: center; }
+@keyframes seat-cue-inward {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  25% { opacity: .9; }
+  70% { stroke-dashoffset: 0; opacity: .9; }
+  100% { stroke-dashoffset: -1; opacity: 0; }
+}
+@keyframes seat-cue-ring {
+  0% { transform: scale(.7); opacity: .85; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

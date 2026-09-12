@@ -16,6 +16,15 @@ On macOS or Linux, use `./gradlew runGame`. Open <http://localhost:8080>. Gradle
 
 For hot reload, browser-only development, and custom ports, see [Development](docs/development.md).
 
+For live UI development without Java, run from the project root:
+
+```powershell
+npm run setup
+npm run dev
+```
+
+Setup is needed once after cloning or when frontend dependencies change. Open the local URL printed by Vite (normally <http://localhost:5174>). Saved UI changes update automatically. Use `npm run dev:full` for live development with the Java backend.
+
 ## Features
 
 - Team and player names, three AI difficulty levels, and table themes.

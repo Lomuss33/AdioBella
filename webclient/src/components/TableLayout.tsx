@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
 import GameDataCard from "./GameDataCard";
 import MatchDataCard from "./MatchDataCard";
@@ -27,6 +28,33 @@ interface TableLayoutProps {
 function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
   canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch }: TableLayoutProps) {
+  const arenaRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const arena = arenaRef.current;
+    const guide = arena?.querySelector<HTMLElement>(".trick-size-guide");
+    if (!arena || !guide) return;
+    let frame = 0;
+    let previousWidth = 0;
+    const syncHandSize = () => {
+      // Read the actual fitted table card, including short-height constraints.
+      const width = Math.floor(guide.getBoundingClientRect().width * .82);
+      if (width > 0 && width !== previousWidth) {
+        previousWidth = width;
+        arena.style.setProperty("--hand-card-max", `${width}px`);
+      }
+    };
+    syncHandSize();
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(syncHandSize);
+    });
+    observer.observe(guide);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      arena.style.removeProperty("--hand-card-max");
+    };
+  }, []);
   const dealerSeat = snapshot?.players.find((player) => player.dealer)?.seat;
   const declarerSeat = snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat;
   const seat = (position: Seat) => <SeatPanel
@@ -35,7 +63,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     showDealer={dealerSeat === position} showTrumpCaller={declarerSeat === position}
   />;
   return (
-    <section className="table-arena" aria-label="Belot table">
+    <section ref={arenaRef} className="table-arena" aria-label="Belot table">
       <div className="arena-header">
         <GameDataCard snapshot={snapshot} />
         <MatchDataCard snapshot={snapshot} />

@@ -34,11 +34,11 @@ const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 const START_LOADING_MS = 600;
 const THEME_META_COLOR: Record<TableTheme, string> = {
-  GREEN: "#07120d",
-  DARK_BLUE: "#060b16",
-  CHERRY_RED: "#150607",
-  WOODY_BROWN: "#120b07",
-  FINE_BLACK: "#050505"
+  GREEN: "#080c0b",
+  DARK_BLUE: "#080b10",
+  CHERRY_RED: "#100a0d",
+  WOODY_BROWN: "#0e0c09",
+  FINE_BLACK: "#090b0a"
 };
 
 function App() {

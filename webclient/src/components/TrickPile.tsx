@@ -17,6 +17,7 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
   return (
     <div className="trick-pool-shell">
       <div className="trick-pool">
+        <span className="trick-size-guide" aria-hidden="true" />
         <span className="panel-caption">Current trick</span>
         {renderedCards.length === 0 ? <div className="trick-empty" aria-hidden="true">♠ <span>♥</span> ♣ <span>♦</span></div> : null}
         <div
@@ -53,10 +54,10 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
               >
                 <PlayingCard
                   card={playedCard.card}
+                  ownerName={playedCard.playerName}
                   disabled
                   highlighted={animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing"}
                 />
-                <span className="trick-owner" title={playedCard.playerName}>{playedCard.seat.toLowerCase()}</span>
               </div>
             );
           })}

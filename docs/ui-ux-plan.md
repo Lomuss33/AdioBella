@@ -1,5 +1,7 @@
 # UI and UX improvement plan
 
+Current color direction: [Casino color and material plan](color-material-plan.md). The restrained felt-and-glass palette is implemented in source and supersedes the colorful styling described below. Shared tokens cover all five themes, table, terminal, cards, and popups. Existing compact layouts are preserved. No tests, builds, or browser checks were run.
+
 [Documentation index](README.md) · [Architecture](architecture.md) · [Development](development.md)
 
 Status: popup work has been followed by a requested **table and terminal** layout pass. Other items in the broader redesign below remain proposals.
@@ -163,3 +165,13 @@ Split `ActionPanel` by user-facing state and extract session orchestration from 
 - Add meaningful regression coverage for trump rendering, setting selection, focus, duplicate actions, error recovery, and reduced-motion completion. Use screenshots for visual layout checks rather than brittle CSS assertions.
 - Observe a small round of usability sessions with both new and experienced Belot players: start a match, identify their teammate and trump, play a legal card, explain the score, and find rematch. Record hesitations, errors, and assistance needed; revise before considering the redesign complete.
 - Update the user guide and capture current screenshots after implementation. Keep this plan clearly distinguished from documentation of shipped behavior.
+
+## Position cues
+
+Visible developer compass labels have been replaced by a shared `SeatMarker` SVG in player seats, the local hand, and played-card ownership indicators. The miniature table marks the logical seat using position and an inward chevron. Turn changes trigger two brief directional pulses; winning markers receive a single ring, and played-card markers fade into place. Persistent shapes and gold accents preserve state after motion ends. Player names and descriptive positions remain available through accessible SVG labels and titles. Reduced-motion styling disables these animations. No tests, builds, or browser checks were run for this change, as requested.
+
+Mobile trick sizing follow-up: the center now inherits a responsive card cap (up to 58px wide on phones, 52px in short landscape, 88px on desktop). Available table width and height can shrink cards further. Card faces and animation offsets share the same size calculation, with space reserved for ownership markers. This replaces the center?s fixed 88px cap that overrode mobile sizing. No tests, builds, or browser checks were run.
+
+Card hierarchy follow-up: a persistent, invisible trick-size guide reports the fitted table-card width through ResizeObserver. Hand columns cap at 82% of that width, including the four-column landscape layout; narrower hand space can reduce them further. Updates are scheduled per animation frame and the observer is cleaned up on unmount. Rank/suit corner indices now use 30% of card width, center suits use 60%, and proportional corner radii/insets preserve the paper-card appearance at small sizes. Meld cards share the same typography. No tests, builds, or browser checks were run.
+
+Position decoration refinement: removed the ownership icons beneath played cards and retained player names in accessible card labels. Seat-panel markers now sit as large, faint, clipped backgrounds behind the text, with no dedicated grid row. The hand indicator remains inline. No tests, builds, or browser checks were run.

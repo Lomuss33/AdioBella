@@ -1,4 +1,5 @@
 import type { PlayerView, Seat } from "../types";
+import SeatMarker from "./SeatMarker";
 
 interface SeatPanelProps {
   player?: PlayerView;
@@ -25,7 +26,7 @@ function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: Se
         .filter(Boolean)
         .join(" ")}
     >
-      <span className="panel-caption seat-direction-label">{player.seat}{player.currentTurn ? " · playing" : ""}</span>
+      <SeatMarker seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
       <div className="seat-main-copy">
         <strong title={player.name}>{player.name}</strong>
         <small title={player.team}>{player.team} · {player.handSize} cards</small>

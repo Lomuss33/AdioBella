@@ -19,54 +19,9 @@
   --trick-entry-offset-x: 14.6rem;
   --trick-center-x: 50%;
   --table-stage-width: 100%;
-  --page-glow: rgba(213, 182, 101, 0.22);
-  --page-top: #10231b;
-  --page-bottom: #07120d;
-  --felt-center: rgba(39, 97, 66, 0.95);
-  --felt-edge: rgba(9, 31, 20, 0.98);
-  color: #f6edd8;
-  font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+  color: var(--ui-text);
+  font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 12.5px;
-}
-
-:root[data-table-theme="GREEN"] {
-  --page-glow: rgba(213, 182, 101, 0.22);
-  --page-top: #10231b;
-  --page-bottom: #07120d;
-  --felt-center: rgba(39, 97, 66, 0.95);
-  --felt-edge: rgba(9, 31, 20, 0.98);
-}
-
-:root[data-table-theme="DARK_BLUE"] {
-  --page-glow: rgba(120, 153, 214, 0.22);
-  --page-top: #0d1830;
-  --page-bottom: #060b16;
-  --felt-center: rgba(34, 67, 118, 0.96);
-  --felt-edge: rgba(8, 19, 40, 0.99);
-}
-
-:root[data-table-theme="CHERRY_RED"] {
-  --page-glow: rgba(224, 122, 122, 0.2);
-  --page-top: #341315;
-  --page-bottom: #150607;
-  --felt-center: rgba(127, 35, 42, 0.96);
-  --felt-edge: rgba(42, 9, 12, 0.99);
-}
-
-:root[data-table-theme="WOODY_BROWN"] {
-  --page-glow: rgba(194, 156, 102, 0.22);
-  --page-top: #2f2016;
-  --page-bottom: #120b07;
-  --felt-center: rgba(118, 78, 42, 0.96);
-  --felt-edge: rgba(38, 21, 11, 0.99);
-}
-
-:root[data-table-theme="FINE_BLACK"] {
-  --page-glow: rgba(201, 201, 201, 0.18);
-  --page-top: #171717;
-  --page-bottom: #050505;
-  --felt-center: rgba(42, 42, 42, 0.97);
-  --felt-edge: rgba(9, 9, 9, 0.99);
 }
 
 * {
@@ -201,18 +156,18 @@ button {
 
 .trump-suit-symbol.hearts,
 .trump-suit-symbol.diams {
-  color: #d86c6c;
+  color: var(--ui-danger);
 }
 
 .trump-suit-symbol.spades,
 .trump-suit-symbol.clubs {
-  color: #d9dec9;
+  color: var(--ui-text);
 }
 
 .score-label,
 .panel-caption,
 .terminal-seq {
-  color: #b7c59f;
+  color: var(--ui-muted);
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
@@ -316,8 +271,8 @@ button {
   min-width: 3.95rem;
   border-radius: 999px;
   border: 1px solid rgba(246, 237, 216, 0.14);
-  background: rgba(214, 186, 116, 0.12);
-  color: #e8d7a9;
+  background: var(--ui-control);
+  color: var(--ui-muted);
   font-size: 0.58rem;
   line-height: 1.2;
   letter-spacing: 0.08em;
@@ -326,8 +281,8 @@ button {
 }
 
 .seat-badge-trump {
-  background: rgba(121, 211, 110, 0.12);
-  color: #bfe8b7;
+  background: var(--ui-control);
+  color: var(--ui-gold-light);
 }
 
 .seat-badge-placeholder {
@@ -794,7 +749,7 @@ button {
   justify-content: center;
   width: min(100%, var(--table-center-width));
   padding: 0 10px 0;
-  color: #d8dfcf;
+  color: var(--ui-muted);
 }
 
 .south-inline-status-row {
@@ -819,7 +774,7 @@ button {
 
 .south-inline-main strong {
   font-size: 0.86rem;
-  color: #f6edd8;
+  color: var(--ui-text);
   letter-spacing: 0.04em;
   text-transform: none;
 }
@@ -849,8 +804,8 @@ button {
   padding: 2px 6px;
   border-radius: 999px;
   border: 1px solid rgba(246, 237, 216, 0.14);
-  background: rgba(214, 186, 116, 0.12);
-  color: #e8d7a9;
+  background: var(--ui-control);
+  color: var(--ui-muted);
   font-size: 0.55rem;
   line-height: 1.2;
   letter-spacing: 0.08em;
@@ -858,8 +813,8 @@ button {
 }
 
 .south-inline-badge-trump {
-  background: rgba(121, 211, 110, 0.12);
-  color: #bfe8b7;
+  background: var(--ui-control);
+  color: var(--ui-gold-light);
 }
 
 .south-inline-badge-placeholder {
@@ -871,7 +826,7 @@ button {
 }
 
 .south-inline-info-winner .south-inline-main strong {
-  color: #f4e6bd;
+  color: var(--ui-gold-light);
 }
 
 .trick-cards .playing-card-face {
@@ -914,10 +869,7 @@ button {
 }
 
 .playing-card-shell.legal-choice .playing-card-face {
-  box-shadow:
-    0 0 0 0.12rem rgba(121, 211, 110, 0.95),
-    0 0.65rem 1.2rem rgba(0, 0, 0, 0.2),
-    0 0 1.1rem rgba(121, 211, 110, 0.28);
+  box-shadow: 0 0 0 1px var(--ui-gold), 0 6px 14px rgb(0 0 0 / 24%);
 }
 
 .playing-card-shell.selected {
@@ -939,16 +891,11 @@ button {
 
 .playing-card-shell.legal-choice.playable:hover .playing-card-face,
 .playing-card-shell.legal-choice.selected .playing-card-face {
-  box-shadow:
-    0 0 0 0.12rem rgba(121, 211, 110, 0.98),
-    0 0.85rem 1.5rem rgba(0, 0, 0, 0.24),
-    0 0 1.25rem rgba(121, 211, 110, 0.34);
+  box-shadow: 0 0 0 1px var(--ui-gold), 0 6px 14px rgb(0 0 0 / 24%);
 }
 
 .playing-card-shell:focus-visible .playing-card-face {
-  box-shadow:
-    0 0 0 0.16rem rgba(214, 186, 116, 0.95),
-    0 0 1rem rgba(214, 186, 116, 0.3);
+  box-shadow: 0 0 0 2px var(--ui-focus), 0 6px 14px rgb(0 0 0 / 24%);
 }
 
 .trick-cards .playing-card-shell {
@@ -1130,7 +1077,7 @@ button {
   width: 38px;
   height: 52px;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 248, 230, 0.98), rgba(228, 214, 176, 0.95));
+  background: linear-gradient(180deg, var(--card-paper), var(--card-paper-edge));
   border: 1px solid rgba(246, 237, 216, 0.24);
   box-shadow: 0 0.75rem 1.35rem rgba(0, 0, 0, 0.28);
 }
@@ -1267,7 +1214,7 @@ button {
 }
 
 .meld-detail-row .panel-caption {
-  color: #b7c59f;
+  color: var(--ui-muted);
 }
 
 .meld-detail-separator {
@@ -1322,7 +1269,7 @@ button {
 
 .team-settings-label strong {
   font-size: 0.86rem;
-  color: #f6edd8;
+  color: var(--ui-text);
   font-family: Georgia, "Times New Roman", serif;
 }
 
@@ -1513,8 +1460,8 @@ button {
   width: fit-content;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(214, 186, 116, 0.18);
-  color: #f1dfb0;
+  background: var(--ui-selected);
+  color: var(--ui-gold-light);
   font-size: 0.66rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -1548,7 +1495,7 @@ button {
 }
 
 .game-complete-box-title {
-  color: #f1dfb0;
+  color: var(--ui-gold-light);
   font-size: 0.66rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -1563,7 +1510,7 @@ button {
 
 .game-complete-box-row span,
 .game-complete-score-row span {
-  color: #b7c59f;
+  color: var(--ui-muted);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1571,7 +1518,7 @@ button {
 
 .game-complete-box-row strong,
 .game-complete-score-row strong {
-  color: #f6edd8;
+  color: var(--ui-text);
   font-size: 0.9rem;
   font-family: Georgia, "Times New Roman", serif;
   line-height: 1.2;
@@ -1584,7 +1531,7 @@ button {
 
 .game-complete-score-row-winner strong,
 .game-complete-score-row-winner span {
-  color: #f1dfb0;
+  color: var(--ui-gold-light);
 }
 
 @media (max-width: 620px) {
@@ -1604,7 +1551,7 @@ button {
 
 .between-games-outcome-line {
   margin: 0;
-  color: #d8dfcf;
+  color: var(--ui-muted);
   font-size: 0.82rem;
   line-height: 1.3;
   text-align: center;
@@ -1613,11 +1560,11 @@ button {
 .between-games-outcome strong {
   font-size: 0.96rem;
   font-family: Georgia, "Times New Roman", serif;
-  color: #f6edd8;
+  color: var(--ui-text);
 }
 
 .between-games-matchline {
-  color: #d8dfcf;
+  color: var(--ui-muted);
   font-size: 0.72rem;
   line-height: 1.25;
   text-align: center;
@@ -1645,7 +1592,7 @@ button {
 }
 
 .match-complete-team {
-  color: #d8dfcf;
+  color: var(--ui-muted);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1653,18 +1600,18 @@ button {
 }
 
 .match-complete-team-winner {
-  color: #f1dfb0;
+  color: var(--ui-gold-light);
 }
 
 .match-complete-score {
-  color: #f6edd8;
+  color: var(--ui-text);
   font-size: 1.18rem;
   font-family: Georgia, "Times New Roman", serif;
   line-height: 1;
 }
 
 .match-complete-score-winner {
-  color: #fff1c9;
+  color: var(--ui-text);
 }
 
 .between-games-team-row {
@@ -1672,7 +1619,7 @@ button {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  color: #d8dfcf;
+  color: var(--ui-muted);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1681,16 +1628,16 @@ button {
 .between-games-team-row strong {
   font-size: 1.08rem;
   font-family: Georgia, "Times New Roman", serif;
-  color: #f6edd8;
+  color: var(--ui-text);
   letter-spacing: 0.02em;
 }
 
 .between-games-team-row-winner {
-  color: #f1dfb0;
+  color: var(--ui-gold-light);
 }
 
 .between-games-team-row-winner strong {
-  color: #fff1c9;
+  color: var(--ui-text);
 }
 
 .trump-controls {
@@ -1795,7 +1742,7 @@ button {
 }
 
 .error-line {
-  color: #ffb8a1;
+  color: var(--ui-danger);
 }
 
 @keyframes action-overlay-fade {
@@ -1888,7 +1835,7 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  color: #b7c59f;
+  color: var(--ui-muted);
   font-size: 0.72rem;
   min-height: 1rem;
   margin: 0;
@@ -1976,7 +1923,7 @@ button {
 .terminal-round-winner strong {
   display: inline-block;
   margin-right: 6px;
-  color: #f4e6bd;
+  color: var(--ui-gold-light);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.66rem;
@@ -2009,7 +1956,7 @@ button {
 .terminal-match-winner {
   border-left: 3px solid #d6ba74;
   background: rgba(214, 186, 116, 0.1);
-  color: #f4e6bd;
+  color: var(--ui-gold-light);
 }
 
 .score-bar {

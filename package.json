@@ -1,0 +1,9 @@
+{
+  "name": "belot-development",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix webclient ci",
+    "dev": "npm --prefix webclient run dev -- --mode browser",
+    "dev:full": "node scripts/live-game.mjs"
+  }
+}

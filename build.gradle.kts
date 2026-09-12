@@ -26,6 +26,6 @@ tasks.register<Exec>("liveGame") {
     description = "Runs the backend with continuous recompilation and the Vite dev server for live frontend testing."
     workingDir(rootDir)
     environment("BELOT_SERVER_PORT", providers.gradleProperty("serverPort").orNull ?: "8080")
-    environment("BELOT_CLIENT_PORT", providers.gradleProperty("clientPort").orNull ?: "5173")
+    environment("BELOT_CLIENT_PORT", providers.gradleProperty("clientPort").orNull ?: "5174")
     commandLine(nodeCommand, "scripts/live-game.mjs")
 }

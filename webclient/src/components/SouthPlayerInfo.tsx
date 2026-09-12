@@ -1,4 +1,5 @@
 import type { PlayerView } from "../types";
+import SeatMarker from "./SeatMarker";
 
 function SouthPlayerInfo({
   player,
@@ -17,7 +18,7 @@ function SouthPlayerInfo({
 
   return (
     <div className={`seat-panel seat-south south-player-panel ${winnerGlow ? "seat-winner-glow" : ""}`.trim()}>
-      <span className="panel-caption seat-direction-label">{player.seat}</span>
+      <SeatMarker seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
       <div className="seat-main-copy">
         <strong>{player.name}</strong>
         <small>{player.team}</small>

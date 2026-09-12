@@ -12,6 +12,7 @@
 | Inspect the server contract | [Session API](api.md) |
 | Publish or diagnose a build | [Deployment](deployment.md) |
 | Plan the UI redesign | [UI and UX improvement plan](ui-ux-plan.md) (proposed) |
+| Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |
 | Review and integrate contributions | [Maintainer guide](../MAINTAINER.md) |
 
 ## Structure
@@ -27,6 +28,7 @@ docs/
   api.md                Session HTTP and event contract
   deployment.md         Pages and local packaging
   ui-ux-plan.md         Proposed UI redesign and acceptance criteria
+  color-material-plan.md  Current casino palette and material specification
   screenshots/          Current product screenshots
   archive/              Historical notes and unused documentation media
 ```

@@ -1,0 +1,58 @@
+/* Shared materials also reach dialogs portaled directly into document.body. */
+:root {
+  --ui-text: #eee8db;
+  --ui-muted: #b2b9af;
+  --ui-gold: #b99a60;
+  --ui-gold-light: #cbb27f;
+  --ui-focus: #e4c98e;
+  --ui-ink: #19170f;
+  --ui-team-your: #9aafa1;
+  --ui-team-opponent: #b7a0a0;
+  --ui-danger: #d29c94;
+  --ui-warning: #d0b078;
+  --ui-success: #a4bca8;
+  --ui-line: rgb(240 232 213 / 12%);
+  --ui-highlight: rgb(240 232 213 / 7%);
+  --ui-glass: rgb(14 20 18 / 82%);
+  --ui-dialog: rgb(14 20 18 / 94%);
+  --ui-solid: #111a16;
+  --ui-control: rgb(240 232 213 / 5%);
+  --ui-selected: rgb(185 154 96 / 14%);
+  --ui-danger-surface: rgb(120 55 49 / 16%);
+  --ui-shadow: 0 12px 32px rgb(0 0 0 / 24%), inset 0 1px 0 var(--ui-highlight);
+  --ui-blur: 12px;
+  --card-paper: #fff9ef;
+  --card-paper-edge: #eee5d6;
+  --card-red: #992d35;
+  --card-black: #19201d;
+  --page-glow: transparent;
+  --page-top: #101a15;
+  --page-bottom: #080c0b;
+  --felt-center: #183e32;
+  --felt-edge: #0b211b;
+}
+:root[data-table-theme="DARK_BLUE"] {
+  --page-top: #10161d; --page-bottom: #080b10;
+  --felt-center: #1b2e40; --felt-edge: #0c1823;
+}
+:root[data-table-theme="CHERRY_RED"] {
+  --page-top: #1b1216; --page-bottom: #100a0d;
+  --felt-center: #40232b; --felt-edge: #210f16;
+}
+:root[data-table-theme="WOODY_BROWN"] {
+  --page-top: #191610; --page-bottom: #0e0c09;
+  --felt-center: #3c3024; --felt-edge: #201911;
+}
+:root[data-table-theme="FINE_BLACK"] {
+  --page-top: #151816; --page-bottom: #090b0a;
+  --felt-center: #252927; --felt-edge: #111513;
+}
+@media (max-width: 700px) {
+  :root { --ui-glass: rgb(14 20 18 / 90%); --ui-dialog: rgb(14 20 18 / 97%); --ui-blur: 6px; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --ui-glass: var(--ui-solid); --ui-dialog: var(--ui-solid); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --ui-glass: var(--ui-solid); --ui-dialog: var(--ui-solid); --ui-blur: 0px; }
+}

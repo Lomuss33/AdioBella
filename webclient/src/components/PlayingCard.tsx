@@ -42,18 +42,24 @@ function PlayingCard({
         .join(" ")}
       disabled={disabled}
       onClick={onClick}
-      aria-label={presentation.hidden ? `${ownerName ?? "Opponent"} hidden card` : presentation.label}
+      aria-label={presentation.hidden ? `${ownerName ?? "Opponent"} hidden card` : `${ownerName ? `${ownerName}: ` : ""}${presentation.label}`}
     >
       <div className={`playing-card-face ${presentation.className}`}>
         {presentation.hidden ? (
           <div className="playing-card-back-mark" aria-hidden="true" />
         ) : (
           <>
-            <span className="playing-card-corner playing-card-corner-top">{presentation.cornerText}</span>
+            <span className="playing-card-corner playing-card-corner-top" aria-hidden="true">
+              <span className="playing-card-rank">{presentation.rankText}</span>
+              <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
+            </span>
             <span className="playing-card-center" aria-hidden="true">
               {presentation.pipSymbol}
             </span>
-            <span className="playing-card-corner playing-card-corner-bottom">{presentation.cornerText}</span>
+            <span className="playing-card-corner playing-card-corner-bottom" aria-hidden="true">
+              <span className="playing-card-rank">{presentation.rankText}</span>
+              <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
+            </span>
           </>
         )}
       </div>

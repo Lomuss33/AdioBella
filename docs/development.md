@@ -13,6 +13,23 @@ Commands below run from the repository root unless a block changes directory. Gr
 
 ## Choose a runtime
 
+### Quick live UI development
+
+From the repository root, install frontend dependencies once, then start the watcher:
+
+```powershell
+npm run setup
+npm run dev
+```
+
+Open the local URL printed by Vite, normally <http://localhost:5174/>. This uses the browser game engine through `webclient/.env.browser`, so Java is not required. Vite watches source files and applies UI changes as you save. Some module changes may reload the page and reset the in-memory browser game. Stop with Ctrl+C.
+
+For another port, use `npm run dev -- --port 5175`. The existing Vite host setting also permits access from a phone on the same network through the printed Network URL, subject to the machine's firewall.
+
+`npx serve .` serves static files; it does not compile this React/TypeScript source or provide the project's live development workflow.
+
+The root npm shortcuts were added without running tests, builds, or launching servers.
+
 ### Full application
 
 ```powershell
@@ -40,15 +57,17 @@ cd ..
 .\gradlew.bat liveGame
 ```
 
-Open <http://localhost:5173>. The launcher runs Vite, Spring Boot, and continuous Java compilation. Vite proxies `/api` to the backend; Spring DevTools handles backend restarts. Stop the launcher with Ctrl+C.
+Open <http://localhost:5174>. The launcher runs Vite, Spring Boot, and continuous Java compilation. Vite proxies `/api` to the backend; Spring DevTools handles backend restarts. Stop the launcher with Ctrl+C.
+
+The same live launcher is available from the project root as `npm run dev:full`. It requires JDK 21 and installed frontend dependencies (`npm run setup`).
 
 Custom ports:
 
 ```powershell
-.\gradlew.bat liveGame -PserverPort=28081 -PclientPort=5174
+.\gradlew.bat liveGame -PserverPort=28081 -PclientPort=5175
 ```
 
-Open <http://localhost:5174>. See [scripts/live-game.mjs](../scripts/live-game.mjs) for orchestration.
+Open <http://localhost:5175>. See [scripts/live-game.mjs](../scripts/live-game.mjs) for orchestration.
 
 ### Browser-only development
 
@@ -58,7 +77,7 @@ npm ci
 npm run dev -- --mode pages
 ```
 
-Open <http://localhost:5173/AdioBella/>. Pages mode loads [the browser runtime setting](../webclient/.env.pages) and uses the repository base path. No Java server is needed.
+Open <http://localhost:5174/AdioBella/>. Pages mode loads [the browser runtime setting](../webclient/.env.pages) and uses the repository base path. No Java server is needed.
 
 ## Change workflow
 

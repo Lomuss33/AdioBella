@@ -5,7 +5,7 @@ const isWindows = process.platform === "win32";
 const gradleCommand = isWindows ? "gradlew.bat" : "./gradlew";
 const npmCommand = isWindows ? "npm.cmd" : "npm";
 const serverPort = process.env.BELOT_SERVER_PORT ?? "8080";
-const clientPort = process.env.BELOT_CLIENT_PORT ?? "5173";
+const clientPort = process.env.BELOT_CLIENT_PORT ?? "5174";
 const viteUrl = `http://localhost:${clientPort}`;
 
 if (process.argv.includes("--help")) {

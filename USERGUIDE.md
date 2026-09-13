@@ -43,7 +43,13 @@ The table uses the visible screen height, with card sizes adapting to the availa
 
 The online version keeps the game in the current page's memory. Reloading or closing it loses the match.
 
-The local server version stores a session identifier in your browser and can restore the session while that server still holds it in memory. Restarting the server loses its games. The table theme is stored separately in the browser.
+The local server version stores a session identifier in your browser and can restore the session while that server still holds it in memory. Restarting the server loses its games.
+
+Language, player and team names, match settings, card style, table color, and interface accent are saved automatically in this browser without a login. These preferences survive reloads; they do not save an online match. Clearing site data removes them, and private browsing or blocked storage may prevent them from being retained. Preferences are specific to the browser and site address.
+
+Use the square globe button beside the scores to open the language dropup. Choose English, German, Croatian, or automatic browser language.
+
+The square info button opens the **Brisnik Bela** book, also available from the starting menu. Its chapters cover getting started, game rules, app controls, the rule-based AI, and customization. Appearance changes take effect immediately. During a match, changes to names, difficulty, and match length are saved for the next match. Opening the book does not pause AI turns or animations.
 
 ## Troubleshooting
 

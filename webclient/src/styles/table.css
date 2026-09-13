@@ -3,14 +3,14 @@
   --game-text: var(--ui-text);
   --game-muted: var(--ui-muted);
   --game-line: var(--ui-line);
-  --arena-height: calc(100dvh - max(4px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
+  --arena-height: calc(100svh - max(4px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 8px;
   padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
   width: 100%;
-  min-height: 100dvh;
+  min-height: 100svh;
   color: var(--game-text);
   font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
   scroll-snap-type: none;
@@ -177,7 +177,7 @@
   .app-shell.game-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); max-width: 2200px; margin-inline: auto;  --game-text: var(--ui-text);  --game-muted: var(--ui-muted);  --game-line: var(--ui-line); }
   .game-layout .terminal-grid { grid-template-columns: minmax(0, 1fr); }
   .game-layout .terminal-lines { max-height: 300px; }
-  .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100dvh - 8px); overflow-y: auto; scrollbar-width: thin; }
+  .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100svh - 8px); overflow-y: auto; scrollbar-width: thin; }
 }
 /* Swap only the annotated panels: opponents | match details | your team. */
 @media (min-width: 701px) {
@@ -222,7 +222,13 @@
 .table-arena .trick-size-guide { position: absolute; width: var(--trick-card-width); height: 0; visibility: hidden; pointer-events: none; }
 .table-arena .trick-points-chip { bottom: 3px;  color: var(--ui-gold-light);  background: var(--ui-solid);  box-shadow: var(--ui-shadow); }
 .table-arena .player-hand-area { width: min(100%, 640px); padding-top: 0; gap: 3px; }
-.table-arena .player-hand-area .card-fan-row { gap: 4px; }
+.table-arena .player-hand-area .card-fan-row {
+  gap: 4px;
+  /* Reserve each row from width alone. Its height must not depend on the
+     trick guide: that guide measures the space left over above this hand. */
+  grid-auto-rows: calc(min(var(--trick-card-max), var(--trick-hand-limit, 80px)) * .95 * 1.42);
+  align-content: center;
+}
 .table-arena .south-inline-info { flex-wrap: nowrap; }
 .table-arena .south-inline-main { flex-wrap: nowrap; min-width: 0;  color: var(--ui-text); }
 .table-arena .south-inline-main strong,

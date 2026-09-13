@@ -19,6 +19,7 @@ export default function TableUtilities({ onOpenBook }: { onOpenBook: () => void 
     return () => document.removeEventListener("pointerdown", outside);
   }, [open]);
   return <div className="table-utilities">
+    <InfoButton onClick={onOpenBook} />
     <div className="language-dropup" ref={ref} onKeyDown={event => {
       if (event.key === "Escape" && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus(); }
     }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false); }}>
@@ -32,6 +33,5 @@ export default function TableUtilities({ onOpenBook }: { onOpenBook: () => void 
           </button>)}
       </div>}
     </div>
-    <InfoButton onClick={onOpenBook} />
   </div>;
 }

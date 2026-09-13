@@ -1,3 +1,4 @@
+import { tr } from "../i18n";
 import { toSuitPresentation } from "../lib/cardPresentation";
 
 interface SuitChoiceButtonProps {
@@ -9,11 +10,11 @@ function SuitChoiceButton({ choice, onChoose }: SuitChoiceButtonProps) {
   const suit = toSuitPresentation(choice);
 
   return (
-    <button type="button" className="suit-choice-button" data-suit={choice} onClick={() => onChoose(choice)} aria-label={suit.label}>
+    <button type="button" className="suit-choice-button" data-suit={choice} onClick={() => onChoose(choice)} aria-label={tr(suit.label)}>
       <div className={`suit-choice-visual ${suit.className}`}>
-        <img src={suit.assetSrc} alt={suit.assetAlt} />
+        <img src={suit.assetSrc} alt="" />
       </div>
-      <span className="suit-choice-label">{suit.label}</span>
+      <span className="suit-choice-label">{tr(suit.label)}</span>
     </button>
   );
 }

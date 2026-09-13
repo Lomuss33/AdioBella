@@ -47,6 +47,8 @@
   --page-top: #151816; --page-bottom: #090b0a;
   --felt-center: #252927; --felt-edge: #111513;
 }
+:root[data-game-accent="silver"] { --ui-gold: #a9b6bc; --ui-gold-light: #d1dce0; --ui-selected: rgb(169 182 188 / 14%); --ui-focus: #e4edf0; }
+:root[data-game-accent="copper"] { --ui-gold: #bc9279; --ui-gold-light: #d6b49d; --ui-selected: rgb(188 146 121 / 14%); --ui-focus: #edd0b7; }
 @media (max-width: 700px) {
   :root { --ui-glass: rgb(14 20 18 / 90%); --ui-dialog: rgb(14 20 18 / 97%); --ui-blur: 6px; }
 }

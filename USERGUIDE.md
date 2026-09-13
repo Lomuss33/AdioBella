@@ -1,5 +1,7 @@
 # User guide
 
+The interface supports **English, Deutsch, and Hrvatski**. On the first visit it uses the first supported language in your browser preferences, falling back to English. Change **Language** in the starting menu at any time the menu is available. Your choice is saved on this browser; select **Automatic (browser)** to follow browser settings again. Switching languages preserves the current game, settings, and entered player/team names. If browser storage is blocked, the choice still works for the current tab.
+
 [README](README.md) · [Maintainer guide](MAINTAINER.md) · [Documentation index](docs/README.md)
 
 ## Open the game

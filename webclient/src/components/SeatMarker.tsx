@@ -1,3 +1,4 @@
+import { t, tr } from "../i18n";
 import type { Seat } from "../types";
 
 const POSITION = {
@@ -16,7 +17,7 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
   backdrop?: boolean;
 }) {
   const position = POSITION[seat];
-  const label = `${playerName ? `${playerName}, ` : ""}${position.label}${active ? ", playing now" : ""}${winner ? ", trick winner" : ""}`;
+  const label = `${playerName ? `${playerName}, ` : ""}${tr(position.label)}${active ? `, ${t("playing now")}` : ""}${winner ? `, ${t("trick winner")}` : ""}`;
 
   return (
     <svg

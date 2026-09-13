@@ -1,3 +1,4 @@
+import { t, countText } from "../i18n";
 import type { PlayerView } from "../types";
 import SeatMarker from "./SeatMarker";
 
@@ -22,12 +23,12 @@ function SouthPlayerInfo({
       <div className="seat-main-copy">
         <strong>{player.name}</strong>
         <small>{player.team}</small>
-        <small>{player.handSize} cards</small>
+        <small>{countText("cards", player.handSize)}</small>
       </div>
       {(showDealer || showTrumpCaller) ? (
         <div className="seat-badges">
-          {showDealer ? <span className="seat-badge">dealer</span> : null}
-          {showTrumpCaller ? <span className="seat-badge seat-badge-trump">trump</span> : null}
+          {showDealer ? <span className="seat-badge">{t("dealer")}</span> : null}
+          {showTrumpCaller ? <span className="seat-badge seat-badge-trump">{t("trump")}</span> : null}
         </div>
       ) : null}
     </div>

@@ -42,11 +42,11 @@ public final class BelotMatchFacade {
         events.clear();
         nextSequence = 1L;
         state = MatchState.create(difficulty);
-        log("INFO", "New Belot session created.", Map.of("difficulty", difficulty.name()));
+        log("INFO", "New Belot session created.", Map.of("eventKind", "SESSION_CREATED", "difficulty", difficulty.name()));
     }
 
     public synchronized void startMatch() {
-        ensure(state.phase == Phase.READY_TO_START || state.phase == Phase.BETWEEN_GAMES, "The match is already running.");
+        ensure(state.phase == Phase.READY_TO_START || state.phase == Phase.BETWEEN_GAMES, "MATCH_RUNNING", "The match is already running.");
         clearValidation();
         if (state.phase == Phase.READY_TO_START) {
             startNextGame(false);
@@ -57,7 +57,7 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void updatePlayerNames(Map<String, String> playerNamesBySeat) {
-        ensure(state.phase == Phase.READY_TO_START, "Player names can only be changed before the match starts.");
+        ensure(state.phase == Phase.READY_TO_START, "PLAYER_NAMES_LOCKED", "Player names can only be changed before the match starts.");
         if (playerNamesBySeat == null || playerNamesBySeat.isEmpty()) {
             return;
         }
@@ -74,11 +74,11 @@ public final class BelotMatchFacade {
             }
         }
 
-        log("INFO", "Player names updated.", Map.of());
+        log("INFO", "Player names updated.", Map.of("eventKind", "PLAYER_NAMES_UPDATED"));
     }
 
     public synchronized void updateTeamNames(String yourTeamName, String enemyTeamName) {
-        ensure(state.phase == Phase.READY_TO_START, "Team names can only be changed before the match starts.");
+        ensure(state.phase == Phase.READY_TO_START, "TEAM_NAMES_LOCKED", "Team names can only be changed before the match starts.");
 
         boolean changed = false;
         if (yourTeamName != null) {
@@ -98,7 +98,7 @@ public final class BelotMatchFacade {
         }
 
         if (changed) {
-            log("INFO", "Team names updated.", Map.of());
+            log("INFO", "Team names updated.", Map.of("eventKind", "TEAM_NAMES_UPDATED"));
         }
     }
 
@@ -110,7 +110,7 @@ public final class BelotMatchFacade {
             Integer matchTargetWins,
             GameLength gameLength
     ) {
-        ensure(state.phase == Phase.READY_TO_START, "Lobby settings can only be changed before the match starts.");
+        ensure(state.phase == Phase.READY_TO_START, "LOBBY_LOCKED", "Lobby settings can only be changed before the match starts.");
         if (difficulty != null) {
             state.difficulty = difficulty;
         }
@@ -120,7 +120,7 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void updateGameSettings(Integer matchTargetWins, GameLength gameLength) {
-        ensure(state.phase == Phase.READY_TO_START, "Game settings can only be changed before the match starts.");
+        ensure(state.phase == Phase.READY_TO_START, "GAME_SETTINGS_LOCKED", "Game settings can only be changed before the match starts.");
 
         if (matchTargetWins != null) {
             state.matchTargetWins = sanitizeMatchTargetWins(matchTargetWins);
@@ -136,11 +136,11 @@ public final class BelotMatchFacade {
         clearValidation();
 
         if (choice == null) {
-            reject("Choose a trump suit or skip.");
+            reject("CHOOSE_TRUMP", "Choose a trump suit or skip.");
         }
 
         if (choice == TrumpChoice.SKIP && state.trumpTurnOffset == 3) {
-            reject("The last player must choose a trump suit.");
+            reject("TRUMP_REQUIRED", "The last player must choose a trump suit.");
         }
 
         if (choice == TrumpChoice.SKIP) {
@@ -170,7 +170,7 @@ public final class BelotMatchFacade {
 
         List<Integer> legal = legalCardIndices(currentPlayer());
         if (!legal.contains(handIndex)) {
-            reject("That card is not legal in the current trick.");
+            reject("ILLEGAL_CARD", "That card is not legal in the current trick.");
         }
 
         playCardInternal(handIndex, callBela);
@@ -178,9 +178,9 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void forfeitGame() {
-        ensure(state.phase != Phase.READY_TO_START, "Start the match before forfeiting a game.");
-        ensure(state.phase != Phase.BETWEEN_GAMES, "The current game is already complete.");
-        ensure(state.phase != Phase.MATCH_COMPLETE, "The match is already complete.");
+        ensure(state.phase != Phase.READY_TO_START, "GAME_NOT_STARTED", "Start the match before forfeiting a game.");
+        ensure(state.phase != Phase.BETWEEN_GAMES, "GAME_COMPLETE", "The current game is already complete.");
+        ensure(state.phase != Phase.MATCH_COMPLETE, "MATCH_COMPLETE", "The match is already complete.");
 
         clearValidation();
 
@@ -199,8 +199,8 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void forfeitMatch() {
-        ensure(state.phase != Phase.READY_TO_START, "Start the match before forfeiting it.");
-        ensure(state.phase != Phase.MATCH_COMPLETE, "The match is already complete.");
+        ensure(state.phase != Phase.READY_TO_START, "MATCH_NOT_STARTED", "Start the match before forfeiting it.");
+        ensure(state.phase != Phase.MATCH_COMPLETE, "MATCH_COMPLETE", "The match is already complete.");
 
         clearValidation();
 
@@ -226,6 +226,7 @@ public final class BelotMatchFacade {
         state.phase = Phase.MATCH_COMPLETE;
         state.pendingType = ActionType.NONE;
         state.pendingValidationMessage = null;
+        state.pendingValidationCode = null;
         state.currentTrick = null;
         log("INFO", winningTeam.name + " won the match.", Map.of(
                 "eventKind", "MATCH_WIN",
@@ -240,7 +241,7 @@ public final class BelotMatchFacade {
         clearValidation();
 
         if (state.humanMeldOffer == null || state.humanMeldOffer.totalPoints() == 0) {
-            reject("There are no melds to report.");
+            reject("NO_MELDS", "There are no melds to report.");
         }
 
         if (declare) {
@@ -365,6 +366,7 @@ public final class BelotMatchFacade {
                 state.firstTrickAnnounced = true;
                 log("INFO", playerAt(state.currentPlayerIndex).name + " leads the first trick.", Map.of(
                         "eventKind", "TRICK_LEAD",
+                        "playerName", playerAt(state.currentPlayerIndex).name,
                         "playerId", playerAt(state.currentPlayerIndex).id,
                         "playerSeat", playerAt(state.currentPlayerIndex).seat.name()
                 ));
@@ -391,7 +393,7 @@ public final class BelotMatchFacade {
         PlayerState player = currentPlayer();
         boolean belaEligible = isBelaEligible(player, handIndex);
         if (callBela && !belaEligible) {
-            reject("Bela cannot be called with that card.");
+            reject("BELA_NOT_ALLOWED", "Bela cannot be called with that card.");
         }
 
         Card card = player.hand.remove(handIndex);
@@ -478,13 +480,14 @@ public final class BelotMatchFacade {
             state.teamOne.gameScore += teamOnePoints;
             state.teamTwo.gameScore += teamTwoPoints;
             log("SCORE", declarer.name + " passed the hand.", Map.of(
+                    "eventKind", "HAND_PASSED", "team", declarer.name,
                     "teamOnePoints", String.valueOf(teamOnePoints),
                     "teamTwoPoints", String.valueOf(teamTwoPoints)
             ));
         } else {
             defenders.gameScore += totalPoints;
             log("SCORE", declarer.name + " failed the hand. " + defenders.name + " collected all " + totalPoints + " points.",
-                    Map.of("winner", defenders.name, "points", String.valueOf(totalPoints)));
+                    Map.of("eventKind", "HAND_FAILED", "team", declarer.name, "winner", defenders.name, "points", String.valueOf(totalPoints)));
         }
 
         TeamState winner = state.teamOne.gameScore >= state.teamTwo.gameScore ? state.teamOne : state.teamTwo;
@@ -521,6 +524,7 @@ public final class BelotMatchFacade {
         state.phase = Phase.BETWEEN_GAMES;
         state.pendingType = ActionType.START_NEXT_GAME;
         state.pendingValidationMessage = null;
+        state.pendingValidationCode = null;
         state.currentTrick = null;
     }
 
@@ -533,6 +537,7 @@ public final class BelotMatchFacade {
                 Map.of(
                         "eventKind", "GAME_START",
                         "gameNumber", String.valueOf(state.gameNumber),
+                        "dealerPlayerName", playerAt(state.dealerIndex).name,
                         "dealerPlayerId", playerAt(state.dealerIndex).id
                 ));
     }
@@ -555,6 +560,7 @@ public final class BelotMatchFacade {
         state.phase = Phase.TRUMP_SELECTION;
         state.pendingType = ActionType.NONE;
         state.pendingValidationMessage = null;
+        state.pendingValidationCode = null;
         state.currentPlayerIndex = (state.dealerIndex + 1) % state.players.size();
         state.deck = RuleUtils.createShuffledDeck(random);
         dealCards(OPENING_DEAL_SIZE);
@@ -790,8 +796,10 @@ public final class BelotMatchFacade {
 
     private PendingAction buildPendingAction() {
         return switch (state.pendingType) {
-            case START_MATCH -> new PendingAction(ActionType.START_MATCH, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "Start the match.");
-            case START_NEXT_GAME -> new PendingAction(ActionType.START_NEXT_GAME, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "Start the next game.");
+            case START_MATCH -> new PendingAction(ActionType.START_MATCH, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage,
+                    state.pendingValidationCode, "Start the match.");
+            case START_NEXT_GAME -> new PendingAction(ActionType.START_NEXT_GAME, playerAt(0).id, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage,
+                    state.pendingValidationCode, "Start the next game.");
             case CHOOSE_TRUMP -> new PendingAction(
                     ActionType.CHOOSE_TRUMP,
                     currentPlayer().id,
@@ -803,6 +811,7 @@ public final class BelotMatchFacade {
                     List.of(),
                     null,
                     state.pendingValidationMessage,
+                    state.pendingValidationCode,
                     state.trumpTurnOffset == 3 ? "Choose the trump suit." : "Choose the trump suit or skip."
             );
             case REPORT_MELDS -> new PendingAction(
@@ -814,6 +823,7 @@ public final class BelotMatchFacade {
                     state.humanMeldOffer == null ? List.of() : List.of(toMeldSetView(state.humanMeldOffer)),
                     null,
                     state.pendingValidationMessage,
+                    state.pendingValidationCode,
                     "Declare melds or pass."
             );
             case ACKNOWLEDGE_MELDS -> new PendingAction(
@@ -825,6 +835,7 @@ public final class BelotMatchFacade {
                     List.of(),
                     state.pendingMeldWinner,
                     state.pendingValidationMessage,
+                    state.pendingValidationCode,
                     "Review the melds and continue."
             );
             case PLAY_CARD -> new PendingAction(
@@ -836,9 +847,11 @@ public final class BelotMatchFacade {
                     List.of(),
                     null,
                     state.pendingValidationMessage,
+                    state.pendingValidationCode,
                     "Play a legal card."
             );
-            case NONE -> new PendingAction(ActionType.NONE, null, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage, "");
+            case NONE -> new PendingAction(ActionType.NONE, null, List.of(), List.of(), List.of(), List.of(), null, state.pendingValidationMessage,
+                    state.pendingValidationCode, "");
         };
     }
 
@@ -891,7 +904,8 @@ public final class BelotMatchFacade {
                 meldSet.player().team.name,
                 meldSet.totalPoints(),
                 0,
-                meldSet.melds().stream().map(MeldCombination::label).toList()
+                meldSet.melds().stream().map(MeldCombination::label).toList(),
+                meldSet.melds().stream().map(this::toMeldCombinationView).toList()
         );
     }
 
@@ -933,23 +947,25 @@ public final class BelotMatchFacade {
     }
 
     private void ensurePending(ActionType expected) {
-        ensure(state.pendingType == expected, "That action is not expected right now.");
+        ensure(state.pendingType == expected, "UNEXPECTED_ACTION", "That action is not expected right now.");
     }
 
-    private void ensure(boolean condition, String message) {
+    private void ensure(boolean condition, String code, String message) {
         if (!condition) {
-            reject(message);
+            reject(code, message);
         }
     }
 
-    private void reject(String message) {
+    private void reject(String code, String message) {
         state.pendingValidationMessage = message;
-        log("ERROR", message, Map.of());
-        throw new IllegalArgumentException(message);
+        state.pendingValidationCode = code;
+        log("ERROR", message, Map.of("eventKind", "ERROR", "code", code));
+        throw new GameRuleException(code, message);
     }
 
     private void clearValidation() {
         state.pendingValidationMessage = null;
+        state.pendingValidationCode = null;
     }
 
     private void log(String type, String message, Map<String, String> payload) {
@@ -1216,6 +1232,7 @@ public final class BelotMatchFacade {
         private Phase phase;
         private ActionType pendingType;
         private String pendingValidationMessage;
+        private String pendingValidationCode;
 
         private MatchState(Difficulty difficulty, List<PlayerState> players, TeamState teamOne, TeamState teamTwo) {
             this.difficulty = difficulty;

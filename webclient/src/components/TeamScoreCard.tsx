@@ -1,3 +1,4 @@
+import { countText } from "../i18n";
 interface TeamScoreCardProps {
   caption: string;
   matchScore: number;
@@ -10,7 +11,7 @@ function TeamScoreCard({ caption, matchScore, gamePoints, className }: TeamScore
     <div className={`team-score-card ${className ?? ""}`.trim()}>
       <span className="score-label">{caption}</span>
       <strong>{matchScore}</strong>
-      <small>{gamePoints} game</small>
+      <small>{countText("points", gamePoints)}</small>
     </div>
   );
 }

@@ -63,6 +63,7 @@ export interface MeldDeclarationView {
   meldPoints: number;
   belaPoints: number;
   labels: string[];
+  melds?: MeldCombinationView[];
 }
 
 export interface MeldCombinationView {
@@ -95,6 +96,7 @@ export interface PendingAction {
   availableMelds: MeldSetView[];
   meldWinner: MeldWinnerView | null;
   validationMessage: string | null;
+  validationCode?: string | null;
   prompt: string;
 }
 

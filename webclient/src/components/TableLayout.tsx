@@ -1,3 +1,5 @@
+import TableUtilities from "./TableUtilities";
+import { t } from "../i18n";
 import { useLayoutEffect, useRef } from "react";
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
 import GameDataCard from "./GameDataCard";
@@ -23,11 +25,12 @@ interface TableLayoutProps {
   canQuitMatch: boolean;
   onForfeitGame: () => void;
   onQuitMatch: () => void;
+  onOpenBook: () => void;
 }
 
 function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
-  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch }: TableLayoutProps) {
+  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook }: TableLayoutProps) {
   const arenaRef = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const arena = arenaRef.current;
@@ -82,7 +85,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     showDealer={dealerSeat === position} showTrumpCaller={declarerSeat === position}
   />;
   return (
-    <section ref={arenaRef} className="table-arena" aria-label="Belot table">
+    <section ref={arenaRef} className="table-arena" aria-label={t("Belot table")}>
       <div className="arena-header">
         <GameDataCard snapshot={snapshot} />
         <MatchDataCard snapshot={snapshot} />
@@ -101,8 +104,11 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
           showTrumpCaller={declarerSeat === "SOUTH"} onPlayCard={onPlayCard} />
         <div className="arena-status">
           <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
+          <div className="arena-controls">
+          <TableUtilities onOpenBook={onOpenBook} />
           <MatchCornerControls canForfeitGame={canForfeitGame} canQuitMatch={canQuitMatch}
             onForfeitGame={onForfeitGame} onQuitMatch={onQuitMatch} />
+          </div>
         </div>
       </div>
     </section>

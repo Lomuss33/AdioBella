@@ -27,6 +27,8 @@ Setup is needed once after cloning or when frontend dependencies change. Open th
 
 ## Features
 
+- English, German, and Croatian, selected from browser preferences or the starting menu.
+
 - Team and player names, three AI difficulty levels, and table themes.
 - Short (501) or long (1001) games; matches to 1, 3, or 5 game wins.
 - Trump selection, meld declarations, Bela prompts, and a game event log.

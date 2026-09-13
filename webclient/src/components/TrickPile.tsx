@@ -18,7 +18,6 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
     <div className="trick-pool-shell">
       <div className="trick-pool">
         <span className="trick-size-guide" aria-hidden="true" />
-        <span className="panel-caption">Current trick</span>
         {renderedCards.length === 0 ? <div className="trick-empty" aria-hidden="true">♠ <span>♥</span> ♣ <span>♦</span></div> : null}
         <div
           className={[

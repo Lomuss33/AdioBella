@@ -106,6 +106,7 @@ interface MatchState {
   phase: Phase;
   pendingType: ActionType;
   pendingValidationMessage: string | null;
+  pendingValidationCode: string | null;
 }
 
 const DEFAULT_MATCH_TARGET_WINS: MatchTargetWins = 3;
@@ -153,11 +154,11 @@ export class BelotMatchFacade {
     this.events.length = 0;
     this.nextSequence = 1;
     this.state = createMatchState(difficulty);
-    this.log("INFO", "New Belot session created.", { difficulty });
+    this.log("INFO", "New Belot session created.", { eventKind: "SESSION_CREATED", difficulty });
   }
 
   startMatch() {
-    this.ensure(this.state.phase === "READY_TO_START" || this.state.phase === "BETWEEN_GAMES", "The match is already running.");
+    this.ensure(this.state.phase === "READY_TO_START" || this.state.phase === "BETWEEN_GAMES", "MATCH_RUNNING", "The match is already running.");
     this.clearValidation();
     if (this.state.phase === "READY_TO_START") {
       this.startNextGame(false);
@@ -168,7 +169,7 @@ export class BelotMatchFacade {
   }
 
   updatePlayerNames(playerNamesBySeat: Partial<Record<Seat, string>> | null | undefined) {
-    this.ensure(this.state.phase === "READY_TO_START", "Player names can only be changed before the match starts.");
+    this.ensure(this.state.phase === "READY_TO_START", "PLAYER_NAMES_LOCKED", "Player names can only be changed before the match starts.");
     if (!playerNamesBySeat || Object.keys(playerNamesBySeat).length === 0) {
       return;
     }
@@ -185,11 +186,11 @@ export class BelotMatchFacade {
       }
     }
 
-    this.log("INFO", "Player names updated.", {});
+    this.log("INFO", "Player names updated.", { eventKind: "PLAYER_NAMES_UPDATED" });
   }
 
   updateTeamNames(yourTeamName: string | null | undefined, enemyTeamName: string | null | undefined) {
-    this.ensure(this.state.phase === "READY_TO_START", "Team names can only be changed before the match starts.");
+    this.ensure(this.state.phase === "READY_TO_START", "TEAM_NAMES_LOCKED", "Team names can only be changed before the match starts.");
 
     let changed = false;
     if (yourTeamName != null && yourTeamName.trim()) {
@@ -203,7 +204,7 @@ export class BelotMatchFacade {
     }
 
     if (changed) {
-      this.log("INFO", "Team names updated.", {});
+      this.log("INFO", "Team names updated.", { eventKind: "TEAM_NAMES_UPDATED" });
     }
   }
 
@@ -215,7 +216,7 @@ export class BelotMatchFacade {
     matchTargetWins: MatchTargetWins | null | undefined,
     gameLength: GameLength | null | undefined
   ) {
-    this.ensure(this.state.phase === "READY_TO_START", "Lobby settings can only be changed before the match starts.");
+    this.ensure(this.state.phase === "READY_TO_START", "LOBBY_LOCKED", "Lobby settings can only be changed before the match starts.");
     if (difficulty) {
       this.state.difficulty = difficulty;
     }
@@ -225,7 +226,7 @@ export class BelotMatchFacade {
   }
 
   updateGameSettings(matchTargetWins: MatchTargetWins | null | undefined, gameLength: GameLength | null | undefined) {
-    this.ensure(this.state.phase === "READY_TO_START", "Game settings can only be changed before the match starts.");
+    this.ensure(this.state.phase === "READY_TO_START", "GAME_SETTINGS_LOCKED", "Game settings can only be changed before the match starts.");
     if (matchTargetWins) {
       this.state.matchTargetWins = sanitizeMatchTargetWins(matchTargetWins);
     }
@@ -239,11 +240,11 @@ export class BelotMatchFacade {
     this.clearValidation();
 
     if (!choice) {
-      this.reject("Choose a trump suit or skip.");
+      this.reject("CHOOSE_TRUMP", "Choose a trump suit or skip.");
     }
 
     if (choice === "SKIP" && this.state.trumpTurnOffset === 3) {
-      this.reject("The last player must choose a trump suit.");
+      this.reject("TRUMP_REQUIRED", "The last player must choose a trump suit.");
     }
 
     if (choice === "SKIP") {
@@ -273,7 +274,7 @@ export class BelotMatchFacade {
 
     const legal = legalCardIndices(this.currentPlayer(), this.state.currentTrick?.cards ?? [], this.state.trumpSuit);
     if (!legal.includes(handIndex)) {
-      this.reject("That card is not legal in the current trick.");
+      this.reject("ILLEGAL_CARD", "That card is not legal in the current trick.");
     }
 
     this.playCardInternal(handIndex, callBela);
@@ -281,9 +282,9 @@ export class BelotMatchFacade {
   }
 
   forfeitGame() {
-    this.ensure(this.state.phase !== "READY_TO_START", "Start the match before forfeiting a game.");
-    this.ensure(this.state.phase !== "BETWEEN_GAMES", "The current game is already complete.");
-    this.ensure(this.state.phase !== "MATCH_COMPLETE", "The match is already complete.");
+    this.ensure(this.state.phase !== "READY_TO_START", "GAME_NOT_STARTED", "Start the match before forfeiting a game.");
+    this.ensure(this.state.phase !== "BETWEEN_GAMES", "GAME_COMPLETE", "The current game is already complete.");
+    this.ensure(this.state.phase !== "MATCH_COMPLETE", "MATCH_COMPLETE", "The match is already complete.");
 
     this.clearValidation();
 
@@ -302,8 +303,8 @@ export class BelotMatchFacade {
   }
 
   forfeitMatch() {
-    this.ensure(this.state.phase !== "READY_TO_START", "Start the match before forfeiting it.");
-    this.ensure(this.state.phase !== "MATCH_COMPLETE", "The match is already complete.");
+    this.ensure(this.state.phase !== "READY_TO_START", "MATCH_NOT_STARTED", "Start the match before forfeiting it.");
+    this.ensure(this.state.phase !== "MATCH_COMPLETE", "MATCH_COMPLETE", "The match is already complete.");
 
     this.clearValidation();
 
@@ -329,6 +330,7 @@ export class BelotMatchFacade {
     this.state.phase = "MATCH_COMPLETE";
     this.state.pendingType = "NONE";
     this.state.pendingValidationMessage = null;
+    this.state.pendingValidationCode = null;
     this.state.currentTrick = null;
     this.log("INFO", `${winningTeam.name} won the match.`, {
       eventKind: "MATCH_WIN",
@@ -344,7 +346,7 @@ export class BelotMatchFacade {
 
     const meldOffer = this.state.humanMeldOffer;
     if (!meldOffer || meldOffer.totalPoints === 0) {
-      this.reject("There are no melds to report.");
+      this.reject("NO_MELDS", "There are no melds to report.");
     }
 
     if (declare) {
@@ -468,6 +470,7 @@ export class BelotMatchFacade {
         this.state.firstTrickAnnounced = true;
         this.log("INFO", `${this.playerAt(this.state.currentPlayerIndex).name} leads the first trick.`, {
           eventKind: "TRICK_LEAD",
+          playerName: this.playerAt(this.state.currentPlayerIndex).name,
           playerId: this.playerAt(this.state.currentPlayerIndex).id,
           playerSeat: this.playerAt(this.state.currentPlayerIndex).seat
         });
@@ -489,12 +492,12 @@ export class BelotMatchFacade {
     const player = this.currentPlayer();
     const belaEligible = this.isBelaEligible(player, handIndex);
     if (callBela && !belaEligible) {
-      this.reject("Bela cannot be called with that card.");
+      this.reject("BELA_NOT_ALLOWED", "Bela cannot be called with that card.");
     }
 
     const [card] = player.hand.splice(handIndex, 1);
     if (!card) {
-      this.reject("That card is not legal in the current trick.");
+      this.reject("ILLEGAL_CARD", "That card is not legal in the current trick.");
     }
 
     if (belaEligible) {
@@ -596,12 +599,14 @@ export class BelotMatchFacade {
       this.state.teamOne.gameScore += teamOnePoints;
       this.state.teamTwo.gameScore += teamTwoPoints;
       this.log("SCORE", `${declarer.name} passed the hand.`, {
+        eventKind: "HAND_PASSED", team: declarer.name,
         teamOnePoints: String(teamOnePoints),
         teamTwoPoints: String(teamTwoPoints)
       });
     } else {
       defenders.gameScore += totalPoints;
       this.log("SCORE", `${declarer.name} failed the hand. ${defenders.name} collected all ${totalPoints} points.`, {
+        eventKind: "HAND_FAILED", team: declarer.name,
         winner: defenders.name,
         points: String(totalPoints)
       });
@@ -641,6 +646,7 @@ export class BelotMatchFacade {
     this.state.phase = "BETWEEN_GAMES";
     this.state.pendingType = "START_NEXT_GAME";
     this.state.pendingValidationMessage = null;
+    this.state.pendingValidationCode = null;
     this.state.currentTrick = null;
   }
 
@@ -652,6 +658,7 @@ export class BelotMatchFacade {
     this.log("INFO", `Game ${this.state.gameNumber} started. ${this.playerAt(this.state.dealerIndex).name} is the dealer.`, {
       eventKind: "GAME_START",
       gameNumber: String(this.state.gameNumber),
+      dealerPlayerName: this.playerAt(this.state.dealerIndex).name,
       dealerPlayerId: this.playerAt(this.state.dealerIndex).id
     });
   }
@@ -674,6 +681,7 @@ export class BelotMatchFacade {
     this.state.phase = "TRUMP_SELECTION";
     this.state.pendingType = "NONE";
     this.state.pendingValidationMessage = null;
+    this.state.pendingValidationCode = null;
     this.state.currentPlayerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
     this.state.deck = createShuffledDeck(this.random);
     this.dealCards(OPENING_DEAL_SIZE);
@@ -907,6 +915,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: "Start the match."
         };
       case "START_NEXT_GAME":
@@ -919,6 +928,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: "Start the next game."
         };
       case "CHOOSE_TRUMP":
@@ -934,6 +944,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: this.state.trumpTurnOffset === 3 ? "Choose the trump suit." : "Choose the trump suit or skip."
         };
       case "REPORT_MELDS":
@@ -946,6 +957,7 @@ export class BelotMatchFacade {
           availableMelds: this.state.humanMeldOffer ? [this.toMeldSetView(this.state.humanMeldOffer)] : [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: "Declare melds or pass."
         };
       case "ACKNOWLEDGE_MELDS":
@@ -958,6 +970,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: this.state.pendingMeldWinner,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: "Review the melds and continue."
         };
       case "PLAY_CARD":
@@ -970,6 +983,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: "Play a legal card."
         };
       case "NONE":
@@ -983,6 +997,7 @@ export class BelotMatchFacade {
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
+          validationCode: this.state.pendingValidationCode,
           prompt: ""
         };
     }
@@ -1047,7 +1062,8 @@ export class BelotMatchFacade {
       teamName: meldSet.player.team.name,
       meldPoints: meldSet.totalPoints,
       belaPoints: 0,
-      labels: meldSet.melds.map((meld) => meld.label)
+      labels: meldSet.melds.map((meld) => meld.label),
+      melds: meldSet.melds.map((meld) => this.toMeldCombinationView(meld))
     };
   }
 
@@ -1062,23 +1078,25 @@ export class BelotMatchFacade {
   }
 
   private ensurePending(expected: ActionType) {
-    this.ensure(this.state.pendingType === expected, "That action is not expected right now.");
+    this.ensure(this.state.pendingType === expected, "UNEXPECTED_ACTION", "That action is not expected right now.");
   }
 
-  private ensure(condition: boolean, message: string) {
+  private ensure(condition: boolean, code: string, message: string) {
     if (!condition) {
-      this.reject(message);
+      this.reject(code, message);
     }
   }
 
-  private reject(message: string): never {
+  private reject(code: string, message: string): never {
     this.state.pendingValidationMessage = message;
-    this.log("ERROR", message, {});
-    throw new Error(message);
+    this.state.pendingValidationCode = code;
+    this.log("ERROR", message, { eventKind: "ERROR", code });
+    throw Object.assign(new Error(message), { code });
   }
 
   private clearValidation() {
     this.state.pendingValidationMessage = null;
+    this.state.pendingValidationCode = null;
   }
 
   private log(type: string, message: string, payload: Record<string, string>) {
@@ -1222,6 +1240,7 @@ function createMatchState(difficulty: Difficulty): MatchState {
     firstTrickAnnounced: false,
     phase: "READY_TO_START",
     pendingType: "START_MATCH",
+    pendingValidationCode: null,
     pendingValidationMessage: null
   };
 }

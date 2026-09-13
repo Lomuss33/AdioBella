@@ -1,3 +1,9 @@
+import { InfoButton } from "./TableUtilities";
+import AppearanceSettings from "./AppearanceSettings";
+import type { VisualSettings } from "../lib/preferences";
+import { meldDescription, errorDescription } from "../i18n/presentation";
+import { t, tr, countText } from "../i18n";
+import LanguageSelect from "./LanguageSelect";
 import { useEffect, useRef, type ReactNode } from "react";
 import type {
   CardView,
@@ -35,6 +41,9 @@ interface ActionPanelProps {
   pendingBelaChoiceCard: CardView | null;
   onPlayWithBela: () => void;
   onPlayWithoutBela: () => void;
+  onOpenBook?: () => void;
+  visual?: VisualSettings;
+  onVisualChange?: (patch: Partial<VisualSettings>) => void;
 }
 
 function ActionPanel({
@@ -57,7 +66,8 @@ function ActionPanel({
   onAcknowledgeMelds,
   pendingBelaChoiceCard,
   onPlayWithBela,
-  onPlayWithoutBela
+  onPlayWithoutBela,
+  onOpenBook, visual, onVisualChange
 }: ActionPanelProps) {
   const isStart = pendingAction?.type === "START_MATCH";
   const isNextGame = pendingAction?.type === "START_NEXT_GAME";
@@ -82,29 +92,29 @@ function ActionPanel({
   }
 
   const title = isStart
-    ? "Start the match"
+    ? t("Start the match")
     : isMatchComplete
-      ? "Match complete"
+      ? t("Match complete")
     : isNextGame
-      ? "Game complete"
+      ? t("Game complete")
       : isTrumpChoice
-        ? "Choose the trump suit"
+        ? t("Choose the trump suit")
         : isReportMelds || isAcknowledgeMelds
-          ? "Melds"
-          : "Bela";
+          ? t("Melds")
+          : t("Bela");
   const subtitle = isStart
-    ? "Your table. Your match."
+    ? t("Your table. Your match.")
     : isMatchComplete
       ? matchCompleteSubtitle(matchCompleteSummary)
     : isNextGame
       ? gameCompleteWinnerMessage(gameCompleteSummary)
       : isTrumpChoice
-        ? pendingAction?.prompt || "Choose the trump suit or skip."
+        ? (pendingAction?.legalTrumpChoices.includes("SKIP") ? t("Choose the trump suit or skip.") : t("Choose the trump suit."))
         : isReportMelds
-          ? "Declare your melds or keep them hidden."
+          ? t("Declare your melds or keep them hidden.")
           : isAcknowledgeMelds
-            ? "Review the winning melds before the first trick."
-            : "Call Bela with this card or play it quietly.";
+            ? t("Review the winning melds before the first trick.")
+            : t("Call Bela with this card or play it quietly.");
 
   return (
     <dialog
@@ -122,7 +132,7 @@ function ActionPanel({
         }
       >
         {isBootLoading ? (
-          <div className="start-loading-screen" aria-label="Loading table" role="status">
+          <div className="start-loading-screen" aria-label={t("Loading table")} role="status">
             <div className="start-loading-spinner" aria-hidden="true">
               <span className="loading-card loading-card-one" />
               <span className="loading-card loading-card-two" />
@@ -137,34 +147,35 @@ function ActionPanel({
                 <h2 className="action-popup-title">{title}</h2>
                 <p className="action-popup-subtitle">{subtitle}</p>
                 <span className="action-popup-ornament" aria-hidden="true" />
-                {errorMessage ? <p className="error-line" role="alert">{errorMessage}</p> : null}
+                {errorMessage ? <p className="error-line" role="alert">{errorDescription(errorMessage)}</p> : null}
               </div>
               {isStart ? (
                 <div className="action-popup-body">
+                  <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>
                   <div className="team-settings-grid">
                     <TeamSettingsRow
                       side="your"
-                      heading="Us"
-                      teamLabel="your team"
+                      heading={t("Us")}
+                      teamLabel={t("your team")}
                       teamValue={teamNames.yourTeam}
                       onTeamChange={(value) => onTeamNameChange("yourTeam", value)}
-                      firstPlayerLabel="you"
+                      firstPlayerLabel={t("you")}
                       firstPlayerValue={playerNames.SOUTH}
                       onFirstPlayerChange={(value) => onPlayerNameChange("SOUTH", value)}
-                      secondPlayerLabel="teammate"
+                      secondPlayerLabel={t("teammate")}
                       secondPlayerValue={playerNames.NORTH}
                       onSecondPlayerChange={(value) => onPlayerNameChange("NORTH", value)}
                     />
                     <TeamSettingsRow
                       side="opponent"
-                      heading="Them"
-                      teamLabel="enemy team"
+                      heading={t("Them")}
+                      teamLabel={t("enemy team")}
                       teamValue={teamNames.enemyTeam}
                       onTeamChange={(value) => onTeamNameChange("enemyTeam", value)}
-                      firstPlayerLabel="west"
+                      firstPlayerLabel={t("west")}
                       firstPlayerValue={playerNames.WEST}
                       onFirstPlayerChange={(value) => onPlayerNameChange("WEST", value)}
-                      secondPlayerLabel="east"
+                      secondPlayerLabel={t("east")}
                       secondPlayerValue={playerNames.EAST}
                       onSecondPlayerChange={(value) => onPlayerNameChange("EAST", value)}
                     />
@@ -180,7 +191,7 @@ function ActionPanel({
                           onClick={() => onGameSettingsChange({ matchTargetWins: value })}
                           aria-pressed={gameSettings.matchTargetWins === value}
                         >
-                          first to {value}
+                          {t("firstTo", { count: value })}
                         </button>
                       ))}
                     </SettingGroup>
@@ -197,7 +208,7 @@ function ActionPanel({
                           onClick={() => onGameSettingsChange({ gameLength: option.value })}
                           aria-pressed={gameSettings.gameLength === option.value}
                         >
-                          {option.label}
+                          {tr(option.label)}
                         </button>
                       ))}
                     </SettingGroup>
@@ -217,23 +228,24 @@ function ActionPanel({
                           onClick={() => onGameSettingsChange({ tableTheme: theme.value })}
                           aria-pressed={gameSettings.tableTheme === theme.value}
                         >
-                          {theme.label}
+                          {tr(theme.label)}
                         </button>
                       ))}
                     </SettingGroup>
                   </div>
 
+                  {visual && onVisualChange && <AppearanceSettings visual={visual} onChange={onVisualChange} />}
                   <div className="start-action-row">
                     <SettingGroup label="difficulty" className="start-difficulty-group">
                       {(["EASY", "NORMAL", "HARD"] as const).map((mode) => (
                         <button
                           key={mode}
                           type="button"
-                          className={`setting-pill setting-pill-difficulty setting-pill-difficulty-${mode.toLowerCase()} ${gameSettings.difficulty === mode ? "selected" : ""}`}
+                          className={`setting-pill setting-pill-difficulty setting-pill-difficulty-${tr(mode.toLowerCase())} ${gameSettings.difficulty === mode ? "selected" : ""}`}
                           onClick={() => onGameSettingsChange({ difficulty: mode })}
                           aria-pressed={gameSettings.difficulty === mode}
                         >
-                          {mode.toLowerCase()}
+                          {tr(mode.toLowerCase())}
                         </button>
                       ))}
                     </SettingGroup>
@@ -264,55 +276,38 @@ function ActionPanel({
               ) : null}
               {isMatchComplete ? (
                 <div className="between-games-summary">
-                  <div className="between-games-chip">match result</div>
+                  <div className="between-games-chip">{t("match result")}</div>
                   {matchCompleteSummary ? <MatchCompleteSummaryPanel summary={matchCompleteSummary} /> : null}
                 </div>
               ) : null}
             </div>
             <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
               {isStart ? (
-                <button type="button" className="action-button action-button-primary" onClick={onStart}>
-                  Start the match <span aria-hidden="true">→</span>
+                <button type="button" className="action-button action-button-primary" onClick={onStart}>{t("Start the match")}<span aria-hidden="true">→</span>
                 </button>
               ) : null}
               {isMatchComplete ? (
                 <>
-                  <button type="button" className="action-button" onClick={onOpenSettingsMenu}>
-                    Settings
-                  </button>
-                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>
-                    Revenge
-                  </button>
+                  <button type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
+                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Revenge")}</button>
                 </>
               ) : null}
               {isNextGame ? (
-                <button type="button" className="action-button action-button-primary" onClick={onStart}>
-                  Deal the next game
-                </button>
+                <button type="button" className="action-button action-button-primary" onClick={onStart}>{t("Deal the next game")}</button>
               ) : null}
               {isReportMelds ? (
                 <>
-                  <button type="button" className="action-button" onClick={() => onReportMelds(false)}>
-                    Pass
-                  </button>
-                  <button type="button" className="action-button action-button-primary" onClick={() => onReportMelds(true)}>
-                    Declare melds
-                  </button>
+                  <button type="button" className="action-button" onClick={() => onReportMelds(false)}>{t("Pass")}</button>
+                  <button type="button" className="action-button action-button-primary" onClick={() => onReportMelds(true)}>{t("Declare melds")}</button>
                 </>
               ) : null}
               {isAcknowledgeMelds ? (
-                <button type="button" className="action-button action-button-primary" onClick={onAcknowledgeMelds}>
-                  Continue
-                </button>
+                <button type="button" className="action-button action-button-primary" onClick={onAcknowledgeMelds}>{t("Continue")}</button>
               ) : null}
               {isBelaChoice ? (
                 <>
-                  <button type="button" className="action-button" onClick={onPlayWithoutBela}>
-                    Play only
-                  </button>
-                  <button type="button" className="action-button action-button-primary" onClick={onPlayWithBela}>
-                    Play + Bela
-                  </button>
+                  <button type="button" className="action-button" onClick={onPlayWithoutBela}>{t("Play only")}</button>
+                  <button type="button" className="action-button action-button-primary" onClick={onPlayWithBela}>{t("Play + Bela")}</button>
                 </>
               ) : null}
               {isTrumpChoice
@@ -323,12 +318,10 @@ function ActionPanel({
                         type="button"
                         className="suit-choice-button suit-choice-skip"
                         onClick={() => onChooseTrump(choice)}
-                        aria-label="skip"
+                        aria-label={t("skip")}
                       >
-                        <div className="suit-choice-visual suit-choice-skip-visual" aria-hidden="true">
-                          pass
-                        </div>
-                        <span className="suit-choice-label">skip</span>
+                        <div className="suit-choice-visual suit-choice-skip-visual" aria-hidden="true">{t("pass")}</div>
+                        <span className="suit-choice-label">{t("skip")}</span>
                       </button>
                     ) : (
                       <SuitChoiceButton key={choice} choice={choice} onChoose={onChooseTrump} />
@@ -345,49 +338,49 @@ function ActionPanel({
 
 function gameCompleteWinnerMessage(summary: GameCompleteSummary | null) {
   if (!summary) {
-    return "The game is over.";
+    return t("The game is over.");
   }
 
-  return summary.byForfeit ? `${summary.winnerName} won the game by forfeit.` : `${summary.winnerName} won the game.`;
+  return t(summary.byForfeit ? "wonGameForfeit" : "wonGame", { name: summary.winnerName });
 }
 
 function matchCompleteSubtitle(summary: MatchCompleteSummary | null) {
   if (!summary) {
-    return "The match is over. Set the next table when you are ready.";
+    return t("The match is over. Set the next table when you are ready.");
   }
 
-  return `${summary.winnerName} win the match ${summary.winnerMatchWins}-${summary.loserMatchWins}.`;
+  return t("wonMatch", { name: summary.winnerName, wins: summary.winnerMatchWins, losses: summary.loserMatchWins });
 }
 
 function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary }) {
   return (
     <div className="game-complete-grid">
-      <section className="game-complete-box" aria-label="Match and game settings">
-        <div className="game-complete-box-title">Settings</div>
+      <section className="game-complete-box" aria-label={t("Match and game settings")}>
+        <div className="game-complete-box-title">{t("Settings")}</div>
         <div className="game-complete-box-row">
-          <span>Match length</span>
+          <span>{t("Match length")}</span>
           <strong>
-            First to {summary.matchTargetWins} game{summary.matchTargetWins === 1 ? "" : "s"}
+            {t("firstTo", { count: summary.matchTargetWins })}
           </strong>
         </div>
         <div className="game-complete-box-row">
-          <span>Game length</span>
-          <strong>{summary.nextGameTargetPoints} points</strong>
+          <span>{t("Game length")}</span>
+          <strong>{countText("points", summary.nextGameTargetPoints)}</strong>
         </div>
       </section>
-      <section className="game-complete-box" aria-label="Current standings">
-        <div className="game-complete-box-title">Standings</div>
+      <section className="game-complete-box" aria-label={t("Current standings")}>
+        <div className="game-complete-box-title">{t("Standings")}</div>
         <div className="game-complete-score-rows">
           <div className="game-complete-score-row game-complete-score-row-winner">
             <span>{summary.winnerName}</span>
             <strong>
-              {summary.winnerMatchWins} MP · {summary.winnerGamePoints} GP
+              {t("scoreSummary", { wins: summary.winnerMatchWins, points: summary.winnerGamePoints })}
             </strong>
           </div>
           <div className="game-complete-score-row">
             <span>{summary.loserName}</span>
             <strong>
-              {summary.loserMatchWins} MP · {summary.loserGamePoints} GP
+              {t("scoreSummary", { wins: summary.loserMatchWins, points: summary.loserGamePoints })}
             </strong>
           </div>
         </div>
@@ -401,22 +394,21 @@ function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary 
     <div className="between-games-result-grid">
       <div className="between-games-outcome">
         <p className="between-games-outcome-line">
-          <strong>{summary.winnerName}</strong>
-          {" win the match"}
+          <strong>{t("matchWinner", { name: summary.winnerName })}</strong>
         </p>
       </div>
-      <div className="match-complete-grid" aria-label="Final match score">
+      <div className="match-complete-grid" aria-label={t("Final match score")}>
         <div className="match-complete-team match-complete-team-winner">{summary.winnerName}</div>
         <div className="match-complete-team">{summary.loserName}</div>
         <div className="match-complete-score match-complete-score-winner">{summary.winnerMatchWins}</div>
         <div className="match-complete-score">{summary.loserMatchWins}</div>
       </div>
       <div className="between-games-matchline">
-        Final game: {summary.finalGameWinnerPoints}-{summary.finalGameLoserPoints}
-        {summary.finalGameByForfeit ? " by forfeit." : "."}
+        {t("finalGame", { win: summary.finalGameWinnerPoints, loss: summary.finalGameLoserPoints })}
+        {summary.finalGameByForfeit ? ` / ${t("byForfeit")}` : ""}
       </div>
       <div className="between-games-matchline">
-        Match target: first to {summary.matchTargetWins} game{summary.matchTargetWins === 1 ? "" : "s"}.
+        {t("firstTo", { count: summary.matchTargetWins })}
       </div>
     </div>
   );
@@ -424,13 +416,13 @@ function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary 
 
 function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
   if (!meldSet) {
-    return <p className="panel-caption">No melds available.</p>;
+    return <p className="panel-caption">{t("No melds available.")}</p>;
   }
 
   return (
     <div className="meld-popup-stack meld-popup-player-block">
       <div className="meld-detail-row">
-        <span className="panel-caption">player</span>
+        <span className="panel-caption">{t("player")}</span>
         <span className="meld-detail-separator" aria-hidden="true">
           {" : "}
         </span>
@@ -443,11 +435,11 @@ function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
       {meldSet.melds.map((meld) => (
         <div key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
           <div className="meld-detail-row">
-            <span className="panel-caption">meld</span>
+            <span className="panel-caption">{t("meld")}</span>
             <span className="meld-detail-separator" aria-hidden="true">
               {" : "}
             </span>
-            <strong>{formatMeldLabel(meld.label)}</strong>
+            <strong>{meldDescription(meld)}</strong>
           </div>
           <div className="meld-card-row">
             {meld.cards.map((card) => (
@@ -462,13 +454,13 @@ function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
 
 function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }) {
   if (!meldWinner) {
-    return <p className="panel-caption">No melds this game.</p>;
+    return <p className="panel-caption">{t("No melds this game.")}</p>;
   }
 
   return (
     <div className="meld-popup-stack">
       <div className="meld-detail-row">
-        <span className="panel-caption">team</span>
+        <span className="panel-caption">{t("team")}</span>
         <span className="meld-detail-separator" aria-hidden="true">
           {" : "}
         </span>
@@ -481,9 +473,6 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
   );
 }
 
-function formatMeldLabel(label: string) {
-  return label.toLowerCase();
-}
 
 interface TeamSettingsRowProps {
   side: "your" | "opponent";
@@ -515,7 +504,7 @@ function TeamSettingsRow({
   return (
     <section className="team-settings-row" data-team={side}>
       <div className="team-settings-label">
-        <span className="panel-caption">team</span>
+        <span className="panel-caption">{t("team")}</span>
         <strong>{heading}</strong>
       </div>
       <label className="name-setting-field team-name-field">
@@ -547,7 +536,7 @@ function SettingGroup({
 }) {
   return (
     <section data-setting={label} className={`setting-group ${boxed ? "setting-group-boxed" : ""} ${className}`.trim()}>
-      <span className="panel-caption">{label}</span>
+      <span className="panel-caption">{tr(label)}</span>
       <div className="setting-pill-row">{children}</div>
     </section>
   );

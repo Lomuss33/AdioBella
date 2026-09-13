@@ -13,7 +13,7 @@
 | Publish or diagnose a build | [Deployment](deployment.md) |
 | Plan the UI redesign | [UI and UX improvement plan](ui-ux-plan.md) (proposed) |
 | Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |
-| Plan English, German, and Croatian support | [Localization plan](localization-plan.md) (proposed) |
+| Maintain English, German, and Croatian support | [Localization design and implementation](localization-plan.md) |
 | Review and integrate contributions | [Maintainer guide](../MAINTAINER.md) |
 
 ## Structure

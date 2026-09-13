@@ -101,3 +101,8 @@
 
 .playing-card-rank { font-variant-numeric: lining-nums; letter-spacing: -.055em; }
 .playing-card-corner-suit { font-size: .78em; }
+:root[data-card-style="modern"] { --card-paper: #f5f5f1; --card-paper-edge: #e7ece8; }
+:root[data-card-style="modern"] .playing-card-face { border-radius: 6% / 4.2%; box-shadow: 0 3px 9px rgb(0 0 0 / 22%); }
+:root[data-card-style="contrast"] { --card-paper: #ffffff; --card-paper-edge: #ffffff; --card-red: #a00020; --card-black: #050505; }
+:root[data-card-style="contrast"] .playing-card-face { border-color: #111; box-shadow: 0 2px 6px rgb(0 0 0 / 30%); }
+:root[data-card-style="contrast"] .table-arena .playing-card-shell.blocked-choice { opacity: .85; }

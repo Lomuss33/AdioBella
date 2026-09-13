@@ -113,7 +113,7 @@ export const browserGateway: GameGateway = {
 function requireSession(sessionId: string) {
   const session = sessions.get(sessionId);
   if (!session) {
-    throw new Error("Session not found.");
+    throw Object.assign(new Error("Session not found."), { code: "error.session" });
   }
   return session;
 }

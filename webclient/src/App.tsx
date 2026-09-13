@@ -1,3 +1,7 @@
+import GuideBook from "./components/GuideBook";
+import { loadPreferences, savePreferences, readStorage, writeStorage, removeStorage, type VisualSettings } from "./lib/preferences";
+import { errorCode } from "./i18n/presentation";
+import { useLanguage } from "./i18n";
 import { useEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
 import ConfirmPopup from "./components/ConfirmPopup";
@@ -42,6 +46,11 @@ const THEME_META_COLOR: Record<TableTheme, string> = {
 };
 
 function App() {
+  useLanguage();
+  const [initialPreferences] = useState(loadPreferences);
+  const [showBook, setShowBook] = useState(false);
+  const [preferencesSaved, setPreferencesSaved] = useState(true);
+  const [visual, setVisual] = useState<VisualSettings>(initialPreferences.visual);
   const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
   const gateway = getGameGateway();
   const persistSession = shouldPersistSession();
@@ -50,9 +59,9 @@ function App() {
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(emptyPlayerNames());
-  const [teamNames, setTeamNames] = useState<TeamNameDrafts>(emptyTeamNames());
-  const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(defaultGameSettings);
+  const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(initialPreferences.players);
+  const [teamNames, setTeamNames] = useState<TeamNameDrafts>(initialPreferences.teams);
+  const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(initialPreferences.game);
   const [startScreenPhase, setStartScreenPhase] = useState<"boot-loading" | "ready">("boot-loading");
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
   const [pendingBelaChoiceIndex, setPendingBelaChoiceIndex] = useState<number | null>(null);
@@ -89,8 +98,15 @@ function App() {
   }, [animatedTrick]);
 
   useEffect(() => {
+    setPreferencesSaved(savePreferences({ version: 1, game: gameSettings, players: playerNames, teams: teamNames, visual }));
+  }, [gameSettings, playerNames, teamNames, visual]);
+  useEffect(() => {
+    document.documentElement.dataset.cardStyle = visual.cardStyle;
+    document.documentElement.dataset.gameAccent = visual.accent;
+  }, [visual]);
+  useEffect(() => {
     document.documentElement.setAttribute("data-table-theme", gameSettings.tableTheme);
-    window.localStorage.setItem(THEME_KEY, gameSettings.tableTheme);
+    writeStorage(THEME_KEY, gameSettings.tableTheme);
     syncThemeColorMeta(THEME_META_COLOR[gameSettings.tableTheme]);
   }, [gameSettings.tableTheme]);
 
@@ -107,7 +123,7 @@ function App() {
         scheduleSnapshotRefresh(sessionId);
       },
       onError: () => {
-        setErrorMessage("Live event stream disconnected. The browser will retry automatically.");
+        setErrorMessage("error.stream");
       }
     });
     subscriptionRef.current = source;
@@ -118,7 +134,7 @@ function App() {
   async function bootstrapSession() {
     try {
       if (persistSession) {
-        const existingSessionId = window.localStorage.getItem(SESSION_KEY);
+        const existingSessionId = readStorage(SESSION_KEY);
         if (existingSessionId) {
           try {
             const restoredSession = await loadSession(existingSessionId, true);
@@ -126,15 +142,15 @@ function App() {
             setSessionId(existingSessionId);
             return;
           } catch {
-            window.localStorage.removeItem(SESSION_KEY);
+            removeStorage(SESSION_KEY);
           }
         }
       }
 
-      const response = await gateway.createSession();
+      const response = await createConfiguredSession();
       applyFreshSession(response);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to create a session.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -159,7 +175,7 @@ function App() {
         if (await recoverMissingSession(error)) {
           return;
         }
-        setErrorMessage("Unable to refresh the game state.");
+        setErrorMessage("error.refresh");
       });
       refreshTimeoutRef.current = null;
     }, SNAPSHOT_REFRESH_DEBOUNCE_MS);
@@ -213,7 +229,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to start the match.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -230,7 +246,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to choose trump.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -263,7 +279,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to play the card.");
+      setErrorMessage(errorCode(error));
       setSelectedHandIndex(null);
       setPendingBelaChoiceIndex(null);
       setHiddenHandIndex(null);
@@ -301,7 +317,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to report melds.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -319,7 +335,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to continue after melds.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -344,7 +360,7 @@ function App() {
       if (await recoverMissingSession(error)) {
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to forfeit the current game.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -366,7 +382,7 @@ function App() {
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to quit the match.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -378,7 +394,7 @@ function App() {
     try {
       await openFreshSessionWithCurrentSetup(true);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to start the rematch.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -390,7 +406,7 @@ function App() {
     try {
       await openFreshSessionWithCurrentSetup(false);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to open the settings lobby.");
+      setErrorMessage(errorCode(error));
     }
   }
 
@@ -575,7 +591,7 @@ function App() {
 
     setSessionId((current) => (current === response.sessionId ? current : response.sessionId));
     if (persistSession) {
-      window.localStorage.setItem(SESSION_KEY, response.sessionId);
+      writeStorage(SESSION_KEY, response.sessionId);
     }
     lastSequenceRef.current = Math.max(lastSequenceRef.current, response.snapshot.lastEventSequence);
 
@@ -594,13 +610,8 @@ function App() {
     setPendingBelaChoiceIndex(null);
     setPlayerNames((current) => mergePlayerNames(current, response.snapshot.players));
     setTeamNames((current) => mergeTeamNames(current, response.snapshot));
-    setGameSettings((current) => ({
-      ...current,
-      difficulty: toDifficulty(response.snapshot.score.difficulty),
-      matchTargetWins: toMatchTargetWins(response.snapshot.score.matchTargetWins),
-      gameLength: response.snapshot.score.gameTargetPoints <= 501 ? "SHORT" : "LONG"
-    }));
-    setErrorMessage(response.snapshot.pendingAction.validationMessage);
+    // Local preferences also describe the next match; snapshots must not overwrite them.
+    setErrorMessage(response.snapshot.pendingAction.validationCode ?? (response.snapshot.pendingAction.validationMessage ? "error.unknown" : null));
   }
 
   function flushDeferredSession() {
@@ -619,7 +630,7 @@ function App() {
           commitSessionSnapshot(deferredSession);
           return;
         }
-        setErrorMessage("Unable to refresh the game state.");
+        setErrorMessage("error.refresh");
         });
       return;
     }
@@ -665,13 +676,19 @@ function App() {
     lastSequenceRef.current = 0;
 
     if (persistSession) {
-      window.localStorage.removeItem(SESSION_KEY);
+      removeStorage(SESSION_KEY);
     }
 
-    const response = await gateway.createSession();
+    const response = await createConfiguredSession();
     applyFreshSession(response);
-    setErrorMessage("The old session expired. A fresh table has been opened.");
+    setErrorMessage("error.freshSession");
     return true;
+  }
+
+  async function createConfiguredSession() {
+    const created = await gateway.createSession();
+    return gateway.updateLobbySettings(created.sessionId, gameSettings.difficulty, playerNames,
+      teamNames, gameSettings.matchTargetWins, gameSettings.gameLength);
   }
 
   function applyFreshSession(response: SessionResponse) {
@@ -771,6 +788,7 @@ function App() {
           canQuitMatch={canQuitMatch}
           onForfeitGame={() => setConfirmExit("game")}
           onQuitMatch={() => setConfirmExit("match")}
+          onOpenBook={() => setShowBook(true)}
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
@@ -793,11 +811,18 @@ function App() {
           pendingBelaChoiceCard={belaChoiceCard}
           onPlayWithBela={handlePlayWithBela}
           onPlayWithoutBela={handlePlayWithoutBela}
+          onOpenBook={() => setShowBook(true)}
+          visual={visual}
+          onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
         />
       </div>
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} />
       </section>
+      {showBook && <GuideBook onClose={() => setShowBook(false)} activeMatch={Boolean(snapshot && snapshot.pendingAction.type !== "START_MATCH")}
+        saved={preferencesSaved} visual={visual} onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
+        game={gameSettings} onGameChange={handleGameSettingsChange} players={playerNames} teams={teamNames}
+        onPlayerChange={handlePlayerNameChange} onTeamChange={handleTeamNameChange} />}
       {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {
         setConfirmExit(null);
         if (confirmExit === "game") void handleForfeitGame();
@@ -850,7 +875,7 @@ function emptyTeamNames(): TeamNameDrafts {
 }
 
 function defaultGameSettings(): GameSettingsDrafts {
-  const storedTheme = typeof window === "undefined" ? null : window.localStorage.getItem(THEME_KEY);
+  const storedTheme = typeof window === "undefined" ? null : readStorage(THEME_KEY);
   return {
     difficulty: "NORMAL",
     matchTargetWins: 3,
@@ -1002,7 +1027,7 @@ function isMissingSessionError(error: unknown) {
   }
 
   if (error instanceof Error) {
-    return /session not found/i.test(error.message);
+    return "code" in error && error.code === "error.session";
   }
 
   return false;

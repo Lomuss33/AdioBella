@@ -1,3 +1,4 @@
+import { cardDescription } from "../i18n/presentation";
 import type { CardView } from "../types";
 import { toCardPresentation } from "../lib/cardPresentation";
 
@@ -42,7 +43,7 @@ function PlayingCard({
         .join(" ")}
       disabled={disabled}
       onClick={onClick}
-      aria-label={presentation.hidden ? `${ownerName ?? "Opponent"} hidden card` : `${ownerName ? `${ownerName}: ` : ""}${presentation.label}`}
+      aria-label={`${ownerName ? `${ownerName}: ` : ""}${cardDescription(card)}`}
     >
       <div className={`playing-card-face ${presentation.className}`}>
         {presentation.hidden ? (

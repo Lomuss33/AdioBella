@@ -244,6 +244,11 @@
   .meld-details-player { padding: 7px 0; }
 }
 
+.belot-dialog .language-select { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; color: var(--ui-muted); font-size: 12px; }
+.belot-dialog .language-select select { max-width: 100%; min-width: 0; min-height: 38px; border: 1px solid var(--ui-line); border-radius: 8px; padding: 6px 28px 6px 10px; color: var(--ui-text); background: var(--ui-solid); font: inherit; font-size: 16px; }
+.belot-dialog select:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.belot-dialog .action-button, .belot-dialog .setting-pill { white-space: normal; overflow-wrap: anywhere; }
+.belot-dialog .game-complete-box-row strong, .belot-dialog .game-complete-score-row strong { overflow-wrap: anywhere; }
 @media (max-width: 540px) {
   .belot-dialog .popup-card { border-radius: 10px;         }
   .belot-dialog .popup-content { padding: 10px 8px; }

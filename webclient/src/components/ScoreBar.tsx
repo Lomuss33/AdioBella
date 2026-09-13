@@ -1,3 +1,5 @@
+import { errorDescription } from "../i18n/presentation";
+import { t, tr } from "../i18n";
 import type { AnimatedTrickState, GameSnapshot } from "../types";
 
 interface ScoreBarProps {
@@ -14,20 +16,19 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
     <section className="score-bar">
       <div className="score-item score-prompt">
         <div className="score-header">
-          <span className="score-label">Status</span>
-          <small className="trump-line">
-            trump{" "}
+          <span className="score-label">{t("Status")}</span>
+          <small className="trump-line">{t("trump")}{" "}
             {trump ? (
               <>
-                <span className={`trump-suit-symbol ${trump.className}`}>{trump.symbol}</span> {trump.label}
+                <span className={`trump-suit-symbol ${trump.className}`}>{trump.symbol}</span> {tr(trump.label)}
               </>
             ) : (
-              "pending"
+              t("pending")
             )}
           </small>
         </div>
         <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
-        {errorMessage ? <small className="error-line" role="alert">{errorMessage}</small> : null}
+        {errorMessage ? <small className="error-line" role="alert">{errorDescription(errorMessage)}</small> : null}
       </div>
     </section>
   );
@@ -50,7 +51,7 @@ function toTrumpMeta(trumpSuit: string | null) {
 
 function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedTrickState | null | undefined) {
   if (!snapshot) {
-    return "Waiting for the session to load.";
+    return t("Waiting for the session to load.");
   }
 
   const southPlayer = snapshot.players.find((player) => player.seat === "SOUTH");
@@ -60,33 +61,33 @@ function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedT
 
   if (animatedTrick) {
     if (animatedTrick.phase === "placing") {
-      return "Cards are being played…";
+      return t("Cards are being played…");
     }
 
     if (winningPlayer && southPlayer && winningPlayer.team === southPlayer.team) {
-      return "Your team wins the trick.";
+      return t("Your team wins the trick.");
     }
 
-    return "Opponents win the trick.";
+    return t("Opponents win the trick.");
   }
 
   switch (snapshot.pendingAction.type) {
     case "START_MATCH":
-      return "Set the table and start the match.";
+      return t("Set the table and start the match.");
     case "START_NEXT_GAME":
-      return "A new game is ready when you are.";
+      return t("A new game is ready when you are.");
     case "CHOOSE_TRUMP":
-      return "Choose a trump or skip.";
+      return t("Choose a trump or skip.");
     case "REPORT_MELDS":
-      return "Declare melds or pass.";
+      return t("Declare melds or pass.");
     case "ACKNOWLEDGE_MELDS":
-      return "Review the melds and continue.";
+      return t("Review the melds and continue.");
     case "PLAY_CARD":
       return snapshot.pendingAction.actingPlayerId === southPlayer?.id
-        ? "Your turn — choose a highlighted card."
-        : "Waiting for the next player…";
+        ? t("Your turn — choose a highlighted card.")
+        : t("Waiting for the next player…");
     default:
-      return snapshot.pendingAction.prompt || "The table is ready.";
+      return t("The table is ready.");
   }
 }
 

@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import type { PlayerView } from "../types";
 import PlayingCard from "./PlayingCard";
 
@@ -45,7 +46,7 @@ function PlayerHand({
   });
 
   return (
-    <div className="player-hand-area" aria-label="Your hand">
+    <div className="player-hand-area" aria-label={t("Your hand")}>
       <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
         <div className="south-inline-status-row">
           <span className="south-inline-side south-inline-left">
@@ -53,7 +54,7 @@ function PlayerHand({
               className={`south-inline-badge ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
               aria-hidden={showDealer ? undefined : true}
             >
-              {showDealer ? "dealer" : ""}
+              {showDealer ? t("dealer") : ""}
             </span>
           </span>
           <span className="south-inline-side south-inline-right">
@@ -61,7 +62,7 @@ function PlayerHand({
               className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
               aria-hidden={showTrumpCaller ? undefined : true}
             >
-              {showTrumpCaller ? "trump" : ""}
+              {showTrumpCaller ? t("trump") : ""}
             </span>
           </span>
         </div>

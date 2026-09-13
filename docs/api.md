@@ -37,3 +37,7 @@ The events endpoint returns an array of events after the supplied sequence. The 
 `handIndex` is a zero-based index into the current hand. Use indices and choices from the current pending action rather than guessing valid moves.
 
 [ApiExceptionHandler](../server/src/main/java/com/belot/server/web/ApiExceptionHandler.java) maps `IllegalArgumentException` to HTTP 400 with `{"error":"..."}`. This includes application validation failures; do not assume every missing session produces a 404. Other framework errors may have a different response shape.
+
+## Localization-compatible data
+
+The selected interface language stays on the client. `PendingAction.validationCode` is an additive nullable error code; `validationMessage` remains as legacy English text. `MeldDeclarationView.melds` adds structured combination data alongside existing `labels`. Game-event payloads include stable `eventKind` values and the actor/dealer/team/card facts needed to render them in another language. New kinds cover session creation, name updates, hand success/failure, and coded errors. Existing message fields remain for older consumers. Invalid game actions return `{ "error": "legacy English explanation", "code": "stable code" }`; clients must use the code/status for behavior, never parse translated prose.

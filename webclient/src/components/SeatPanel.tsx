@@ -1,3 +1,4 @@
+import { t, countText } from "../i18n";
 import type { PlayerView, Seat } from "../types";
 import SeatMarker from "./SeatMarker";
 
@@ -11,7 +12,7 @@ interface SeatPanelProps {
 
 function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: SeatPanelProps) {
   if (!player) {
-    return <div className={`seat-panel seat-${(seat ?? "NORTH").toLowerCase()} seat-loading`}>Loading seat…</div>;
+    return <div className={`seat-panel seat-${(seat ?? "NORTH").toLowerCase()} seat-loading`}>{t("Loading seat…")}</div>;
   }
 
   return (
@@ -29,17 +30,17 @@ function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: Se
       <SeatMarker backdrop seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
       <div className="seat-main-copy">
         <strong title={player.name}>{player.name}</strong>
-        <small title={player.team}>{player.team} · {player.handSize} cards</small>
+        <small title={player.team}>{player.team} · {countText("cards", player.handSize)}</small>
       </div>
       <div className="seat-badges">
         <span className={`seat-badge ${showDealer ? "" : "seat-badge-placeholder"}`.trim()} aria-hidden={showDealer ? undefined : true}>
-          {showDealer ? "dealer" : ""}
+          {showDealer ? t("dealer") : ""}
         </span>
         <span
           className={`seat-badge seat-badge-trump ${showTrumpCaller ? "" : "seat-badge-placeholder"}`.trim()}
           aria-hidden={showTrumpCaller ? undefined : true}
         >
-          {showTrumpCaller ? "trump" : ""}
+          {showTrumpCaller ? t("trump") : ""}
         </span>
       </div>
     </div>

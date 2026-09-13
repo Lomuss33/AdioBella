@@ -56,3 +56,7 @@ Visible card labels stay lowercase, such as `10c`, `ad`, and `7s`. Trump control
 ## Boundaries
 
 Keep rules and action validation in the engines, session lifecycle in session classes, transport in gateways/controllers, and rendering in React. Expose view models rather than serializing private engine state. Browser-only builds must remain playable without API calls.
+
+## Localization
+
+The client locale store in `webclient/src/i18n/index.ts` resolves and persists `auto`, `en`, `de`, or `hr` independently of sessions and gameplay settings. App subscribes without remounting the game tree. The starting dialog uses `LanguageSelect`; all three catalogs ship together for offline browser play. `presentation.ts` translates stable event/error/meld data at render time, so history can follow a locale change. Keep enum values, card identity, names, and numeric game state untranslated. See [localization design and implementation](localization-plan.md) for compatibility and validation details.

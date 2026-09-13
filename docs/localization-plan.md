@@ -2,7 +2,19 @@
 
 [Documentation index](README.md) ? [Architecture](architecture.md) ? [UI and UX plan](ui-ux-plan.md)
 
-Status: proposed, not implemented. This plan is based on the current React client, browser engine, Java API records, server error handling, and existing documentation. No tests, builds, or browser checks were run. The standing no-testing instruction applies to implementation until the user changes it.
+Status: implemented, with focused validation. Browser-first selection, explicit English/German/Croatian preferences, the starting-menu selector, localized components, structured runtime messages, error codes, meld descriptors, and responsive label handling are in source. Seven focused localization tests, the frontend build, the Pages build, and Java engine/server compilation passed. No full test suite, visual device sweep, or native-speaker translation review was performed.
+
+## Implementation record
+
+The implementation uses a small reactive external store (`src/i18n/index.ts`) subscribed to by App and locale-sensitive controls/history, rather than a provider wrapper. It resolves the browser language before rendering, synchronizes document language/title, guards storage, and handles automatic-mode browser language changes. Locale changes neither recreate the game gateway nor submit settings.
+
+`catalog.ts` co-locates English, German, and Croatian entries in fixed tuples with typed message keys; static UI entries use stable source phrases and dynamic/domain entries use semantic keys. Named interpolation arguments are preserved across all three catalogs and checked in the focused test. Numeric/count formatting uses the selected locale and Croatian plural categories. `presentation.ts` formats cards, structured events, meld combinations, and stable errors. Brand names, printed rank letters, and stored player/team names are preserved. Existing default player names are treated as names; only role labels translate, avoiding unsafe default-name detection.
+
+Both engines now add missing event kinds and actor/dealer/team facts. Meld declaration history carries optional structured combinations, and pending actions carry an optional validation code. Java retains legacy record constructors and English fallback fields. Server errors add a code alongside the existing error field; the browser facade attaches equivalent codes. Existing text-only meld history can fall back to its old labels. Unknown event codes use a translated generic label; legacy unstructured events retain their prose in English and use a generic localized label in other languages.
+
+Verification covered preference priority, regional/unsupported languages, automatic versus explicit selection, storage failure, selector focus/persistence, catalog interpolation/Unicode, Croatian count forms, existing game/event preservation during switching, and localized engine rejection codes. The normal frontend build and Java compile passed during implementation; the final Pages build includes the last source and test type checks. Later terminology and device reviews remain useful and are not claimed here.
+
+The original staged design below remains as rationale and future review guidance. Where it differs, this implementation record describes current behavior.
 
 ## Outcome and boundaries
 

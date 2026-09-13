@@ -4,7 +4,8 @@ import type { GameGateway } from "./gameGateway";
 export class HttpError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    public readonly code: string = "error.unknown"
   ) {
     super(message);
     this.name = "HttpError";
@@ -120,8 +121,8 @@ async function sendRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const errorBody = (await response.json().catch(() => ({ error: "Request failed." }))) as { error?: string };
-    throw new HttpError(errorBody.error ?? "Request failed.", response.status);
+    const errorBody = (await response.json().catch(() => ({ error: "Request failed." }))) as { error?: string; code?: string };
+    throw new HttpError(errorBody.error ?? "Request failed.", response.status, response.status === 404 ? "error.session" : errorBody.code ?? "error.unknown");
   }
 
   return (await response.json()) as T;

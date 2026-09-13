@@ -414,6 +414,15 @@
   .table-arena .match-corner-button svg { display: none; }
 }
 
+/* Localized labels can grow without shrinking the text or hiding an action. */
+.table-arena .match-corner-button { white-space: normal; overflow-wrap: anywhere; }
+.table-arena .match-corner-button > span { min-width: 0; }
+@media (max-width: 700px) {
+  .table-arena .arena-status { grid-template-columns: minmax(0, 1fr) minmax(116px, 30%); }
+}
+@media (max-width: 380px), (max-height: 500px) and (min-width: 600px) {
+  .table-arena .arena-status { grid-template-columns: minmax(0, 1fr); }
+}
 @media (prefers-reduced-motion: reduce) {
   .table-arena *, .table-arena *::before, .table-arena *::after { animation: none !important; transition: none !important; }
 }

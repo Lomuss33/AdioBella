@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GameSnapshot, MeldDeclarationView } from "../types";
 import { usePopupDialog } from "../lib/usePopupDialog";
@@ -25,23 +25,41 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
 
 function MeldDetails({ melds, onClose }: { melds: MeldDeclarationView[]; onClose: () => void }) {
   const dialogRef = usePopupDialog(true);
+  const titleId = useId();
+  const descriptionId = useId();
   return (
-    <dialog ref={dialogRef} className="belot-dialog" aria-label="Meld details"
-      onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <dialog ref={dialogRef} className="belot-dialog belot-dialog-melds" aria-labelledby={titleId}
+      aria-describedby={descriptionId} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="popup-card">
-        <div className="popup-content">
-          <div className="action-popup-header action-popup-header-start">
-            <h2 className="action-popup-title">Meld details</h2>
-            <p className="action-popup-subtitle">Declared points for this game.</p>
+        <header className="meld-details-heading">
+          <div>
+            <h2 id={titleId} className="action-popup-title">Meld details</h2>
+            <p id={descriptionId} className="action-popup-subtitle">Declarations and Bela points for this game.</p>
           </div>
-          <div className="meld-popup-stack">
-            {melds.length === 0 ? <p>No melds declared this game.</p> : melds.map((meld) => (
-              <div className="meld-detail-row" key={`${meld.playerId}-${meld.labels.join("-")}-${meld.belaPoints}`}>
-                <span>{meld.playerName} · {meld.teamName}</span>
-                <strong>{meld.meldPoints + meld.belaPoints} points</strong>
-              </div>
-            ))}
-          </div>
+          <button type="button" className="meld-details-close" aria-label="Close meld details" onClick={onClose}>?</button>
+        </header>
+        <div className="popup-content meld-details-content" tabIndex={0} role="region" aria-label="Declared melds">
+          {melds.length === 0 ? (
+            <div className="meld-details-empty">
+              <span aria-hidden="true">?</span>
+              <strong>No declarations yet</strong>
+              <p>Melds and Bela points will appear here as they are recorded.</p>
+            </div>
+          ) : melds.map((meld) => (
+            <article className="meld-details-player" key={meld.playerId}>
+              <header className="meld-details-player-heading">
+                <div><strong>{meld.playerName}</strong><small>{meld.teamName}</small></div>
+                <span className="meld-details-total"><strong>{meld.meldPoints + meld.belaPoints}</strong><small>points</small></span>
+              </header>
+              <dl className="meld-details-breakdown">
+                <div><dt>Melds</dt><dd>{meld.meldPoints}</dd></div>
+                <div><dt>Bela</dt><dd>{meld.belaPoints}</dd></div>
+              </dl>
+              {meld.labels.length > 0 ? (
+                <ul className="meld-details-labels">{meld.labels.map((label, index) => <li key={`${index}-${label}`}>{label}</li>)}</ul>
+              ) : <p className="meld-details-note">{meld.belaPoints > 0 ? "Bela declared; no other melds recorded." : "No meld combinations recorded."}</p>}
+            </article>
+          ))}
         </div>
         <div className="popup-footer action-controls">
           <button type="button" className="action-button action-button-primary" autoFocus onClick={onClose}>Back to table</button>

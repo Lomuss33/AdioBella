@@ -35,26 +35,45 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     if (!arena || !guide) return;
     let frame = 0;
     let previousWidth = 0;
+    let previousLimit = 0;
+    const handRow = arena.querySelector<HTMLElement>(".card-fan-row");
     const syncHandSize = () => {
-      // Read the actual fitted table card, including short-height constraints.
-      const width = Math.floor(guide.getBoundingClientRect().width * .82);
+      // Fit both sets to the hand's available width, with only a 5% difference.
+      if (handRow) {
+        const style = getComputedStyle(handRow);
+        const columns = Number(style.getPropertyValue("--hand-columns")) || 8;
+        const gap = parseFloat(style.columnGap) || 0;
+        const inset = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+        const available = (handRow.clientWidth - inset - gap * (columns - 1)) / columns;
+        const limit = Math.max(32, Math.floor(available / .95));
+        if (limit !== previousLimit) {
+          previousLimit = limit;
+          arena.style.setProperty("--trick-hand-limit", `${limit}px`);
+        }
+      }
+      const width = Math.floor(guide.getBoundingClientRect().width * .95 * 4) / 4;
       if (width > 0 && width !== previousWidth) {
         previousWidth = width;
         arena.style.setProperty("--hand-card-max", `${width}px`);
       }
     };
     syncHandSize();
-    const observer = new ResizeObserver(() => {
+    const scheduleSync = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(syncHandSize);
-    });
+    };
+    const observer = new ResizeObserver(scheduleSync);
     observer.observe(guide);
+    if (handRow) observer.observe(handRow);
+    window.addEventListener("resize", scheduleSync);
     return () => {
       observer.disconnect();
+      window.removeEventListener("resize", scheduleSync);
       cancelAnimationFrame(frame);
       arena.style.removeProperty("--hand-card-max");
+      arena.style.removeProperty("--trick-hand-limit");
     };
-  }, []);
+  }, [Boolean(playersBySeat.SOUTH)]);
   const dealerSeat = snapshot?.players.find((player) => player.dealer)?.seat;
   const declarerSeat = snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat;
   const seat = (position: Seat) => <SeatPanel

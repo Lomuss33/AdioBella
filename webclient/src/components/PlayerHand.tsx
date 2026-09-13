@@ -1,6 +1,5 @@
 import type { PlayerView } from "../types";
 import PlayingCard from "./PlayingCard";
-import SeatMarker from "./SeatMarker";
 
 interface PlayerHandProps {
   player?: PlayerView;
@@ -67,7 +66,6 @@ function PlayerHand({
           </span>
         </div>
         <div className="south-inline-main">
-          <SeatMarker seat={player.seat} active={player.currentTurn && !locked} winner={winnerGlow} playerName={player.name} />
           <strong title={player.name}>{player.name}</strong>
           <span className="south-inline-separator">:</span>
           <span title={player.team}>{player.team}</span>

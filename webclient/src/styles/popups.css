@@ -212,6 +212,38 @@
 .belot-dialog .match-complete-team-winner, .belot-dialog .match-complete-score-winner { color: var(--ui-gold-light); }
 .belot-dialog .popup-card-loading { width: auto; border: 0; background: none; box-shadow: none; padding: 40px;  backdrop-filter: none;  -webkit-backdrop-filter: none; }
 
+/* Declaration history: fixed heading/actions, scrollable details only. */
+.belot-dialog-melds .popup-card { width: min(100%, 680px); }
+.belot-dialog-melds .meld-details-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 14px 14px 8px; flex: 0 0 auto; }
+.belot-dialog-melds .meld-details-heading h2, .belot-dialog-melds .meld-details-heading p { margin: 0; }
+.belot-dialog-melds .meld-details-heading p { margin-top: 4px; }
+.belot-dialog-melds .meld-details-close { flex: 0 0 36px; min-height: 36px; border: 1px solid var(--ui-line); border-radius: 50%; background: var(--ui-control); color: var(--ui-text); font: 24px/1 system-ui; cursor: pointer; }
+.belot-dialog-melds .meld-details-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 0 18px; padding: 0 14px 12px; }
+.belot-dialog-melds .meld-details-content:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; }
+.meld-details-player { min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--ui-line); }
+.meld-details-player-heading { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+.meld-details-player-heading > div { min-width: 0; }
+.meld-details-player-heading strong { font-size: 16px; overflow-wrap: anywhere; }
+.meld-details-player-heading small { display: block; color: var(--ui-muted); font-size: 12px; overflow-wrap: anywhere; }
+.meld-details-total { flex-shrink: 0; text-align: right; }
+.meld-details-total strong { color: var(--ui-gold-light); font: 500 24px/1.1 Georgia, serif; font-variant-numeric: tabular-nums; }
+.meld-details-breakdown { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 6px; font-size: 12px; }
+.meld-details-breakdown > div { display: flex; gap: 6px; }
+.meld-details-breakdown dt { color: var(--ui-muted); }
+.meld-details-breakdown dd { margin: 0; color: var(--ui-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.meld-details-labels { margin: 0; padding-left: 16px; color: var(--ui-text); font-size: 13px; line-height: 1.5; }
+.meld-details-labels li::marker { color: var(--ui-gold); }
+.meld-details-note, .meld-details-empty p { margin: 0; color: var(--ui-muted); font-size: 13px; }
+.meld-details-empty { grid-column: 1 / -1; display: grid; justify-items: center; gap: 8px; padding: 22px 10px; text-align: center; }
+.meld-details-empty > span { font: 36px/1 Georgia, serif; color: var(--ui-gold); opacity: .6; }
+@media (max-width: 440px) {
+  .belot-dialog-melds .meld-details-content { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-height: 500px) {
+  .belot-dialog-melds .meld-details-heading { padding: 8px 12px 4px; }
+  .meld-details-player { padding: 7px 0; }
+}
+
 @media (max-width: 540px) {
   .belot-dialog .popup-card { border-radius: 10px;         }
   .belot-dialog .popup-content { padding: 10px 8px; }

@@ -18,7 +18,7 @@ function SouthPlayerInfo({
 
   return (
     <div className={`seat-panel seat-south south-player-panel ${winnerGlow ? "seat-winner-glow" : ""}`.trim()}>
-      <SeatMarker seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
+      <SeatMarker backdrop seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
       <div className="seat-main-copy">
         <strong>{player.name}</strong>
         <small>{player.team}</small>

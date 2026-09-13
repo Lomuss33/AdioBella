@@ -26,7 +26,7 @@ function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: Se
         .filter(Boolean)
         .join(" ")}
     >
-      <SeatMarker seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
+      <SeatMarker backdrop seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} />
       <div className="seat-main-copy">
         <strong title={player.name}>{player.name}</strong>
         <small title={player.team}>{player.team} · {player.handSize} cards</small>

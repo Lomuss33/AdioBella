@@ -13,6 +13,7 @@
 | Publish or diagnose a build | [Deployment](deployment.md) |
 | Plan the UI redesign | [UI and UX improvement plan](ui-ux-plan.md) (proposed) |
 | Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |
+| Plan English, German, and Croatian support | [Localization plan](localization-plan.md) (proposed) |
 | Review and integrate contributions | [Maintainer guide](../MAINTAINER.md) |
 
 ## Structure
@@ -29,6 +30,7 @@ docs/
   deployment.md         Pages and local packaging
   ui-ux-plan.md         Proposed UI redesign and acceptance criteria
   color-material-plan.md  Current casino palette and material specification
+  localization-plan.md  Browser language, catalogs, and runtime message migration
   screenshots/          Current product screenshots
   archive/              Historical notes and unused documentation media
 ```

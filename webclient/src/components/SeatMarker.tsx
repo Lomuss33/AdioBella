@@ -8,11 +8,12 @@ const POSITION = {
 } satisfies Record<Seat, { angle: number; label: string }>;
 
 /** A miniature table locates the player without exposing internal seat names. */
-export default function SeatMarker({ seat, active = false, winner = false, playerName }: {
+export default function SeatMarker({ seat, active = false, winner = false, playerName, backdrop = false }: {
   seat: Seat;
   active?: boolean;
   winner?: boolean;
   playerName?: string;
+  backdrop?: boolean;
 }) {
   const position = POSITION[seat];
   const label = `${playerName ? `${playerName}, ` : ""}${position.label}${active ? ", playing now" : ""}${winner ? ", trick winner" : ""}`;
@@ -27,6 +28,12 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
       aria-label={label}
     >
       <title>{label}</title>
+      {backdrop ? (
+        <g transform={`rotate(${position.angle} 16 16)`} className="seat-backdrop-pointer">
+          <path className="seat-backdrop-chevron" d="M2 2 L16 16 L30 2 L30 11 L16 25 L2 11 Z" />
+          <path className="seat-backdrop-echo" d="M2 17 L16 31 L30 17" />
+        </g>
+      ) : <>
       <rect className="seat-marker-table" x="8" y="8" width="16" height="16" rx="6" />
       <g className="seat-marker-places">
         <circle cx="16" cy="3.5" r="1.5" />
@@ -40,6 +47,7 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
         <circle className="seat-marker-halo" cx="16" cy="3.5" r="3" />
         <circle className="seat-marker-dot" cx="16" cy="3.5" r="2.2" />
       </g>
+      </>}
     </svg>
   );
 }

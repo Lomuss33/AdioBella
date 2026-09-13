@@ -31,7 +31,7 @@ Start the match when ready.
 
 The three AI players take their turns automatically. Cards may be temporarily unavailable while an action or trick animation finishes.
 
-The table uses deep felt, smoked-glass panels, and warm ivory cards. Your team labels use muted sage and opponents use muted wine; gold highlights the active turn and primary actions. Open **Meld details** near the scores for declaration totals. The **Game Terminal** header collapses or expands history; it sits beside the table on wide screens and below it on smaller screens. When reading older entries, use **Latest rounds** or **Latest results** to return to the newest events.
+The table uses deep felt, smoked-glass panels, and warm ivory cards. Your team labels use muted sage and opponents use muted wine; gold highlights the active turn and primary actions. Open **Meld details** near the scores for each player?s declarations and separate meld/Bela totals. The **Game Terminal** header collapses or expands history; it sits beside the table on wide screens and below it on smaller screens. When reading older entries, use **Latest rounds** or **Latest results** to return to the newest events.
 
 The table uses the visible screen height, with card sizes adapting to the available space. Short landscape screens put your hand beside the play area. Meld details open in a separate popup. Very small or heavily zoomed views allow scrolling to keep the controls accessible.
 
@@ -52,4 +52,4 @@ The local server version stores a session identifier in your browser and can res
 
 When reporting a problem, include whether you played online or locally, your browser, the steps that led to it, and the visible error or a screenshot.
 
-Faint table motifs behind player panels hint at their positions; your hand keeps a small inline marker. The active player?s marker briefly pulses toward the center, then stays gold; the trick winner receives a short ring cue. Reduced-motion preferences keep these indicators static.
+Faint inward-pointing chevrons behind player panels hint at their positions; your hand shows only player and team text. The active player?s marker briefly pulses toward the center, then stays gold; the trick winner receives a short ring cue. Reduced-motion preferences keep these indicators static.

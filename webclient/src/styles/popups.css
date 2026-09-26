@@ -17,14 +17,14 @@
   margin: 0;
   padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
   border: 0;
-  background: transparent;
+  background: color-mix(in srgb, var(--page-bottom) 98%, transparent);
   color: var(--popup-text);
   font: 16px/1.5 "Segoe UI", system-ui, sans-serif;
   overflow: hidden;
 }
 
 .belot-dialog[open] { display: grid; place-items: center; }
-.belot-dialog::backdrop { background: rgb(3 6 5 / 64%); backdrop-filter: none; }
+.belot-dialog::backdrop { background: transparent; backdrop-filter: none; }
 .belot-dialog *, .belot-dialog *::before, .belot-dialog *::after { box-sizing: border-box; }
 
 .belot-dialog .popup-card {
@@ -212,6 +212,155 @@
 .belot-dialog .match-complete-team-winner, .belot-dialog .match-complete-score-winner { color: var(--ui-gold-light); }
 .belot-dialog .popup-card-loading { width: auto; border: 0; background: none; box-shadow: none; padding: 40px;  backdrop-filter: none;  -webkit-backdrop-filter: none; }
 
+/* Start screen lobby: clear teams, one rules row, one appearance row. */
+.belot-dialog-setup .popup-card { position: relative; width: min(100%, 880px); max-height: min(680px, 100%); }
+.belot-dialog-setup .popup-content { display: flex; flex-direction: column; overflow: hidden; padding: 18px clamp(16px, 3vw, 28px) 12px; }
+.belot-dialog-setup .action-popup-header { position: static; margin: 0 0 16px; padding: 0; }
+.belot-dialog-setup .start-heading-row { display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 40px; }
+.belot-dialog-setup .start-heading-copy { min-width: 0; text-align: center; }
+.belot-dialog-setup .action-popup-title { margin: 0; color: var(--ui-text); font: 650 clamp(22px, 2.5vw, 30px)/1.1 "Segoe UI", system-ui, sans-serif; letter-spacing: -.04em; }
+.belot-dialog-setup .action-popup-subtitle { display: none; }
+.belot-dialog.belot-dialog-setup .setup-toolbar { display: contents; }
+.belot-dialog-setup .setup-toolbar .language-select { position: absolute; top: 10px; left: 12px; z-index: 2; flex: 0 0 auto; }
+.belot-dialog-setup .setup-toolbar .language-flag-options { right: auto; left: 0; }
+.belot-dialog-setup .setup-toolbar .table-square-button { position: absolute; top: 10px; right: 12px; z-index: 2; }
+.belot-dialog-setup .action-popup-body { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 12px; align-content: start; min-height: 0; flex: 0 1 auto; }
+.belot-dialog-setup .team-settings-grid { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.belot-dialog-setup .team-settings-row { --team-tone: var(--ui-team-your); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; min-width: 0; padding: 13px; border: 1px solid color-mix(in srgb, var(--team-tone) 36%, var(--ui-line)); border-radius: 13px; background: linear-gradient(135deg, color-mix(in srgb, var(--team-tone) 11%, transparent), transparent 65%), var(--ui-control); box-shadow: inset 0 1px 0 var(--ui-highlight); }
+.belot-dialog-setup [data-team="opponent"] { --team-tone: var(--ui-team-opponent); }
+.belot-dialog-setup .team-settings-label { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; min-width: 0; }
+.belot-dialog-setup .team-settings-label > .panel-caption { display: none; }
+.belot-dialog-setup .team-settings-label strong { display: inline-flex; align-items: center; gap: 7px; color: var(--team-tone); font: 700 11px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+.belot-dialog-setup .team-settings-label strong::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.belot-dialog-setup .name-setting-field { display: grid; gap: 5px; min-width: 0; color: var(--ui-muted); font-size: 10px; line-height: 1.2; letter-spacing: .08em; text-transform: uppercase; }
+.belot-dialog-setup .name-setting-field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.belot-dialog-setup .name-setting-field input { width: 100%; min-width: 0; min-height: 38px; padding: 7px 9px; border: 1px solid var(--ui-line); border-radius: 8px; background: color-mix(in srgb, var(--ui-solid) 72%, transparent); color: var(--ui-text); font: 500 14px/1.2 "Segoe UI", system-ui, sans-serif; }
+.belot-dialog-setup .name-setting-field input:focus { border-color: var(--team-tone); }
+.belot-dialog-setup .settings-stack { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] { display: flex; align-items: center; justify-content: space-between; gap: 6px; text-align: left; }
+.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .setting-pill-row { width: auto; flex: 0 0 auto; }
+.belot-dialog-setup .setting-group { display: grid; align-content: start; gap: 6px; min-width: 0; padding: 11px; border: 1px solid var(--ui-line); border-radius: 11px; background: linear-gradient(145deg, var(--ui-highlight), transparent 60%), var(--ui-control); }
+.belot-dialog-setup .setting-group-boxed { padding: 11px; }
+.belot-dialog-setup .setting-group > .panel-caption, .belot-dialog-setup .appearance-setting > span { color: var(--ui-muted); font-size: 9px; font-weight: 700; line-height: 1.2; letter-spacing: .13em; text-transform: uppercase; }
+.belot-dialog-setup .setting-group-wide { grid-column: auto; }
+.belot-dialog-setup .choice-stepper { display: grid; grid-template-columns: 32px minmax(0, 1fr) 32px; align-items: center; min-width: 0; min-height: 36px; overflow: hidden; border: 1px solid var(--ui-line); border-radius: 8px; background: color-mix(in srgb, var(--ui-solid) 65%, transparent); }
+.belot-dialog-setup .choice-stepper > button { display: grid; place-items: center; width: 32px; min-height: 34px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--ui-gold-light); font: 24px/1 system-ui; cursor: pointer; }
+.belot-dialog-setup .choice-stepper > button:hover { background: var(--ui-selected); }
+.belot-dialog-setup .choice-stepper > output { min-width: 0; overflow: hidden; color: var(--ui-text); font: 600 12px/1.15 "Segoe UI", system-ui, sans-serif; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.belot-dialog-setup .choice-stepper-accent > output { border-radius: 6px; background: var(--selected-accent, var(--ui-gold)); color: var(--ui-ink); box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%); }
+.belot-dialog-setup .choice-stepper-accent > output { justify-self: center; width: min(100%, 54px); min-height: 23px; padding: 4px 3px; display: grid; place-items: center; }
+.belot-dialog-setup .choice-stepper-accent[data-value="gold"] { --selected-accent: #b99a60; }
+.belot-dialog-setup .choice-stepper-accent[data-value="silver"] { --selected-accent: #a9b6bc; }
+.belot-dialog-setup .choice-stepper-accent[data-value="copper"] { --selected-accent: #bc9279; }
+.belot-dialog-setup .match-length-choices { display: flex; align-items: center; gap: 4px; }
+.belot-dialog-setup .match-length-choices button { display: grid; place-items: center; width: 30px; min-width: 30px; min-height: 30px; padding: 0; border: 1px solid var(--ui-line); border-radius: 7px; background: color-mix(in srgb, var(--ui-solid) 60%, transparent); color: var(--ui-text); font: 650 12px/1 "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+.belot-dialog-setup .match-length-choices button[aria-pressed="true"] { border-color: var(--ui-gold-light); background: var(--ui-selected); color: var(--ui-gold-light); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-gold-light) 26%, transparent); }
+.belot-dialog-setup .setup-theme-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; gap: 5px; min-height: 36px; }
+.belot-dialog-setup .setup-theme-choice { --swatch: #46836b; position: relative; display: grid; place-items: center; min-width: 0; width: 100%; min-height: 32px; padding: 0; border: 1px solid color-mix(in srgb, var(--swatch) 70%, white 15%); border-radius: 8px; background: linear-gradient(145deg, color-mix(in srgb, var(--swatch) 90%, white 10%), var(--swatch)); cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
+.belot-dialog-setup .setup-theme-green { --swatch: #34745c; }
+.belot-dialog-setup .setup-theme-dark_blue { --swatch: #355b7a; }
+.belot-dialog-setup .setup-theme-cherry_red { --swatch: #813b4a; }
+.belot-dialog-setup .setup-theme-woody_brown { --swatch: #725539; }
+.belot-dialog-setup .setup-theme-fine_black { --swatch: #303a36; }
+.belot-dialog-setup .setup-theme-choice[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ui-dialog), 0 0 0 4px var(--ui-gold-light), 0 0 14px color-mix(in srgb, var(--swatch) 50%, transparent); transform: translateY(-1px); }
+.belot-dialog-setup .setup-theme-choice[aria-pressed="true"]::after { content: "\2713"; color: white; font: 700 13px/1 system-ui; text-shadow: 0 1px 4px #000; }
+.belot-dialog-setup .appearance-settings { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+.belot-dialog-setup .appearance-setting { display: grid; gap: 6px; min-width: 0; padding: 10px 11px; border: 1px solid var(--ui-line); border-radius: 11px; background: var(--ui-control); }
+.belot-dialog-setup .appearance-preview { display: none; }
+.belot-dialog-setup .start-action-row { display: contents; }
+.belot-dialog-setup .start-difficulty-group { grid-column: auto; max-width: none; margin: 0; }
+.belot-dialog-setup .popup-footer { justify-content: center; padding: 10px clamp(16px, 3vw, 28px) 16px; border-top: 1px solid color-mix(in srgb, var(--ui-line) 75%, transparent); background: linear-gradient(0deg, color-mix(in srgb, var(--ui-solid) 40%, transparent), transparent); }
+.belot-dialog-setup .action-button-primary { flex: 0 0 min(100%, 260px); max-width: none; min-height: 48px; }
+/* Group the lower controls into two purposeful surfaces instead of isolated boxes. */
+.belot-dialog-setup .settings-stack { padding: 12px; border: 1px solid var(--ui-line); border-radius: 13px; background: linear-gradient(145deg, var(--ui-highlight), transparent 60%), color-mix(in srgb, var(--ui-control) 75%, transparent); box-shadow: inset 0 1px 0 var(--ui-highlight); }
+.belot-dialog-setup .settings-stack > .setting-group { align-content: center; padding: 3px 10px; border: 0; border-left: 1px solid var(--ui-line); border-radius: 0; background: transparent; box-shadow: none; }
+.belot-dialog-setup .settings-stack > .setting-group:first-child { border-left: 0; }
+.belot-dialog-setup .setting-group > .panel-caption, .belot-dialog-setup .appearance-setting > span { font-size: 9px; }
+.belot-dialog-setup .choice-stepper { min-height: 40px; background: color-mix(in srgb, var(--ui-solid) 55%, transparent); }
+.belot-dialog-setup .choice-stepper > button { min-height: 38px; }
+.belot-dialog-setup .setup-theme-buttons { gap: 6px; }
+.belot-dialog-setup .setup-theme-choice { min-height: 34px; }
+.belot-dialog.belot-dialog-setup .appearance-settings { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 110px auto; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid var(--ui-line); border-radius: 13px; background: linear-gradient(145deg, var(--ui-highlight), transparent 60%), color-mix(in srgb, var(--ui-control) 75%, transparent); box-shadow: inset 0 1px 0 var(--ui-highlight); }
+.belot-dialog-setup .appearance-setting { align-content: center; gap: 4px; padding: 1px 8px; border: 0; border-left: 1px solid var(--ui-line); border-radius: 0; background: transparent; }
+.belot-dialog-setup .appearance-setting:first-child { border-left: 0; }
+.belot-dialog-setup .appearance-table-colors { padding-inline: 5px; }
+.belot-dialog-setup .appearance-preview { display: flex; gap: 4px; justify-content: center; padding-left: 6px; }
+.belot-dialog.belot-dialog-setup .appearance-preview .playing-card-shell { width: 26px; height: 36px; opacity: 1; }
+.belot-dialog-setup .appearance-preview .playing-card-face { width: 100%; height: 100%; }
+@media (max-width: 700px) {
+  .belot-dialog-setup .settings-stack { grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); gap: 6px; align-items: center; }
+  .belot-dialog-setup .settings-stack > .setting-group { min-height: 45px; padding: 4px 6px; border-left: 1px solid var(--ui-line); }
+  .belot-dialog-setup .settings-stack > .setting-group:first-child { border-left: 0; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] { grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 4px; text-align: left; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .panel-caption { flex: 0 0 auto; font-size: 8px; letter-spacing: .035em; white-space: nowrap; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .setting-pill-row { width: auto; flex: 0 0 auto; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="game length"] { grid-column: 2; grid-row: 1; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="difficulty"] { grid-column: 3; grid-row: 1; }
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="game length"] > .setting-pill-row,
+  .belot-dialog-setup .settings-stack > .setting-group[data-setting="difficulty"] > .setting-pill-row { width: 100%; }
+  .belot-dialog-setup .setup-segment-control { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+  .belot-dialog-setup [data-setting="difficulty"] .setup-segment-control { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .belot-dialog-setup .setup-segment-control button { min-width: 0; min-height: 27px; padding: 3px 4px; border: 1px solid var(--ui-line); border-radius: 6px; background: color-mix(in srgb, var(--ui-solid) 60%, transparent); color: var(--ui-muted); font: 600 9px/1.1 "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+  .belot-dialog-setup .setup-segment-control button[aria-pressed="true"] { border-color: var(--ui-gold-light); background: var(--ui-selected); color: var(--ui-gold-light); }
+  .belot-dialog-setup .match-length-choices { gap: 3px; }
+  .belot-dialog-setup .match-length-choices button { width: 24px; min-width: 24px; min-height: 27px; }
+  .belot-dialog-setup .popup-content { padding: 12px 12px 8px; }
+  .belot-dialog-setup .action-popup-header { margin-bottom: 9px; }
+  .belot-dialog-setup .action-popup-body { gap: 8px; }
+  .belot-dialog-setup .team-settings-grid { gap: 8px; }
+  .belot-dialog-setup .team-settings-row { grid-template-columns: 1fr; gap: 6px; padding: 10px; }
+  .belot-dialog-setup .team-settings-label { margin-bottom: 1px; }
+  .belot-dialog-setup .name-setting-field { grid-template-columns: minmax(45px, .65fr) minmax(0, 1fr); align-items: center; gap: 6px; }
+  .belot-dialog-setup .name-setting-field input { min-height: 33px; }
+  .belot-dialog-setup .settings-stack { gap: 7px; }
+  .belot-dialog-setup .settings-stack { padding: 8px; }
+  .belot-dialog-setup .settings-stack > .setting-group { padding: 2px 7px; }
+  .belot-dialog-setup .choice-stepper { grid-template-columns: 27px minmax(0, 1fr) 27px; min-height: 32px; }
+  .belot-dialog-setup .choice-stepper > button { width: 27px; min-height: 30px; }
+  .belot-dialog-setup .choice-stepper > output { font-size: 11px; }
+  .belot-dialog-setup .appearance-setting .choice-stepper { width: min(100%, 118px); grid-template-columns: 22px minmax(0, 1fr) 22px; min-height: 28px; }
+  .belot-dialog-setup .appearance-setting .choice-stepper > button { width: 22px; min-height: 26px; }
+  .belot-dialog-setup .setup-theme-buttons { gap: 3px; }
+  .belot-dialog-setup .setup-theme-choice { min-height: 30px; }
+  .belot-dialog.belot-dialog-setup .appearance-settings { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 88px; gap: 5px; padding: 7px; }
+  .belot-dialog-setup .appearance-setting { padding: 2px 7px; }
+  .belot-dialog.belot-dialog-setup .appearance-setting:first-child { grid-column: 1; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-preview { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0; }
+  .belot-dialog.belot-dialog-setup .appearance-setting:nth-child(2) { grid-column: 3; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-table-colors { grid-column: 4; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-preview .playing-card-shell { width: 21px; height: 29px; }
+  .belot-dialog-setup .popup-footer { padding: 7px 12px 10px; }
+}
+@media (max-width: 420px) {
+  .belot-dialog-setup .popup-card { width: min(100%, 390px); }
+  .belot-dialog-setup .start-heading-row { gap: 8px; }
+  .belot-dialog-setup .action-popup-title { font-size: 20px; }
+  .belot-dialog-setup .language-flag-trigger, .belot-dialog-setup .setup-toolbar .table-square-button { width: 34px; min-width: 34px; height: 34px; }
+  .belot-dialog-setup .team-settings-grid { grid-template-columns: 1fr; }
+  .belot-dialog-setup .team-settings-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .belot-dialog-setup .team-settings-label { grid-column: 1 / -1; }
+  .belot-dialog-setup .name-setting-field { display: grid; grid-template-columns: 1fr; gap: 3px; }
+  .belot-dialog-setup .name-setting-field input { min-height: 32px; font-size: 13px; }
+  .belot-dialog-setup .settings-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .belot-dialog.belot-dialog-setup .appearance-settings { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .belot-dialog.belot-dialog-setup .appearance-setting:first-child { grid-column: 1; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-preview { grid-column: 2; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-setting:nth-child(2) { grid-column: 3; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-table-colors { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+}
+@media (max-height: 620px) {
+  .belot-dialog-setup .popup-content { padding-block: 8px 5px; }
+  .belot-dialog-setup .action-popup-header { margin-bottom: 7px; }
+  .belot-dialog-setup .action-popup-body { gap: 6px; }
+  .belot-dialog-setup .team-settings-grid { gap: 6px; }
+  .belot-dialog-setup .team-settings-row { padding: 8px; gap: 5px; }
+  .belot-dialog-setup .name-setting-field input { min-height: 30px; }
+  .belot-dialog-setup .settings-stack, .belot-dialog-setup .appearance-settings { gap: 6px; }
+  .belot-dialog-setup .settings-stack, .belot-dialog-setup .appearance-settings { padding: 7px; }
+  .belot-dialog-setup .settings-stack > .setting-group, .belot-dialog-setup .appearance-setting { padding: 1px 5px; }
+  .belot-dialog-setup .popup-footer { padding-block: 5px 7px; }
+  .belot-dialog-setup .action-button-primary { min-height: 40px; }
+}
 /* Declaration history: fixed heading/actions, scrollable details only. */
 .belot-dialog-melds .popup-card { width: min(100%, 680px); }
 .belot-dialog-melds .meld-details-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 14px 14px 8px; flex: 0 0 auto; }
@@ -276,25 +425,93 @@
   .belot-dialog .trump-controls .suit-choice-button { min-height: 60px; padding: 5px 3px;       }
   .belot-dialog .trump-controls .suit-choice-skip { grid-column: auto; }
 }
-
-/* Use available width to save vertical space on laptops and phone landscape. */
-@media (min-width: 600px) {
-  .belot-dialog-setup .action-popup-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 16px; }
-  .belot-dialog-setup .team-settings-grid { grid-column: 1 / -1; }
-  .belot-dialog-setup .settings-stack { display: contents; }
-  .belot-dialog-setup .setting-group-wide { grid-column: 1; }
-  .belot-dialog-setup .start-action-row { grid-column: 2; }
-  .belot-dialog .start-difficulty-group { max-width: none; }
-}
-
-@media (max-height: 500px) and (min-width: 600px) {
-  .belot-dialog-setup .popup-card { width: min(100%, 1040px); }
-  .belot-dialog-setup .action-popup-body { gap: 7px 12px; }
-  .belot-dialog .action-popup-header { margin-bottom: 6px; }
-}
-
 @media (hover: hover) {
   .belot-dialog button:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }
+}
+
+/* Keep the whole setup card inside narrow browser viewports. */
+.belot-dialog-setup { box-sizing: border-box; }
+.belot-dialog-setup .popup-card { width: min(880px, calc(100vw - 24px)); min-width: 0; }
+.belot-dialog-setup .popup-content, .belot-dialog-setup .action-popup-body,
+.belot-dialog-setup .team-settings-grid, .belot-dialog-setup .settings-stack,
+.belot-dialog-setup .appearance-settings { width: 100%; min-width: 0; }
+.belot-dialog-setup .team-settings-row, .belot-dialog-setup .setting-group,
+.belot-dialog-setup .appearance-setting { min-width: 0; }
+@media (max-width: 420px) {
+  .belot-dialog-setup .popup-card { width: calc(100vw - 40px); max-width: calc(100vw - 40px); }
+  .belot-dialog-setup .popup-content { padding-inline: 9px; }
+  .belot-dialog-setup .team-settings-row { padding-inline: 8px; }
+  .belot-dialog-setup .name-setting-field input { padding-inline: 7px; }
+  .belot-dialog-setup .settings-stack { column-gap: 5px; }
+}
+@media (max-width: 540px) {
+  .belot-dialog-setup .popup-card { box-sizing: border-box; width: calc(100vw - 40px) !important; max-width: calc(100vw - 40px) !important; }
+  .belot-dialog-setup .appearance-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .belot-dialog-setup .popup-footer { width: 100%; min-width: 0; justify-content: center; }
+  .belot-dialog-setup .action-button-primary { flex: 0 1 260px; width: auto; max-width: 100%; }
+  .belot-dialog-setup .team-settings-grid > *, .belot-dialog-setup .settings-stack > *, .belot-dialog-setup .appearance-settings > * { min-width: 0; max-width: 100%; }
+}
+
+@media (max-width: 540px) {
+  .belot-dialog-setup .popup-content { padding: 10px 10px 7px; }
+  .belot-dialog-setup .action-popup-header { margin: 0 0 8px; }
+  .belot-dialog-setup .team-settings-grid { grid-template-columns: 1fr; gap: 7px; }
+  .belot-dialog-setup .settings-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .belot-dialog-setup .setting-group, .belot-dialog-setup .setting-group-boxed { padding: 8px; }
+  .belot-dialog-setup .popup-footer { padding: 7px 10px 9px; border-top: 1px solid var(--ui-line); background: transparent; }
+  .belot-dialog-setup .action-button-primary { background: linear-gradient(145deg, var(--ui-gold-light), var(--ui-gold)); color: var(--ui-ink); }
+}
+@media (max-width: 700px) {
+  .belot-dialog.belot-dialog-setup .appearance-settings {
+    width: 100%;
+    max-width: 100%;
+    justify-self: stretch;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(88px, .8fr);
+    gap: 4px;
+    padding: 5px;
+  }
+  .belot-dialog.belot-dialog-setup .appearance-setting { padding-inline: 0; }
+  .belot-dialog.belot-dialog-setup .appearance-setting .choice-stepper { width: 100%; }
+}
+@media (max-width: 420px) {
+  .belot-dialog.belot-dialog-setup .appearance-settings { width: 100%; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .belot-dialog.belot-dialog-setup .appearance-table-colors { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 540px) {
+  .belot-dialog.belot-dialog-setup .popup-content { box-sizing: border-box; width: 100%; padding-inline: 8px; }
+  .belot-dialog.belot-dialog-setup .team-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .belot-dialog.belot-dialog-setup .team-settings-row { grid-template-columns: 1fr; gap: 4px; padding: 6px; }
+  .belot-dialog.belot-dialog-setup .team-settings-label strong { font-size: 9px; }
+  .belot-dialog.belot-dialog-setup .name-setting-field { grid-template-columns: minmax(0, .6fr) minmax(0, 1fr); gap: 4px; font-size: 9px; }
+  .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 27px; padding: 4px 5px; font-size: 12px; }
+  .belot-dialog.belot-dialog-setup .settings-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 5px; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group { min-height: 0; padding: 3px 5px; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] { grid-column: 1 / -1; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="game length"] { grid-column: 1; grid-row: 2; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="difficulty"] { grid-column: 2; grid-row: 2; }
+  .belot-dialog.belot-dialog-setup .appearance-settings { min-width: 0; }
+}
+@media (max-width: 420px) {
+  .belot-dialog.belot-dialog-setup .team-settings-row { grid-template-columns: 1fr; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .panel-caption { font-size: 8px; }
+  .belot-dialog.belot-dialog-setup .appearance-table-colors .setup-theme-choice { min-height: 28px; }
+}
+@media (max-height: 620px) {
+  .belot-dialog.belot-dialog-setup .popup-content { padding-block: 5px 3px; }
+  .belot-dialog.belot-dialog-setup .action-popup-header { margin-bottom: 4px; }
+  .belot-dialog.belot-dialog-setup .start-heading-row { min-height: 42px; }
+  .belot-dialog.belot-dialog-setup .action-popup-body { gap: 4px; }
+  .belot-dialog.belot-dialog-setup .team-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 4px; }
+  .belot-dialog.belot-dialog-setup .team-settings-row { gap: 3px; padding: 4px; }
+  .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 24px; padding-block: 2px; }
+  .belot-dialog.belot-dialog-setup .settings-stack { gap: 4px; padding: 4px; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group { padding-block: 2px; }
+  .belot-dialog.belot-dialog-setup .appearance-settings { gap: 3px; padding: 4px; }
+  .belot-dialog.belot-dialog-setup .appearance-setting .choice-stepper { min-height: 24px; }
+  .belot-dialog.belot-dialog-setup .appearance-setting .choice-stepper > button { min-height: 22px; }
+  .belot-dialog.belot-dialog-setup .appearance-preview .playing-card-shell { width: 17px; height: 24px; }
+  .belot-dialog.belot-dialog-setup .popup-footer { padding-block: 4px 5px; }
+  .belot-dialog.belot-dialog-setup .action-button-primary { min-height: 38px; }
 }
 @keyframes popup-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {

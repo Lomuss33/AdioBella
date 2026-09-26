@@ -72,6 +72,10 @@ button {
   scroll-snap-align: start;
 }
 
+/* Keep the game table from showing through or receiving annotations behind
+   the editable setup surface. The popup remains non-modal for preview tools. */
+.table-stage-setup > .table-arena { visibility: hidden; }
+
 .after-table {
   display: grid;
   gap: 0;

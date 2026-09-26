@@ -19,17 +19,26 @@ describe("localization", () => {
     expect(resolveLocale(null, ["it-IT"])).toBe("en");
   });
 
-  test("selector changes language and persists without losing focus", () => {
+  test("flag selector changes language, persists, and closes after selection", () => {
     render(<LanguageSelect />);
-    const select = screen.getByRole("combobox");
-    select.focus();
-    fireEvent.change(select, { target: { value: "de" } });
+    const trigger = screen.getByRole("button", { name: /Language/ });
+    expect(trigger.querySelector(".language-flag-icon")).not.toBeNull();
+    fireEvent.click(trigger);
+    const german = screen.getByRole("button", { name: "Deutsch" });
+    fireEvent.click(german);
     expect(document.documentElement.lang).toBe("de");
     expect(document.title).toBe("Belot-Tisch");
-    expect(screen.getByLabelText("Sprache")).toBe(select);
-    expect(select).toHaveFocus();
+    expect(screen.getByRole("button", { name: /Sprache/ })).toHaveAttribute("aria-expanded", "false");
     expect(localStorage.getItem("belot-language")).toBe("de");
     expect(resolveLocale(localStorage.getItem("belot-language"), ["hr"])).toBe("de");
+  });
+
+  test("flag selector closes when clicking outside", () => {
+    render(<><LanguageSelect /><button type="button">outside</button></>);
+    fireEvent.click(screen.getByRole("button", { name: /Language/ }));
+    expect(screen.getByRole("group", { name: "Language" })).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByRole("button", { name: "outside" }));
+    expect(screen.queryByRole("group", { name: "Language" })).not.toBeInTheDocument();
   });
 
   test("automatic mode follows browser changes, but explicit selection does not", () => {

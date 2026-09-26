@@ -22,7 +22,6 @@ import { usePopupDialog } from "../lib/usePopupDialog";
 
 interface ActionPanelProps {
   pendingAction?: PendingAction;
-  startScreenPhase: "boot-loading" | "ready";
   errorMessage: string | null;
   playerNames: PlayerNameDrafts;
   teamNames: TeamNameDrafts;
@@ -48,7 +47,6 @@ interface ActionPanelProps {
 
 function ActionPanel({
   pendingAction,
-  startScreenPhase,
   errorMessage,
   playerNames,
   teamNames,
@@ -76,7 +74,6 @@ function ActionPanel({
   const isAcknowledgeMelds = pendingAction?.type === "ACKNOWLEDGE_MELDS";
   const isBelaChoice = pendingBelaChoiceCard !== null;
   const isMatchComplete = matchCompleteSummary !== null;
-  const isBootLoading = isStart && startScreenPhase === "boot-loading";
   const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
   const dialogRef = usePopupDialog(isPopupVisible);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -85,14 +82,14 @@ function ActionPanel({
     if (!isPopupVisible) return;
     contentRef.current?.scrollTo?.(0, 0);
     contentRef.current?.focus({ preventScroll: true });
-  }, [isPopupVisible, isBootLoading, pendingAction?.type, isBelaChoice, isMatchComplete]);
+  }, [isPopupVisible, pendingAction?.type, isBelaChoice, isMatchComplete]);
 
   if (!isPopupVisible) {
     return null;
   }
 
   const title = isStart
-    ? t("Start the match")
+    ? "Adio Bella"
     : isMatchComplete
       ? t("Match complete")
     : isNextGame
@@ -103,7 +100,7 @@ function ActionPanel({
           ? t("Melds")
           : t("Bela");
   const subtitle = isStart
-    ? t("Your table. Your match.")
+    ? null
     : isMatchComplete
       ? matchCompleteSubtitle(matchCompleteSummary)
     : isNextGame
@@ -120,38 +117,25 @@ function ActionPanel({
     <dialog
       ref={dialogRef}
       className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""}`}
-      aria-label={title}
-      aria-modal="true"
+      aria-label={isStart ? t("Start the match") : title}
+      aria-modal={false}
       onCancel={(event) => event.preventDefault()}
     >
-      <div
-        className={
-          isBootLoading
-            ? "popup-card popup-card-loading"
-            : "popup-card"
-        }
-      >
-        {isBootLoading ? (
-          <div className="start-loading-screen" aria-label={t("Loading table")} role="status">
-            <div className="start-loading-spinner" aria-hidden="true">
-              <span className="loading-card loading-card-one" />
-              <span className="loading-card loading-card-two" />
-              <span className="loading-card loading-card-three" />
-            </div>
-          </div>
-        ) : (
-          <>
+      <div className="popup-card">
             <div ref={contentRef} tabIndex={-1} className="popup-content">
-              <div className="action-popup-header action-popup-header-start">
-                <div className="popup-eyebrow"><span aria-hidden="true">♠</span> BELOT <span aria-hidden="true">♦</span></div>
-                <h2 className="action-popup-title">{title}</h2>
-                <p className="action-popup-subtitle">{subtitle}</p>
-                <span className="action-popup-ornament" aria-hidden="true" />
+              <div className={`action-popup-header ${isStart ? "action-popup-header-start" : ""}`}>
+                <div className="start-heading-row">
+                  <div className="start-heading-copy">
+                    <h2 className="action-popup-title">{title}</h2>
+                    {subtitle ? <p className="action-popup-subtitle">{subtitle}</p> : null}
+                  </div>
+                  {isStart && <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>}
+                </div>
                 {errorMessage ? <p className="error-line" role="alert">{errorDescription(errorMessage)}</p> : null}
               </div>
               {isStart ? (
                 <div className="action-popup-body">
-                  <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>
+
                   <div className="team-settings-grid">
                     <TeamSettingsRow
                       side="your"
@@ -183,73 +167,21 @@ function ActionPanel({
 
                   <div className="settings-stack">
                     <SettingGroup label="match length" boxed>
-                      {([1, 3, 5] as const).map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`setting-pill ${gameSettings.matchTargetWins === value ? "selected" : ""}`}
-                          onClick={() => onGameSettingsChange({ matchTargetWins: value })}
-                          aria-pressed={gameSettings.matchTargetWins === value}
-                        >
-                          {t("firstTo", { count: value })}
-                        </button>
-                      ))}
+                      <div className="match-length-choices" role="group" aria-label={t("match length")}>
+                        {([1, 3, 5] as const).map(value => <button key={value} type="button" aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
+                      </div>
                     </SettingGroup>
 
                     <SettingGroup label="game length" boxed>
-                      {([
-                        { value: "SHORT", label: "short 501" },
-                        { value: "LONG", label: "long 1001" }
-                      ] as const).map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={`setting-pill ${gameSettings.gameLength === option.value ? "selected" : ""}`}
-                          onClick={() => onGameSettingsChange({ gameLength: option.value })}
-                          aria-pressed={gameSettings.gameLength === option.value}
-                        >
-                          {tr(option.label)}
-                        </button>
-                      ))}
+                      <CompactChoices ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
                     </SettingGroup>
 
-                    <SettingGroup label="table color" boxed className="setting-group-wide">
-                      {([
-                        { value: "GREEN", label: "green" },
-                        { value: "DARK_BLUE", label: "dark blue" },
-                        { value: "CHERRY_RED", label: "cherry red" },
-                        { value: "WOODY_BROWN", label: "woody brown" },
-                        { value: "FINE_BLACK", label: "fine black" }
-                      ] as const).map((theme) => (
-                        <button
-                          key={theme.value}
-                          type="button"
-                          className={`setting-pill setting-pill-theme setting-pill-theme-${theme.value.toLowerCase()} ${gameSettings.tableTheme === theme.value ? "selected" : ""}`}
-                          onClick={() => onGameSettingsChange({ tableTheme: theme.value })}
-                          aria-pressed={gameSettings.tableTheme === theme.value}
-                        >
-                          {tr(theme.label)}
-                        </button>
-                      ))}
-                    </SettingGroup>
-                  </div>
-
-                  {visual && onVisualChange && <AppearanceSettings visual={visual} onChange={onVisualChange} />}
-                  <div className="start-action-row">
                     <SettingGroup label="difficulty" className="start-difficulty-group">
-                      {(["EASY", "NORMAL", "HARD"] as const).map((mode) => (
-                        <button
-                          key={mode}
-                          type="button"
-                          className={`setting-pill setting-pill-difficulty setting-pill-difficulty-${tr(mode.toLowerCase())} ${gameSettings.difficulty === mode ? "selected" : ""}`}
-                          onClick={() => onGameSettingsChange({ difficulty: mode })}
-                          aria-pressed={gameSettings.difficulty === mode}
-                        >
-                          {tr(mode.toLowerCase())}
-                        </button>
-                      ))}
+                      <CompactChoices ariaLabel={t("difficulty")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
                     </SettingGroup>
                   </div>
+
+                  {visual && onVisualChange && <AppearanceSettings visual={visual} onChange={onVisualChange} tableTheme={gameSettings.tableTheme} onTableThemeChange={tableTheme => onGameSettingsChange({ tableTheme })} />}
                 </div>
               ) : null}
               {isReportMelds ? (
@@ -329,8 +261,6 @@ function ActionPanel({
                   )
                 : null}
             </div>
-          </>
-        )}
       </div>
     </dialog>
   );
@@ -540,6 +470,42 @@ function SettingGroup({
       <div className="setting-pill-row">{children}</div>
     </section>
   );
+}
+
+function ChoiceStepper<T extends string | number>({
+  ariaLabel,
+  values,
+  value,
+  label,
+  onChange
+}: {
+  ariaLabel: string;
+  values: readonly T[];
+  value: T;
+  label: (value: T) => string;
+  onChange: (value: T) => void;
+}) {
+  const index = values.indexOf(value);
+  const previous = values[(index - 1 + values.length) % values.length];
+  const next = values[(index + 1) % values.length];
+  return <div className="choice-stepper" role="group" aria-label={ariaLabel}>
+    <button type="button" aria-label={`${ariaLabel} previous`} onClick={() => onChange(previous)}><span aria-hidden="true">‹</span></button>
+    <output aria-live="polite">{label(value)}</output>
+    <button type="button" aria-label={`${ariaLabel} next`} onClick={() => onChange(next)}><span aria-hidden="true">›</span></button>
+  </div>;
+}
+
+function CompactChoices<T extends string>({ ariaLabel, values, value, label, describe, onChange }: {
+  ariaLabel: string;
+  values: readonly T[];
+  value: T;
+  label: (value: T) => string;
+  describe?: (value: T) => string;
+  onChange: (value: T) => void;
+}) {
+  return <div className="setup-segment-control" role="group" aria-label={ariaLabel}>
+    {values.map(option => <button key={option} type="button" title={describe?.(option) ?? label(option)} aria-label={describe?.(option) ?? label(option)} aria-pressed={value === option} onClick={() => onChange(option)}>{label(option)}</button>)}
+  </div>;
 }
 
 export default ActionPanel;

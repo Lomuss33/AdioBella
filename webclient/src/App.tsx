@@ -36,7 +36,6 @@ import type {
 const SESSION_KEY = "belot-session-id";
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
-const START_LOADING_MS = 600;
 const THEME_META_COLOR: Record<TableTheme, string> = {
   GREEN: "#080c0b",
   DARK_BLUE: "#080b10",
@@ -49,7 +48,6 @@ function App() {
   useLanguage();
   const [initialPreferences] = useState(loadPreferences);
   const [showBook, setShowBook] = useState(false);
-  const [preferencesSaved, setPreferencesSaved] = useState(true);
   const [visual, setVisual] = useState<VisualSettings>(initialPreferences.visual);
   const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
   const gateway = getGameGateway();
@@ -62,7 +60,6 @@ function App() {
   const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(initialPreferences.players);
   const [teamNames, setTeamNames] = useState<TeamNameDrafts>(initialPreferences.teams);
   const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(initialPreferences.game);
-  const [startScreenPhase, setStartScreenPhase] = useState<"boot-loading" | "ready">("boot-loading");
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
   const [pendingBelaChoiceIndex, setPendingBelaChoiceIndex] = useState<number | null>(null);
   const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
@@ -71,7 +68,6 @@ function App() {
   const lastSequenceRef = useRef(0);
   const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
-  const startScreenTimeoutRef = useRef<number | null>(null);
   const animationTimeoutsRef = useRef<number[]>([]);
   const animationRunIdRef = useRef(0);
   const animatedTrickRef = useRef<AnimatedTrickState | null>(null);
@@ -89,7 +85,6 @@ function App() {
       subscriptionRef.current?.close();
       clearScheduledRefresh();
       clearAnimationTimeline();
-      clearStartScreenTimer();
     };
   }, []);
 
@@ -98,7 +93,7 @@ function App() {
   }, [animatedTrick]);
 
   useEffect(() => {
-    setPreferencesSaved(savePreferences({ version: 1, game: gameSettings, players: playerNames, teams: teamNames, visual }));
+    savePreferences({ version: 1, game: gameSettings, players: playerNames, teams: teamNames, visual });
   }, [gameSettings, playerNames, teamNames, visual]);
   useEffect(() => {
     document.documentElement.dataset.cardStyle = visual.cardStyle;
@@ -138,7 +133,6 @@ function App() {
         if (existingSessionId) {
           try {
             const restoredSession = await loadSession(existingSessionId, true);
-            primeStartScreenPhase(restoredSession.snapshot.pendingAction.type === "START_MATCH");
             setSessionId(existingSessionId);
             return;
           } catch {
@@ -194,13 +188,6 @@ function App() {
       window.clearTimeout(timeoutId);
     }
     animationTimeoutsRef.current = [];
-  }
-
-  function clearStartScreenTimer() {
-    if (startScreenTimeoutRef.current !== null) {
-      window.clearTimeout(startScreenTimeoutRef.current);
-      startScreenTimeoutRef.current = null;
-    }
   }
 
   function queueAnimation(runId: number, ms: number, callback: () => void) {
@@ -426,16 +413,12 @@ function App() {
 
       if (autoStart) {
         const startedSession = await gateway.startMatch(createdSession.sessionId);
-        clearStartScreenTimer();
-        setStartScreenPhase("ready");
         applySession(startedSession);
         await syncEvents(createdSession.sessionId, 0);
         setErrorMessage(null);
         return;
       }
 
-      clearStartScreenTimer();
-      setStartScreenPhase("ready");
       applySession(configuredSession);
       await syncEvents(createdSession.sessionId, 0);
       setErrorMessage(null);
@@ -448,7 +431,6 @@ function App() {
     subscriptionRef.current?.close();
     clearScheduledRefresh();
     clearAnimationTimeline();
-    clearStartScreenTimer();
     pendingAnimationQueueRef.current = [];
     deferredSessionRef.current = null;
     deferredRefreshSessionIdRef.current = null;
@@ -692,23 +674,8 @@ function App() {
   }
 
   function applyFreshSession(response: SessionResponse) {
-    primeStartScreenPhase(true);
     applySession(response);
     void syncEvents(response.sessionId, 0);
-  }
-
-  function primeStartScreenPhase(shouldShowLoading: boolean) {
-    clearStartScreenTimer();
-    if (!shouldShowLoading) {
-      setStartScreenPhase("ready");
-      return;
-    }
-
-    setStartScreenPhase("boot-loading");
-    startScreenTimeoutRef.current = window.setTimeout(() => {
-      setStartScreenPhase("ready");
-      startScreenTimeoutRef.current = null;
-    }, START_LOADING_MS);
   }
 
   async function persistLobbySettingsIfNeeded(id: string) {
@@ -772,7 +739,7 @@ function App() {
 
   return (
     <main className="app-shell game-layout">
-      <div className="table-stage">
+      <div className={`table-stage ${snapshot?.pendingAction.type === "START_MATCH" ? "table-stage-setup" : ""}`}>
         <TableLayout
           snapshot={snapshot}
           playersBySeat={playersBySeat}
@@ -792,7 +759,6 @@ function App() {
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
-          startScreenPhase={startScreenPhase}
           errorMessage={errorMessage}
           playerNames={playerNames}
           teamNames={teamNames}
@@ -819,10 +785,7 @@ function App() {
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} />
       </section>
-      {showBook && <GuideBook onClose={() => setShowBook(false)} activeMatch={Boolean(snapshot && snapshot.pendingAction.type !== "START_MATCH")}
-        saved={preferencesSaved} visual={visual} onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
-        game={gameSettings} onGameChange={handleGameSettingsChange} players={playerNames} teams={teamNames}
-        onPlayerChange={handlePlayerNameChange} onTeamChange={handleTeamNameChange} />}
+      {showBook && <GuideBook onClose={() => setShowBook(false)} />}
       {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {
         setConfirmExit(null);
         if (confirmExit === "game") void handleForfeitGame();

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 /** Native top-layer modal, with its height following the mobile keyboard viewport. */
-export function usePopupDialog(visible: boolean) {
+export function usePopupDialog(visible: boolean, modal = false) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -10,6 +10,12 @@ export function usePopupDialog(visible: boolean) {
     const previousOverflow = document.body.style.overflow;
     const viewport = window.visualViewport;
     const containTab = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !modal) {
+        event.preventDefault();
+        const cancelEvent = new Event("cancel", { cancelable: true });
+        if (dialog.dispatchEvent(cancelEvent)) dialog.close();
+        return;
+      }
       if (event.key !== "Tab") return;
       const controls = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]')]
         .filter((element) => element.getClientRects().length > 0);
@@ -31,7 +37,11 @@ export function usePopupDialog(visible: boolean) {
       }
     };
     document.body.style.overflow = "hidden";
-    dialog.showModal();
+    // Native modal dialogs enter the browser's top layer and make the rest of
+    // the document inert, which prevents preview annotation overlays from
+    // selecting popup controls. Keep popups in the document layer instead.
+    if (modal) dialog.showModal();
+    else dialog.setAttribute("open", "");
     dialog.addEventListener("keydown", containTab);
     fitViewport();
     viewport?.addEventListener("resize", fitViewport);
@@ -44,6 +54,6 @@ export function usePopupDialog(visible: boolean) {
       document.body.style.overflow = previousOverflow;
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [visible]);
+  }, [visible, modal]);
   return dialogRef;
 }

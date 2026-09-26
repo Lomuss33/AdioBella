@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "setup": "npm --prefix webclient ci",
-    "dev": "npm --prefix webclient run dev -- --mode browser",
+    "dev": "npm --prefix webclient run dev -- --mode browser --port 3003",
     "dev:full": "node scripts/live-game.mjs"
   }
 }

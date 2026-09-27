@@ -106,3 +106,20 @@
 :root[data-card-style="contrast"] { --card-paper: #ffffff; --card-paper-edge: #ffffff; --card-red: #a00020; --card-black: #050505; }
 :root[data-card-style="contrast"] .playing-card-face { border-color: #111; box-shadow: 0 2px 6px rgb(0 0 0 / 30%); }
 :root[data-card-style="contrast"] .table-arena .playing-card-shell.blocked-choice { opacity: .85; }
+
+/* Regional deck treatments: distinct stock, ink, and printed frame details. */
+:root[data-card-style="italian"] { --card-paper: #fff8e8; --card-paper-edge: #eee0c4; --card-red: #a6382c; --card-black: #173e32; }
+:root[data-card-style="italian"] .playing-card-face { border: 1px solid #9c6f43; border-radius: 8% / 5%; box-shadow: inset 0 0 0 2px #fff8e8, inset 0 0 0 3px rgb(156 111 67 / 48%), 0 3px 8px rgb(0 0 0 / 22%); font-family: Georgia, "Times New Roman", serif; }
+:root[data-card-style="german"] { --card-paper: #fffdf2; --card-paper-edge: #e8e5d4; --card-red: #bd302c; --card-black: #174d3d; }
+:root[data-card-style="german"] .playing-card-face { border: 1px solid #3f6655; border-radius: 5% / 4%; background-color: var(--card-paper); background-image: linear-gradient(135deg, rgb(42 92 67 / 4%) 25%, transparent 25%, transparent 50%, rgb(42 92 67 / 4%) 50%, rgb(42 92 67 / 4%) 75%, transparent 75%); background-size: 8px 8px; box-shadow: inset 0 0 0 2px #fffdf2, 0 3px 8px rgb(0 0 0 / 20%); }
+:root[data-card-style="french"] { --card-paper: #fff; --card-paper-edge: #f1f4f7; --card-red: #c52235; --card-black: #172944; }
+:root[data-card-style="french"] .playing-card-face { border: 1px solid #526984; border-radius: 5% / 3%; box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgb(63 92 126 / 30%), 0 3px 8px rgb(0 0 0 / 20%); }
+:root[data-card-style="polish"] { --card-paper: #fffaf1; --card-paper-edge: #eee0d1; --card-red: #b52537; --card-black: #273d68; }
+:root[data-card-style="polish"] .playing-card-face { border: 1px solid #a92d3c; border-radius: 9% / 6%; background-color: var(--card-paper); background-image: radial-gradient(circle at 50% 50%, rgb(169 45 60 / 6%) 0 1px, transparent 1.5px), linear-gradient(180deg, #fffaf1, #eee0d1); background-size: 7px 7px, auto; box-shadow: inset 0 0 0 2px #fffaf1, inset 0 0 0 3px rgb(39 61 104 / 28%), 0 3px 8px rgb(0 0 0 / 21%); font-family: Georgia, "Times New Roman", serif; }
+:root[data-card-style="russian"] { --card-paper: #fff9ec; --card-paper-edge: #e9dcc8; --card-red: #8f2338; --card-black: #213451; }
+:root[data-card-style="russian"] .playing-card-face { border: 1px solid #8b6946; border-radius: 7% / 5%; box-shadow: inset 0 0 0 2px #fff9ec, inset 0 0 0 3px rgb(139 105 70 / 52%), inset 0 0 0 5px rgb(139 105 70 / 12%), 0 3px 8px rgb(0 0 0 / 22%); font-family: Georgia, "Times New Roman", serif; }
+:root[data-card-style="turkish"] { --card-paper: #fff8e9; --card-paper-edge: #e9ddc4; --card-red: #b44332; --card-black: #17645d; }
+:root[data-card-style="turkish"] .playing-card-face { border: 1px solid #28756c; border-radius: 11% / 7%; background-color: var(--card-paper); background-image: radial-gradient(ellipse at center, rgb(40 117 108 / 9%), transparent 66%), linear-gradient(180deg, #fff8e9, #e9ddc4); box-shadow: inset 0 0 0 2px #fff8e9, inset 0 0 0 3px rgb(40 117 108 / 45%), 0 3px 8px rgb(0 0 0 / 22%); }
+
+.playing-card-face:not(.back)::before { position: absolute; z-index: 0; inset: 5%; border-radius: inherit; content: ""; pointer-events: none; }
+.playing-card-corner, .playing-card-center { z-index: 1; }

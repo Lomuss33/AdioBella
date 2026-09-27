@@ -1,14 +1,14 @@
 import type { CSSProperties } from "react";
 import { t, tr } from "../i18n";
-import type { VisualSettings } from "../lib/preferences";
+import { CARD_STYLES, type VisualSettings } from "../lib/preferences";
 import type { TableTheme } from "../types";
 import PlayingCard from "./PlayingCard";
 
 export function CardStylePicker({ value, onChange }: { value: VisualSettings["cardStyle"]; onChange: (value: VisualSettings["cardStyle"]) => void }) {
-  const values = ["classic", "modern", "contrast"] as const;
+  const values = CARD_STYLES;
   const index = values.indexOf(value);
   return <div className="appearance-setting appearance-card-style" role="group" aria-label={t("book.cardStyle")}>
-    <output className="card-style-name" aria-live="polite">{t(`book.${value}` as "book.classic" | "book.modern" | "book.contrast")}</output>
+    <div className="card-style-heading"><span>{t("book.cardStylePrefix")}</span><output className="card-style-name" aria-live="polite">{t(`book.${value}` as "book.classic" | "book.modern" | "book.contrast" | "book.italian" | "book.german" | "book.french" | "book.polish" | "book.russian" | "book.turkish")}</output></div>
     <div className="card-style-preview-row">
       <div className="appearance-preview" role="group" aria-label={t("book.preview")}>
         <PlayingCard card={{ rank: "ACE", suit: "SPADES", label: "as", faceUp: true, playable: false }} disabled />

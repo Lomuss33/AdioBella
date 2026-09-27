@@ -1,6 +1,8 @@
 import type { GameSettingsDrafts, PlayerNameDrafts, TeamNameDrafts } from "../types";
 
-export interface VisualSettings { cardStyle: "classic" | "modern" | "contrast"; accent: "gold" | "silver" | "copper"; }
+export type CardStyle = "classic" | "modern" | "contrast" | "italian" | "german" | "french" | "polish" | "russian" | "turkish";
+export const CARD_STYLES: readonly CardStyle[] = ["classic", "modern", "contrast", "italian", "german", "french", "polish", "russian", "turkish"];
+export interface VisualSettings { cardStyle: CardStyle; accent: "gold" | "silver" | "copper"; }
 export interface Preferences { version: 1; game: GameSettingsDrafts; players: PlayerNameDrafts; teams: TeamNameDrafts; visual: VisualSettings; }
 export const PREFERENCES_KEY = "belot-preferences-v1";
 export function readStorage(key: string) { try { return localStorage.getItem(key); } catch { return null; } }
@@ -23,7 +25,7 @@ export function loadPreferences(): Preferences {
     },
     players: { SOUTH: name(players.SOUTH, 24), NORTH: name(players.NORTH, 24), WEST: name(players.WEST, 24), EAST: name(players.EAST, 24) },
     teams: { yourTeam: name(teams.yourTeam, 30), enemyTeam: name(teams.enemyTeam, 30) },
-    visual: { cardStyle: choice(visual.cardStyle, ["classic", "modern", "contrast"], "classic"), accent: choice(visual.accent, ["gold", "silver", "copper"], "gold") }
+    visual: { cardStyle: choice(visual.cardStyle, CARD_STYLES, "classic"), accent: choice(visual.accent, ["gold", "silver", "copper"], "gold") }
   };
 }
 export function savePreferences(preferences: Preferences) { return writeStorage(PREFERENCES_KEY, JSON.stringify(preferences)); }

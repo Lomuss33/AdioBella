@@ -513,6 +513,59 @@
   .belot-dialog.belot-dialog-setup .popup-footer { padding-block: 4px 5px; }
   .belot-dialog.belot-dialog-setup .action-button-primary { min-height: 38px; }
 }
+/* Card style is preview-first: show the selected style name above samples and
+   use one predictable next control to cycle through the available designs. */
+.belot-dialog.belot-dialog-setup .appearance-settings {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px;
+}
+.belot-dialog-setup .appearance-setting { min-width: 0; padding: 5px; border: 1px solid var(--ui-line); border-radius: 9px; background: color-mix(in srgb, var(--ui-solid) 32%, transparent); }
+.belot-dialog-setup .appearance-card-style { grid-template-rows: auto auto auto; align-content: center; gap: 3px; }
+.belot-dialog-setup .card-style-name { overflow: hidden; color: var(--ui-text); font-size: 10px; font-weight: 650; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.belot-dialog-setup .card-style-preview-row { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 5px; }
+.belot-dialog-setup .card-style-preview-row .appearance-preview { display: flex; min-width: 0; align-items: center; justify-content: flex-start; gap: 4px; padding: 0; }
+.belot-dialog-setup .card-style-preview-row .appearance-preview .playing-card-shell { width: 20px; height: 28px; flex: 0 0 auto; opacity: 1; }
+.belot-dialog-setup .card-style-preview-row .appearance-preview .playing-card-face { width: 100%; height: 100%; }
+.belot-dialog-setup .accent-color-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 5px; min-height: 28px; }
+.belot-dialog-setup .accent-color-choice { position: relative; display: grid; width: 100%; min-width: 0; min-height: 28px; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--accent-swatch) 72%, white 12%); border-radius: 7px; background: linear-gradient(145deg, color-mix(in srgb, var(--accent-swatch) 92%, white 8%), var(--accent-swatch)); cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
+.belot-dialog-setup .accent-color-choice:hover { filter: brightness(1.1); }
+.belot-dialog-setup .accent-color-choice[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ui-dialog), 0 0 0 3px var(--ui-gold-light); }
+.belot-dialog-setup .accent-color-choice[aria-pressed="true"]::after { content: "\2713"; color: var(--ui-ink); font: 700 12px/1 system-ui; text-shadow: 0 1px 2px rgb(255 255 255 / 30%); }
+.belot-dialog-setup .card-style-next { display: grid; width: 30px; min-width: 30px; min-height: 30px; flex: 0 0 30px; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--ui-gold) 45%, var(--ui-line)); border-radius: 9px; background: color-mix(in srgb, var(--ui-gold) 14%, var(--ui-control)); color: var(--ui-gold-light); cursor: pointer; transition: background 140ms ease, border-color 140ms ease, transform 140ms ease; }
+.belot-dialog-setup .card-style-next svg { display: block; width: 17px; height: 17px; }
+.belot-dialog-setup .card-style-next:hover { border-color: var(--ui-gold-light); background: color-mix(in srgb, var(--ui-gold) 26%, var(--ui-control)); }
+.belot-dialog-setup .start-difficulty-group > .panel-caption { display: none; }
+.belot-dialog-setup .team-settings-label { justify-content: center; text-align: center; }
+.belot-dialog-setup .name-setting-field > .panel-caption { width: 100%; text-align: center; }
+.belot-dialog-setup .name-setting-field input { text-align: center; }
+.belot-dialog.belot-dialog-setup .appearance-settings > .appearance-setting { grid-column: auto; grid-row: auto; }
+@media (max-width: 700px) {
+  .belot-dialog.belot-dialog-setup .settings-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group { grid-column: auto; grid-row: auto; min-width: 0; }
+}
+@media (max-width: 540px) {
+  .belot-dialog.belot-dialog-setup .settings-stack { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group { padding: 3px; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] { display: flex; justify-content: center; gap: 3px; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .panel-caption { flex: 0 1 39px; white-space: normal; text-align: center; font-size: 8px; line-height: 1.05; letter-spacing: 0; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="match length"] > .setting-pill-row { width: auto; flex: 0 0 auto; }
+  .belot-dialog.belot-dialog-setup .match-length-choices { gap: 2px; }
+  .belot-dialog.belot-dialog-setup .match-length-choices button { width: 20px; min-width: 20px; min-height: 24px; padding: 0; }
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="game length"] > .setting-pill-row,
+  .belot-dialog.belot-dialog-setup .settings-stack > .setting-group[data-setting="difficulty"] > .setting-pill-row { width: 100%; }
+}
+@media (max-width: 700px) {
+  .belot-dialog.belot-dialog-setup .appearance-settings { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .belot-dialog.belot-dialog-setup .appearance-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .belot-dialog.belot-dialog-setup .appearance-settings > .appearance-card-style { grid-column: 1; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-settings > .appearance-setting:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .belot-dialog.belot-dialog-setup .appearance-settings > .appearance-table-colors { grid-column: 1 / -1; grid-row: 2; }
+  .belot-dialog-setup .card-style-preview-row .appearance-preview .playing-card-shell { width: 18px; height: 25px; }
+}
 @keyframes popup-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   .belot-dialog *, .belot-dialog *::before, .belot-dialog *::after { animation: none !important; transition: none !important; }

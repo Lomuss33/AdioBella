@@ -1,5 +1,5 @@
 import { InfoButton } from "./TableUtilities";
-import AppearanceSettings from "./AppearanceSettings";
+import { AccentColorPicker, CardStylePicker, TableColorPicker } from "./AppearanceSettings";
 import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
 import { t, tr, countText } from "../i18n";
@@ -165,23 +165,28 @@ function ActionPanel({
                     />
                   </div>
 
-                  <div className="settings-stack">
-                    <SettingGroup label="match length" boxed>
-                      <div className="match-length-choices" role="group" aria-label={t("match length")}>
-                        {([1, 3, 5] as const).map(value => <button key={value} type="button" aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
-                      </div>
-                    </SettingGroup>
-
-                    <SettingGroup label="game length" boxed>
-                      <CompactChoices ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
-                    </SettingGroup>
-
-                    <SettingGroup label="difficulty" className="start-difficulty-group">
-                      <CompactChoices ariaLabel={t("difficulty")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
-                    </SettingGroup>
+                  <div className="setup-options-grid">
+                    <div className="setup-options-row">
+                      <SettingGroup label="mode">
+                        <CompactChoices ariaLabel={t("mode")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
+                      </SettingGroup>
+                      <SettingGroup label="match length" boxed>
+                        <div className="match-length-choices" role="group" aria-label={t("match length")}>
+                          {([1, 3, 5] as const).map(value => <button key={value} type="button" aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
+                        </div>
+                      </SettingGroup>
+                    </div>
+                    <div className="setup-options-row">
+                      <SettingGroup label="game length" boxed>
+                        <CompactChoices ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
+                      </SettingGroup>
+                      {visual && onVisualChange ? <CardStylePicker value={visual.cardStyle} onChange={cardStyle => onVisualChange({ cardStyle })} /> : null}
+                    </div>
+                    {visual && onVisualChange ? <div className="setup-options-row">
+                      <AccentColorPicker value={visual.accent} onChange={accent => onVisualChange({ accent })} />
+                      <TableColorPicker value={gameSettings.tableTheme} onChange={tableTheme => onGameSettingsChange({ tableTheme })} />
+                    </div> : null}
                   </div>
-
-                  {visual && onVisualChange && <AppearanceSettings visual={visual} onChange={onVisualChange} tableTheme={gameSettings.tableTheme} onTableThemeChange={tableTheme => onGameSettingsChange({ tableTheme })} />}
                 </div>
               ) : null}
               {isReportMelds ? (

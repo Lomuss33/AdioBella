@@ -85,7 +85,6 @@
 @media (max-width: 440px) {
   .belot-dialog .appearance-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .appearance-preview { grid-column: 1 / -1; }
-  .belot-dialog-setup .appearance-preview { display: none; }
   .guide-chapters { gap: 2px; padding-inline: 6px; }
   .guide-chapters button { padding-inline: 6px; font-size: 12px; }
 }
@@ -99,7 +98,6 @@
   .language-dropup-options { right: 0; }
 }
 @media (max-height: 500px) {
-  .belot-dialog-setup .appearance-preview { display: none; }
   .guide-heading { padding-block: 6px; }
   .guide-page p { margin-bottom: 10px; }
 }

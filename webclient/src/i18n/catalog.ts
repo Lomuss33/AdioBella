@@ -141,6 +141,7 @@ export const messages = {
     "Schwierigkeit",
     "Težina"
   ],
+  "mode": ["mode", "Modus", "Način"],
   "short 501": [
     "short 501",
     "Kurz · 501",

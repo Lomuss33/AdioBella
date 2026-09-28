@@ -600,6 +600,24 @@
   .guide-page p { margin-bottom: 10px; font-size: 12px; line-height: 1.4; }
 }
 
+/* Six accent swatches stay balanced in the compact lobby appearance row. */
+.belot-dialog.belot-dialog-setup .setup-options-row .accent-color-choices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(20px, 1fr));
+  align-content: center;
+  gap: 4px 5px;
+  min-height: 44px;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .accent-color-choice {
+  min-height: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+.belot-dialog.belot-dialog-setup .accent-color-choice[aria-pressed="true"]::after {
+  color: white;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 70%);
+}
+
 @media (max-width: 320px) {
   .belot-dialog .popup-content { padding-inline: 7px; }
   .belot-dialog .action-popup-title { font-size: 17px; }

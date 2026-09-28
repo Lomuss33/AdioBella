@@ -2,22 +2,24 @@
 :root {
   --ui-text: #eee8db;
   --ui-muted: #b2b9af;
-  --ui-gold: #b99a60;
-  --ui-gold-light: #cbb27f;
-  --ui-focus: #e4c98e;
+  --ui-gold: #8665c8;
+  --ui-gold-light: #c1a8f4;
+  --ui-focus: #e3d4ff;
   --ui-ink: #19170f;
   --ui-team-your: #9aafa1;
   --ui-team-opponent: #b7a0a0;
   --ui-danger: #d29c94;
   --ui-warning: #d0b078;
   --ui-success: #a4bca8;
+  --table-tone: #3f8c6a;
   --ui-line: rgb(240 232 213 / 12%);
   --ui-highlight: rgb(240 232 213 / 7%);
-  --ui-glass: rgb(14 20 18 / 82%);
-  --ui-dialog: rgb(14 20 18 / 94%);
-  --ui-solid: #111a16;
+  /* Shared surfaces inherit the felt hue without changing text or gameplay accents. */
+  --ui-glass: color-mix(in srgb, rgb(14 20 18 / 82%) 78%, var(--table-tone));
+  --ui-dialog: color-mix(in srgb, rgb(14 20 18 / 94%) 92%, var(--table-tone));
+  --ui-solid: color-mix(in srgb, #111a16 80%, var(--table-tone));
   --ui-control: rgb(240 232 213 / 5%);
-  --ui-selected: rgb(185 154 96 / 14%);
+  --ui-selected: rgb(134 101 200 / 16%);
   --ui-danger-surface: rgb(120 55 49 / 16%);
   --ui-shadow: 0 12px 32px rgb(0 0 0 / 24%), inset 0 1px 0 var(--ui-highlight);
   --ui-blur: 12px;
@@ -32,25 +34,37 @@
   --felt-edge: #0b211b;
 }
 :root[data-table-theme="DARK_BLUE"] {
+  --table-tone: #477fb1;
   --page-top: #10161d; --page-bottom: #080b10;
   --felt-center: #1b2e40; --felt-edge: #0c1823;
 }
 :root[data-table-theme="CHERRY_RED"] {
+  --table-tone: #a64e62;
   --page-top: #1b1216; --page-bottom: #100a0d;
   --felt-center: #40232b; --felt-edge: #210f16;
 }
 :root[data-table-theme="WOODY_BROWN"] {
+  --table-tone: #9b7047;
   --page-top: #191610; --page-bottom: #0e0c09;
   --felt-center: #3c3024; --felt-edge: #201911;
 }
 :root[data-table-theme="FINE_BLACK"] {
+  --table-tone: #718078;
   --page-top: #151816; --page-bottom: #090b0a;
   --felt-center: #252927; --felt-edge: #111513;
 }
+:root[data-game-accent="purple"] { --ui-gold: #8665c8; --ui-gold-light: #c1a8f4; --ui-selected: rgb(134 101 200 / 16%); --ui-focus: #e3d4ff; }
+:root[data-game-accent="azure"] { --ui-gold: #4f92c8; --ui-gold-light: #9ac8eb; --ui-selected: rgb(79 146 200 / 16%); --ui-focus: #c9e7ff; }
+:root[data-game-accent="jade"] { --ui-gold: #3f9b78; --ui-gold-light: #8fd0ad; --ui-selected: rgb(63 155 120 / 16%); --ui-focus: #c6f5d9; }
+:root[data-game-accent="gold"] { --ui-gold: #b99a60; --ui-gold-light: #cbb27f; --ui-selected: rgb(185 154 96 / 14%); --ui-focus: #e4c98e; }
 :root[data-game-accent="silver"] { --ui-gold: #a9b6bc; --ui-gold-light: #d1dce0; --ui-selected: rgb(169 182 188 / 14%); --ui-focus: #e4edf0; }
 :root[data-game-accent="copper"] { --ui-gold: #bc9279; --ui-gold-light: #d6b49d; --ui-selected: rgb(188 146 121 / 14%); --ui-focus: #edd0b7; }
 @media (max-width: 700px) {
-  :root { --ui-glass: rgb(14 20 18 / 90%); --ui-dialog: rgb(14 20 18 / 97%); --ui-blur: 6px; }
+  :root {
+    --ui-glass: color-mix(in srgb, rgb(14 20 18 / 90%) 78%, var(--table-tone));
+    --ui-dialog: color-mix(in srgb, rgb(14 20 18 / 97%) 92%, var(--table-tone));
+    --ui-blur: 6px;
+  }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root { --ui-glass: var(--ui-solid); --ui-dialog: var(--ui-solid); }

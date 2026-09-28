@@ -522,6 +522,11 @@ export const messages = {
     "Deine Karten",
     "Tvoje karte"
   ],
+  "Game history": [
+    "Game history",
+    "Spielverlauf",
+    "Tijek igre"
+  ],
   "Game Terminal": [
     "Game Terminal",
     "Spielverlauf",
@@ -961,6 +966,11 @@ export const messages = {
     "Loading seat…",
     "Spieler wird geladen…",
     "Učitavanje igrača…"
+  ],
+  "Latest": [
+    "Latest",
+    "Neueste",
+    "Najnovije"
   ],
   "Latest rounds ↑": [
     "Latest rounds ↑",

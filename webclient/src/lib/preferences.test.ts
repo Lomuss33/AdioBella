@@ -22,7 +22,7 @@ test("recovers from malformed or invalid stored settings", () => {
   expect(preferences.game.difficulty).toBe("NORMAL");
   expect(preferences.game.matchTargetWins).toBe(3);
   expect(preferences.players.SOUTH).toHaveLength(24);
-  expect(preferences.visual.accent).toBe("gold");
+  expect(preferences.visual.accent).toBe("purple");
 });
 
 test("keeps settings usable and reports when browser storage is unavailable", () => {

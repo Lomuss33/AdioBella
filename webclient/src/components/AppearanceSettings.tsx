@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { t, tr } from "../i18n";
 import type { MessageKey } from "../i18n/catalog";
-import { CARD_STYLES, type VisualSettings } from "../lib/preferences";
+import { ACCENT_COLORS, CARD_STYLES, type VisualSettings } from "../lib/preferences";
 import type { TableTheme } from "../types";
 import PlayingCard from "./PlayingCard";
 
@@ -13,6 +13,22 @@ const cardStyleMessages: Record<VisualSettings["cardStyle"], MessageKey> = {
   modern: "book.modern",
   heritage: "book.heritage",
   "four-color": "book.fourColor"
+};
+const accentLabels: Record<VisualSettings["accent"], MessageKey> = {
+  purple: "book.purple",
+  azure: "book.azure",
+  jade: "book.jade",
+  gold: "book.gold",
+  silver: "book.silver",
+  copper: "book.copper"
+};
+const accentSwatches: Record<VisualSettings["accent"], string> = {
+  purple: "#8665c8",
+  azure: "#4f92c8",
+  jade: "#3f9b78",
+  gold: "#b99a60",
+  silver: "#a9b6bc",
+  copper: "#bc9279"
 };
 
 const deckPreviewCards = [
@@ -52,11 +68,7 @@ export function CardStylePicker({ value, onChange }: { value: VisualSettings["ca
 export function AccentColorPicker({ value, onChange }: { value: VisualSettings["accent"]; onChange: (value: VisualSettings["accent"]) => void }) {
   return <div className="appearance-setting appearance-accent-setting"><span>{t("book.accent")}</span>
     <div className="accent-color-choices" role="group" aria-label={t("book.accent")}>
-      {([
-        { value: "gold", label: "book.gold", color: "#b99a60" },
-        { value: "silver", label: "book.silver", color: "#a9b6bc" },
-        { value: "copper", label: "book.copper", color: "#bc9279" }
-      ] as const).map(accent => <button key={accent.value} type="button" className="accent-color-choice" style={{ "--accent-swatch": accent.color } as CSSProperties} title={t(accent.label)} aria-label={t(accent.label)} aria-pressed={value === accent.value} onClick={() => onChange(accent.value)} />)}
+      {ACCENT_COLORS.map(accent => <button key={accent} type="button" className="accent-color-choice" style={{ "--accent-swatch": accentSwatches[accent] } as CSSProperties} title={t(accentLabels[accent])} aria-label={t(accentLabels[accent])} aria-pressed={value === accent} onClick={() => onChange(accent)} />)}
     </div>
   </div>;
 }

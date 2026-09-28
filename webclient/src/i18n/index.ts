@@ -52,13 +52,19 @@ export function t(key: MessageKey, args: Args = {}): string {
 }
 /** Translate known presentation labels only; never pass user names to this helper. */
 export function tr(label: string): string { return Object.hasOwn(messages, label) ? t(label as MessageKey) : label; }
-export function countText(kind: "cards" | "points" | "rounds" | "updates", count: number) {
+export function countText(kind: "cards" | "points" | "rounds" | "updates" | "results", count: number) {
   const category = new Intl.PluralRules(locale).select(count);
   const nouns = {
     en: { cards: ["card", "cards", "cards"], points: ["point", "points", "points"], rounds: ["trick", "tricks", "tricks"], updates: ["update", "updates", "updates"] },
     de: { cards: ["Karte", "Karten", "Karten"], points: ["Punkt", "Punkte", "Punkte"], rounds: ["Stich", "Stiche", "Stiche"], updates: ["Eintrag", "Einträge", "Einträge"] },
     hr: { cards: ["karta", "karte", "karata"], points: ["bod", "boda", "bodova"], rounds: ["štih", "štiha", "štihova"], updates: ["ažuriranje", "ažuriranja", "ažuriranja"] }
   };
-  return `${number(count)} ${nouns[locale][kind][category === "one" ? 0 : category === "few" ? 1 : 2]}`;
+  const results = {
+    en: ["result", "results", "results"],
+    de: ["Ergebnis", "Ergebnisse", "Ergebnisse"],
+    hr: ["rezultat", "rezultata", "rezultata"]
+  };
+  const pluralIndex = category === "one" ? 0 : category === "few" ? 1 : 2;
+  return `${number(count)} ${kind === "results" ? results[locale][pluralIndex] : nouns[locale][kind][pluralIndex]}`;
 }
 syncDocument();

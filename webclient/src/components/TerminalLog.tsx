@@ -17,29 +17,29 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
   return (
     <details className="terminal-panel" open>
       <summary className="terminal-header">
-        <h2>{t("Game Terminal")}</h2>
-        <span>{matchComplete ? t("Match complete") : t("Live feed")}</span>
+        <div className="terminal-heading">
+          <h2>{t("Game history")}</h2>
+          <span className={`terminal-status${matchComplete ? " is-complete" : " is-live"}`}>
+            <span className="terminal-status-dot" aria-hidden="true" />
+            {matchComplete ? t("Match complete") : t("Live feed")}
+          </span>
+        </div>
+        <span className="terminal-disclosure" aria-hidden="true" />
       </summary>
       <div className="terminal-grid">
-        <section className="terminal-section">
+        <section className="terminal-section" aria-labelledby="round-feed-heading">
           <div className="terminal-subheader">
-            <span className="panel-caption">{t("Round Feed")}</span>
-            <span>{countText("rounds", roundGroups.length)}</span>
-            {rounds.readingOlder ? <button type="button" className="terminal-latest" onClick={rounds.latest}>{t("Latest rounds ↑")}</button> : null}
+            <h3 id="round-feed-heading">{t("Round Feed")}</h3>
+            <span className="terminal-count">{countText("rounds", roundGroups.length)}</span>
+            {rounds.readingOlder ? <button type="button" className="terminal-latest" aria-controls="round-feed-history" onClick={rounds.latest}>{t("Latest")}</button> : null}
           </div>
-          <div ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" tabIndex={0} aria-label={t("Round history")}>
+          <div id="round-feed-history" ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" role="region" tabIndex={0} aria-label={t("Round history")}>
             {roundGroups.length === 0 ? <div className="terminal-empty">{t("No round events yet.")}</div> : null}
             {roundGroups.map((group) => (
               <section key={group.key} className="terminal-round-group">
                 <div className="terminal-round-title" data-history-key={group.key}>
                   {t("historyHeading", { game: group.gameNumber, round: group.roundNumber })}
                 </div>
-                {group.plays.map((event) => (
-                  <div key={event.sequence} data-history-key={`event-${event.sequence}`} className="terminal-play-row">
-                    <span className="terminal-seq">#{event.sequence}</span>
-                    <span>{eventDescription(event)}</span>
-                  </div>
-                ))}
                 {group.winner ? (
                   <div className="terminal-round-winner" data-history-key={`event-${group.winner.sequence}`}>
                     <span className="terminal-seq">#{group.winner.sequence}</span>
@@ -48,22 +48,34 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
                     </span>
                   </div>
                 ) : null}
+                {[...group.plays].reverse().map((event) => (
+                  <div key={event.sequence} data-history-key={`event-${event.sequence}`} className="terminal-play-row">
+                    <span className="terminal-seq">#{event.sequence}</span>
+                    <span>{eventDescription(event)}</span>
+                  </div>
+                ))}
               </section>
             ))}
           </div>
         </section>
-        <section className="terminal-section">
+        <section className="terminal-section" aria-labelledby="match-feed-heading">
           <div className="terminal-subheader">
-            <span className="panel-caption">{t("Match Feed")}</span>
-            <span>{countText("updates", matchEvents.length)}</span>
-            {matches.readingOlder ? <button type="button" className="terminal-latest" onClick={matches.latest}>{t("Latest results ↑")}</button> : null}
+            <h3 id="match-feed-heading">{t("Match Feed")}</h3>
+            <span className="terminal-count">{countText("results", matchEvents.length)}</span>
+            {matches.readingOlder ? <button type="button" className="terminal-latest" aria-controls="match-feed-history" onClick={matches.latest}>{t("Latest")}</button> : null}
           </div>
-          <div ref={matches.ref} onScroll={matches.capture} className="terminal-lines" tabIndex={0} aria-label={t("Match history")}>
+          <div id="match-feed-history" ref={matches.ref} onScroll={matches.capture} className="terminal-lines" role="region" tabIndex={0} aria-label={t("Match history")}>
             {matchEvents.length === 0 ? <div className="terminal-empty">{t("No game or match winners yet.")}</div> : null}
             {matchEvents.map((event) => (
               <div key={event.sequence} data-history-key={`event-${event.sequence}`} className={matchRowClassName(event)}>
                 <span className="terminal-seq">#{event.sequence}</span>
-                <span>{eventDescription(event)}</span>
+                <span>
+                  {eventDescription(event)}
+                  {event.payload.eventKind === "GAME_WIN" && Number.isFinite(Number(event.payload.winningScore))
+                    ? <strong className="terminal-result-points"> - {countText("points", Number(event.payload.winningScore))}</strong>
+                    : null}
+                  {event.payload.byForfeit === "true" ? <small className="terminal-forfeit">{t("byForfeit")}</small> : null}
+                </span>
               </div>
             ))}
           </div>
@@ -81,17 +93,19 @@ interface RoundGroup {
   winner: GameEvent | null;
 }
 
-// Anchor the visible entry when new events are inserted above a reader.
+// Keep the newest event visible at the top unless the player has scrolled back.
 function useFeedScroll(items: readonly unknown[]) {
   const { locale } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const anchor = useRef<{ key: string; offset: number } | null>(null);
+  const pinnedToLatest = useRef(true);
   const [readingOlder, setReadingOlder] = useState(false);
   const capture = () => {
     const pane = ref.current;
     if (!pane || pane.clientHeight === 0) return;
     const older = pane.scrollTop > 8;
     setReadingOlder(older);
+    pinnedToLatest.current = !older;
     if (!older) { anchor.current = null; return; }
     const top = pane.getBoundingClientRect().top;
     const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
@@ -105,17 +119,23 @@ function useFeedScroll(items: readonly unknown[]) {
   useLayoutEffect(() => {
     const pane = ref.current;
     if (!pane || pane.clientHeight === 0) return;
+    if (pinnedToLatest.current) {
+      pane.scrollTop = 0;
+      anchor.current = null;
+      capture();
+      return;
+    }
     const saved = anchor.current;
     if (saved) {
       const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
         .find((element) => element.dataset.historyKey === saved.key);
       if (row) pane.scrollTop += row.getBoundingClientRect().top - pane.getBoundingClientRect().top - saved.offset;
-      else pane.scrollTop = 0;
-    } else pane.scrollTop = 0;
+    }
     capture();
   }, [items, locale]);
   const latest = () => {
     if (ref.current) ref.current.scrollTop = 0;
+    pinnedToLatest.current = true;
     anchor.current = null;
     setReadingOlder(false);
   };
@@ -162,21 +182,17 @@ function buildRoundGroups(events: GameEvent[]) {
     roundNumber += 1;
   }
 
-  return [...groups].reverse();
+  return groups.reverse();
 }
 
 function buildMatchFeed(events: GameEvent[]) {
   return events
-    .filter((event) => {
-      const message = event.message.toLowerCase();
-      return message.includes("won the game") || message.includes("won the match");
-    })
+    .filter((event) => event.payload.eventKind === "GAME_WIN" || event.payload.eventKind === "MATCH_WIN")
     .reverse();
 }
 
 function matchRowClassName(event: GameEvent) {
-  const message = event.message.toLowerCase();
-  if (message.includes("won the match")) {
+  if (event.payload.eventKind === "MATCH_WIN") {
     return "terminal-line terminal-match-winner";
   }
   return "terminal-line terminal-game-winner";

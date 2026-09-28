@@ -95,16 +95,14 @@ button {
 }
 
 .score-item,
-.action-bar,
-.terminal-panel {
+.action-bar {
   border: 1px solid rgba(246, 237, 216, 0.14);
   border-radius: 16px;
   background: rgba(8, 20, 15, 0.86);
   box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.24);
 }
 
-.score-bar,
-.terminal-panel {
+.score-bar {
   padding: 10px 12px;
 }
 
@@ -169,8 +167,7 @@ button {
 }
 
 .score-label,
-.panel-caption,
-.terminal-seq {
+.panel-caption {
   color: var(--ui-muted);
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -1801,169 +1798,6 @@ button {
   }
 }
 
-.terminal-panel {
-  min-height: 0;
-  width: 100%;
-  justify-self: stretch;
-  border-radius: 0 0 18px 18px;
-  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.24);
-}
-
-.terminal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.terminal-header h1 {
-  margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.92rem;
-}
-
-.terminal-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.95fr);
-  gap: 12px;
-  align-items: start;
-}
-
-.terminal-section {
-  min-width: 0;
-  display: grid;
-  gap: 8px;
-  align-content: start;
-}
-
-.terminal-subheader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  color: var(--ui-muted);
-  font-size: 0.72rem;
-  min-height: 1rem;
-  margin: 0;
-  line-height: 1;
-}
-
-.terminal-lines {
-  margin-top: 0;
-  max-height: 184px;
-  overflow: auto;
-  display: grid;
-  gap: 6px;
-  font-family: "Cascadia Mono", Consolas, monospace;
-  font-size: 0.74rem;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(214, 186, 116, 0.72) rgba(5, 12, 9, 0.52);
-  overscroll-behavior: contain;
-}
-
-.terminal-lines::-webkit-scrollbar {
-  width: 10px;
-}
-
-.terminal-lines::-webkit-scrollbar-track {
-  background: rgba(5, 12, 9, 0.52);
-  border-radius: 999px;
-}
-
-.terminal-lines::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(214, 186, 116, 0.9), rgba(132, 182, 109, 0.85));
-  border-radius: 999px;
-  border: 2px solid rgba(5, 12, 9, 0.52);
-}
-
-.terminal-lines::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(232, 209, 142, 0.96), rgba(148, 203, 121, 0.92));
-}
-
-.terminal-line {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: rgba(3, 8, 6, 0.74);
-}
-
-.terminal-round-group {
-  display: grid;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(246, 237, 216, 0.08);
-  background: rgba(3, 8, 6, 0.6);
-}
-
-.terminal-round-title {
-  color: #d6ba74;
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-}
-
-.terminal-play-row,
-.terminal-round-winner {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-}
-
-.terminal-play-row {
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 3px solid rgba(214, 186, 116, 0.5);
-}
-
-.terminal-round-winner {
-  background: rgba(121, 211, 110, 0.14);
-  border: 1px solid rgba(121, 211, 110, 0.34);
-  color: #d8f1ca;
-  font-weight: 700;
-}
-
-.terminal-round-winner strong {
-  display: inline-block;
-  margin-right: 6px;
-  color: var(--ui-gold-light);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.66rem;
-}
-
-.terminal-empty {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(3, 8, 6, 0.5);
-  color: #9fb393;
-}
-
-.terminal-action {
-  border-left: 3px solid #d6ba74;
-}
-
-.terminal-score {
-  border-left: 3px solid #79d36e;
-}
-
-.terminal-error {
-  border-left: 3px solid #ff8f70;
-  color: #ffcab8;
-}
-
-.terminal-game-winner {
-  border-left: 3px solid #79d36e;
-}
-
-.terminal-match-winner {
-  border-left: 3px solid #d6ba74;
-  background: rgba(214, 186, 116, 0.1);
-  color: var(--ui-gold-light);
-}
 
 .score-bar {
   position: absolute;
@@ -2110,10 +1944,7 @@ button {
     gap: 0;
   }
 
-  .score-bar,
-  .terminal-panel {
-    padding: 8px 10px;
-  }
+  .score-bar { padding: 8px 10px; }
 
   .score-bar {
     width: 100%;
@@ -2396,13 +2227,7 @@ button {
     font-size: 0.62rem;
   }
 
-  .terminal-grid {
-    grid-template-columns: 1fr;
-  }
 
-  .terminal-lines {
-    max-height: 150px;
-  }
 
   .action-overlay {
     padding: 8px;

@@ -165,18 +165,6 @@
 .belot-dialog button { touch-action: manipulation; }
 .belot-dialog .error-line { font-size: 14px; padding: 10px; border: 1px solid color-mix(in srgb, var(--ui-muted) 31.37%, transparent); border-radius: 8px; background: var(--ui-danger-surface);  color: var(--ui-danger);  border-color: color-mix(in srgb, var(--ui-danger) 35%, transparent); }
 
-.belot-dialog .trump-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.belot-dialog .trump-controls .suit-choice-button { min-width: 0; width: 100%; min-height: 72px; aspect-ratio: auto; padding: 7px 5px; grid-template-rows: auto auto; gap: 4px; border-radius: 8px; background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge)); border: 1px solid var(--ui-muted); box-shadow: 0 3px 8px #0003;  border-color: var(--ui-line);  color: var(--card-black); }
-.belot-dialog .trump-controls [data-suit="CLUBS"] { background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge)); border-color: var(--ui-line); color: var(--card-black); }
-.belot-dialog .trump-controls [data-suit="DIAMONDS"] { background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge)); border-color: var(--ui-line); color: var(--card-red); }
-.belot-dialog .trump-controls [data-suit="HEARTS"] { background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge)); border-color: var(--ui-line); color: var(--card-red); }
-.belot-dialog .trump-controls [data-suit="SPADES"] { background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge)); border-color: var(--ui-line); color: var(--card-black); }
-.belot-dialog .trump-controls .suit-choice-visual { width: 36px; height: 36px; background: none; }
-.belot-dialog .trump-controls .suit-choice-visual img { width: 32px; height: 32px; }
-.belot-dialog .trump-controls .suit-choice-label { font-size: 12px; overflow-wrap: anywhere; }
-.belot-dialog .trump-controls .suit-choice-skip { grid-column: 1 / -1; min-height: 44px; background: transparent; color: var(--popup-muted); border-color: var(--popup-line); display: flex; justify-content: center; }
-.belot-dialog .suit-choice-skip-visual { display: none; }
-
 .belot-dialog .meld-popup-stack { gap: 10px; width: 100%; }
 .belot-dialog .meld-popup-player-block { padding: 0; border: 0; border-radius: 0; background: none; }
 .belot-dialog .meld-combination-block { gap: 5px; margin-top: 8px; }
@@ -410,9 +398,6 @@
   .belot-dialog .panel-caption { font-size: 11px; letter-spacing: .02em; }
   .belot-dialog .popup-footer { padding: 4px 8px 8px;  background: rgb(0 0 0 / 12%); }
   .belot-dialog .action-button { flex-basis: 100px; padding-inline: 12px;  background: var(--ui-control);  color: var(--ui-text); }
-  .belot-dialog .trump-controls { gap: 6px; }
-  .belot-dialog .trump-controls .suit-choice-button { min-height: 64px; padding: 6px 3px; gap: 4px;       }
-  .belot-dialog .trump-controls .suit-choice-skip { min-height: 44px; }
 }
 
 @media (max-height: 500px) {
@@ -421,9 +406,6 @@
   .belot-dialog .action-popup-title { font-size: 23px; }
   .belot-dialog .popup-eyebrow, .belot-dialog .action-popup-ornament { display: none; }
   .belot-dialog .popup-footer { padding: 4px 8px 8px;  background: rgb(0 0 0 / 12%); }
-  .belot-dialog .trump-controls { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .belot-dialog .trump-controls .suit-choice-button { min-height: 60px; padding: 5px 3px;       }
-  .belot-dialog .trump-controls .suit-choice-skip { grid-column: auto; }
 }
 @media (hover: hover) {
   .belot-dialog button:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }

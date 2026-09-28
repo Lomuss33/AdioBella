@@ -122,28 +122,31 @@
   outline-offset: 3px;
 }
 
-/* Trump selection is a single, balanced four-suit choice row plus a quiet pass action. */
-.belot-dialog-trump .popup-card { width: min(100%, 520px); }
+/* Trump selection uses four clear suit choices and a compact fifth pass action. */
+.belot-dialog-trump .popup-card { width: min(100%, 520px); container: trump-choice / inline-size; }
+.belot-dialog-trump-can-skip { --trump-choice-columns: 5; }
 .belot-dialog-trump .popup-content { flex: 0 1 auto; padding: 22px 22px 14px; }
 .belot-dialog-trump .action-popup-header { margin-bottom: 0; text-align: center; }
 .belot-dialog-trump .action-popup-subtitle { margin-inline: auto; }
 .belot-dialog-trump .popup-footer.trump-controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 9px;
-  padding: 8px 22px 20px;
+  grid-template-columns: repeat(var(--trump-choice-columns, 4), minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(5px, 1.2vw, 9px);
+  padding: 8px clamp(12px, 3vw, 22px) 14px;
   border-top: 0;
   background: transparent;
 }
 .belot-dialog-trump .suit-choice-button {
   display: grid;
-  grid-template-rows: minmax(36px, 1fr) auto;
+  aspect-ratio: 1;
+  grid-template-rows: minmax(34px, 1fr) auto;
   justify-items: center;
   align-content: center;
-  gap: 7px;
+  gap: 5px;
   min-width: 0;
-  min-height: 84px;
-  padding: 10px 5px;
+  min-height: 0;
+  padding: 7px 4px;
   border: 1px solid color-mix(in srgb, currentColor 18%, var(--ui-line));
   border-radius: 12px;
   background: linear-gradient(145deg, var(--card-paper), var(--card-paper-edge));
@@ -163,23 +166,28 @@
 .belot-dialog-trump .suit-choice-visual { display: grid; width: 40px; height: 40px; place-items: center; background: none; }
 .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { display: block; width: auto; max-width: 26px; height: 36px; object-fit: contain; }
 .belot-dialog-trump .suit-choice-label { color: currentColor; font: 750 11px/1.2 "Segoe UI", system-ui, sans-serif; letter-spacing: .1em; text-align: center; text-transform: uppercase; }
+.belot-dialog-trump .suit-choice-skip-icon { display: block; width: 22px; height: 22px; }
 .belot-dialog-trump .suit-choice-skip {
-  grid-column: 1 / -1;
+  grid-column: auto;
   justify-self: center;
-  display: flex;
-  width: min(100%, 150px);
-  min-height: 38px;
+  display: grid;
+  grid-template-rows: minmax(34px, 1fr) auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+  justify-items: center;
+  align-content: center;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 5px 12px;
-  border-color: var(--ui-line);
-  background: transparent;
-  box-shadow: none;
+  gap: 5px;
+  padding: 7px 4px;
+  border: 1px solid var(--ui-line);
+  background: color-mix(in srgb, var(--ui-control) 35%, var(--ui-glass));
+  box-shadow: inset 0 1px 0 var(--ui-highlight);
   color: var(--ui-muted);
 }
-.belot-dialog-trump .suit-choice-skip .suit-choice-visual { width: auto; height: auto; font-size: 10px; letter-spacing: .12em; }
-.belot-dialog-trump .suit-choice-skip .suit-choice-label { font-size: 12px; }
+.belot-dialog-trump .suit-choice-skip .suit-choice-label { font-size: 12px; letter-spacing: .02em; text-transform: capitalize; }
+.belot-dialog-trump .suit-choice-skip:hover { border-color: var(--ui-gold); background: color-mix(in srgb, var(--ui-gold) 9%, var(--ui-glass)); box-shadow: inset 0 1px 0 var(--ui-highlight); }
 
 /* Longer reading surfaces keep actions anchored while only the content scrolls. */
 .guide-dialog .guide-book {
@@ -205,9 +213,11 @@
   .belot-dialog .popup-footer { gap: 7px; padding: 9px 12px max(9px, env(safe-area-inset-bottom)); }
   .belot-dialog .action-button { flex-basis: 125px; min-height: 44px; padding: 9px 11px; font-size: 13px; }
   .belot-dialog-trump .popup-content { padding: 18px 16px 12px; }
-  .belot-dialog-trump .popup-footer.trump-controls { gap: 6px; padding: 6px 14px 16px; }
-  .belot-dialog-trump .suit-choice-button { min-height: 76px; padding: 8px 3px; }
+  .belot-dialog-trump .popup-footer.trump-controls { gap: 6px; padding: 6px 14px 12px; }
+  .belot-dialog-trump .suit-choice-button { min-height: 66px; padding: 6px 3px; }
   .belot-dialog-trump .suit-choice-visual { width: 34px; height: 34px; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 20px; height: 20px; }
+  .belot-dialog-trump .suit-choice-skip { min-height: 66px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 22px; height: 32px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; letter-spacing: .06em; }
 }
@@ -536,8 +546,8 @@
 
   .belot-dialog-trump .popup-content { gap: 7px; padding: 12px 9px 8px; }
   .belot-dialog-trump .action-popup-header { margin-bottom: 0; }
-  .belot-dialog-trump .popup-footer.trump-controls { gap: 4px; padding: 5px 9px 10px; }
-  .belot-dialog-trump .suit-choice-button { min-height: 62px; gap: 4px; padding: 5px 2px; border-radius: 8px; }
+  .belot-dialog-trump .popup-footer.trump-controls { gap: 4px; padding: 5px 9px 8px; }
+  .belot-dialog-trump .suit-choice-button { min-height: 58px; gap: 4px; padding: 4px 2px; border-radius: 8px; }
   .belot-dialog-trump .suit-choice-visual { width: 28px; height: 28px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 19px; height: 26px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; line-height: 1.15; letter-spacing: .04em; }
@@ -639,7 +649,7 @@
   .belot-dialog .popup-content { padding-block: 8px; }
   .belot-dialog .action-popup-header { margin-bottom: 5px; }
   .belot-dialog .popup-footer { padding-block: 6px; }
-  .belot-dialog-trump .suit-choice-button { min-height: 56px; }
+  .belot-dialog-trump .suit-choice-button { min-height: 54px; }
   .belot-dialog.belot-dialog-setup .popup-content { gap: 5px; padding-block: 6px 4px; }
   .belot-dialog.belot-dialog-setup .setup-options-grid { gap: 4px; }
   .belot-dialog.belot-dialog-setup .setup-options-row { gap: 4px; }
@@ -647,4 +657,41 @@
   .belot-dialog.belot-dialog-setup .team-settings-row { gap: 4px; padding-block: 5px; }
   .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 26px; }
   .belot-dialog.belot-dialog-setup .popup-footer .action-button-primary { min-height: 38px; }
+}
+
+@container trump-choice (max-width: 390px) {
+  .belot-dialog-trump .popup-footer.trump-controls { gap: 4px; padding-inline: 10px; }
+  .belot-dialog-trump .suit-choice-button { min-height: 0; gap: 3px; padding: 4px; border-radius: 10px; }
+  .belot-dialog-trump .suit-choice-visual { width: 27px; height: 27px; }
+  .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 19px; height: 25px; }
+  .belot-dialog-trump .suit-choice-label { font-size: 9px; letter-spacing: .04em; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 18px; height: 18px; }
+}
+
+@container trump-choice (max-width: 330px) {
+  .belot-dialog-trump .popup-footer.trump-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 6px; }
+  .belot-dialog-trump .suit-choice-button { width: min(100%, 104px); justify-self: center; }
+  .belot-dialog-trump .suit-choice-skip { grid-column: 1 / -1; width: min(100%, 104px); justify-self: center; }
+}
+
+@media (max-height: 520px) {
+  .belot-dialog-trump .popup-content { padding-block: 8px 5px; }
+  .belot-dialog-trump .popup-footer.trump-controls { gap: 5px; padding-block: 5px 8px; }
+  .belot-dialog-trump .suit-choice-button { min-height: 0; padding-block: 4px; }
+  .belot-dialog-trump .suit-choice-visual { width: 30px; height: 30px; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 18px; height: 18px; }
+  .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 20px; height: 28px; }
+  .belot-dialog-trump .suit-choice-skip { min-height: 0; }
+}
+
+@media (max-height: 380px) {
+  .belot-dialog-trump .popup-content { padding-block: 5px 3px; }
+  .belot-dialog-trump .action-popup-title { font-size: 19px; }
+  .belot-dialog-trump .action-popup-subtitle { font-size: 11px; }
+  .belot-dialog-trump .popup-footer.trump-controls { gap: 3px; padding-block: 3px 5px; }
+  .belot-dialog-trump .suit-choice-button { aspect-ratio: auto; min-height: 48px; padding-block: 3px; }
+  .belot-dialog-trump .suit-choice-visual { width: 25px; height: 25px; }
+  .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 17px; height: 23px; }
+  .belot-dialog-trump .suit-choice-label { font-size: 9px; }
+  .belot-dialog-trump .suit-choice-skip { aspect-ratio: auto; min-height: 48px; }
 }

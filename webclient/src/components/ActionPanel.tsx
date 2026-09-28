@@ -70,6 +70,7 @@ function ActionPanel({
   const isStart = pendingAction?.type === "START_MATCH";
   const isNextGame = pendingAction?.type === "START_NEXT_GAME";
   const isTrumpChoice = pendingAction?.type === "CHOOSE_TRUMP";
+  const canSkipTrump = isTrumpChoice && Boolean(pendingAction?.legalTrumpChoices.includes("SKIP"));
   const isReportMelds = pendingAction?.type === "REPORT_MELDS";
   const isAcknowledgeMelds = pendingAction?.type === "ACKNOWLEDGE_MELDS";
   const isBelaChoice = pendingBelaChoiceCard !== null;
@@ -116,7 +117,7 @@ function ActionPanel({
   return (
     <dialog
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""}`}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
@@ -257,7 +258,10 @@ function ActionPanel({
                         onClick={() => onChooseTrump(choice)}
                         aria-label={t("skip")}
                       >
-                        <div className="suit-choice-visual suit-choice-skip-visual" aria-hidden="true">{t("pass")}</div>
+                        <svg className="suit-choice-skip-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                          <path d="m5 5 14 7-14 7V5Z" fill="currentColor" />
+                          <path d="M20 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
                         <span className="suit-choice-label">{t("skip")}</span>
                       </button>
                     ) : (

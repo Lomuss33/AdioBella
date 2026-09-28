@@ -7,6 +7,7 @@ import "./styles/table.css";
 import "./styles/popups.css";
 import "./styles/book.css";
 import "./styles/setup.css";
+import "./styles/dialog-system.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

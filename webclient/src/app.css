@@ -873,7 +873,8 @@ button {
 }
 
 .playing-card-shell.legal-choice .playing-card-face {
-  box-shadow: 0 0 0 1px var(--ui-gold), 0 6px 14px rgb(0 0 0 / 24%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-gold-light) 68%, transparent),
+    0 2px 5px rgb(0 0 0 / 18%), 0 8px 18px rgb(0 0 0 / 16%);
 }
 
 .playing-card-shell.selected {
@@ -890,16 +891,17 @@ button {
 
 .playing-card-shell.playable:hover .playing-card-face,
 .playing-card-shell.selected .playing-card-face {
-  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.22);
+  box-shadow: 0 3px 7px rgb(0 0 0 / 18%), 0 12px 24px rgb(0 0 0 / 22%);
 }
 
 .playing-card-shell.legal-choice.playable:hover .playing-card-face,
 .playing-card-shell.legal-choice.selected .playing-card-face {
-  box-shadow: 0 0 0 1px var(--ui-gold), 0 6px 14px rgb(0 0 0 / 24%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-gold-light) 78%, transparent),
+    0 3px 7px rgb(0 0 0 / 20%), 0 13px 26px rgb(0 0 0 / 24%);
 }
 
 .playing-card-shell:focus-visible .playing-card-face {
-  box-shadow: 0 0 0 2px var(--ui-focus), 0 6px 14px rgb(0 0 0 / 24%);
+  box-shadow: 0 0 0 2px var(--ui-focus), 0 3px 7px rgb(0 0 0 / 18%), 0 12px 24px rgb(0 0 0 / 22%);
 }
 
 .trick-cards .playing-card-shell {

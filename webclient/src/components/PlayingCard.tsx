@@ -1,6 +1,9 @@
 import { cardDescription } from "../i18n/presentation";
 import type { CardView } from "../types";
 import { toCardPresentation } from "../lib/cardPresentation";
+import { deckCardAsset } from "../lib/deckAssets";
+import { SuitMark, type CardSuit } from "./SuitMark";
+import { useCardStyle } from "./CardStyleContext";
 
 interface PlayingCardProps {
   card: CardView;
@@ -26,6 +29,8 @@ function PlayingCard({
   className
 }: PlayingCardProps) {
   const presentation = toCardPresentation(card);
+  const deck = useCardStyle();
+  const importedArtwork = deckCardAsset(deck, card);
 
   return (
     <button
@@ -44,9 +49,20 @@ function PlayingCard({
       disabled={disabled}
       onClick={onClick}
       aria-label={`${ownerName ? `${ownerName}: ` : ""}${cardDescription(card)}`}
+      data-card-style={deck}
     >
-      <div className={`playing-card-face ${presentation.className}`}>
-        {presentation.hidden ? (
+      <div className={`playing-card-face ${presentation.className}${importedArtwork ? " has-imported-art" : ""}`} data-card-style={deck}>
+        {importedArtwork ? (
+          <>
+            <img className="playing-card-imported-art" src={importedArtwork} alt="" draggable={false} aria-hidden="true" />
+            {card.faceUp && card.rank && card.suit && (deck === "italian" || deck === "german") && (
+              <span className="playing-card-center-index" aria-hidden="true">
+                <span>{presentation.rankText}</span>
+                <SuitMark suit={card.suit as CardSuit} />
+              </span>
+            )}
+          </>
+        ) : presentation.hidden ? (
           <div className="playing-card-back-mark" aria-hidden="true" />
         ) : (
           <>
@@ -54,9 +70,7 @@ function PlayingCard({
               <span className="playing-card-rank">{presentation.rankText}</span>
               <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
             </span>
-            <span className="playing-card-center" aria-hidden="true">
-              {presentation.pipSymbol}
-            </span>
+            <span className="playing-card-center" aria-hidden="true">{presentation.pipSymbol}</span>
             <span className="playing-card-corner playing-card-corner-bottom" aria-hidden="true">
               <span className="playing-card-rank">{presentation.rankText}</span>
               <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>

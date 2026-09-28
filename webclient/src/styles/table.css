@@ -1,4 +1,7 @@
 /* One table layout, with its own dimensions rather than viewport-wide zoom. */
+:root[data-card-style="italian"] .table-arena { --playing-card-height-factor: 2; }
+:root[data-card-style="german"] .table-arena { --playing-card-height-factor: 1.56; }
+:root[data-card-style="four-color"] .table-arena { --playing-card-height-factor: 1.392; }
 .app-shell.game-layout {
   --game-text: var(--ui-text);
   --game-muted: var(--ui-muted);
@@ -22,7 +25,7 @@
 .table-arena {
   --trick-card-max: 80px;
   --trick-card-width: clamp(62px, 6vw, var(--trick-card-max));
-  --trick-card-height: calc(var(--trick-card-width) * 1.42);
+  --trick-card-height: calc(var(--trick-card-width) * var(--playing-card-height-factor, 1.42));
   --trick-offset-y: calc(var(--trick-card-height) * .6);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
   --trick-entry-offset-y: calc(var(--trick-card-height) * 1.1);
@@ -55,13 +58,12 @@
 .table-arena .data-label { color: var(--ui-muted); font-size: 11px; line-height: 1.35; letter-spacing: .03em; white-space: normal; }
 .table-arena .data-value { color: var(--ui-text); font-size: 13px; line-height: 1.35; font-variant-numeric: tabular-nums; }
 .table-arena .data-row:nth-child(2) .data-value { color: var(--team-color); font-weight: 700; }
-.table-arena .match-data-card { display: block; grid-area: auto; width: 100%; max-width: none; min-width: 0; padding: 8px; border: 0; border-radius: 8px; background: var(--ui-glass); container-type: normal; color: var(--ui-muted); }
+.table-arena .match-data-card { appearance: none; display: block; grid-area: auto; width: 100%; max-width: none; min-width: 0; padding: 8px; border: 1px solid transparent; border-radius: 8px; background: var(--ui-glass); container-type: normal; color: var(--ui-muted); font: inherit; text-align: left; cursor: pointer; transition: background 140ms ease, border-color 140ms ease; }
 .table-arena .match-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 40px; font-size: 12px; }
 .table-arena summary::-webkit-details-marker { display: none; }
 .table-arena .match-summary-title { color: var(--ui-text); font-weight: 700; }
-.table-arena .match-details-label { color: var(--ui-text); background: var(--ui-control); border: 1px solid color-mix(in srgb, var(--ui-muted) 33.33%, transparent); border-radius: 6px; padding: 5px 8px; min-height: 32px; font: inherit; cursor: pointer;  border-color: var(--ui-line); }
-.table-arena .match-details-label::after { content: " +"; }
-.table-arena .match-data-card[open] .match-details-label::after { content: " −"; }
+.table-arena .match-data-card:hover { border-color: color-mix(in srgb, var(--ui-gold-light) 45%, var(--ui-line)); background: color-mix(in srgb, var(--ui-highlight) 8%, var(--ui-glass)); }
+.table-arena .match-data-card:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 .table-arena .match-meld-details { margin-top: 6px; display: grid; gap: 6px; font-size: 12px; color: var(--ui-muted); overflow-wrap: anywhere; }
 .table-arena .match-meld-details p { margin: 0; }
 .table-arena .match-meld-details > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; }
@@ -94,13 +96,19 @@
 .table-arena .player-hand-area { grid-area: auto; width: min(100%, 600px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
 .table-arena .player-hand-area .card-fan-row { --hand-columns: 8; grid-template-columns: repeat(8, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .95)))); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
 .table-arena .hand-slot { min-width: 0; }
-.table-arena .hand-slot-empty::before { content: ""; display: block; width: 100%; aspect-ratio: 5 / 7.1; }
+.table-arena .hand-slot-empty::before { content: ""; display: block; width: 100%; aspect-ratio: 1 / var(--playing-card-height-factor, 1.42); }
 .table-arena .player-hand-area .playing-card-shell { width: 100%; min-width: 0; height: auto; touch-action: manipulation; }
-.table-arena .player-hand-area .playing-card-face { width: 100%; height: auto; aspect-ratio: 5 / 7.1; }
-.table-arena .playing-card-shell.legal-choice .playing-card-face { box-shadow: 0 0 0 1px var(--ui-gold), 0 4px 10px rgb(0 0 0 / 24%); }
+.table-arena .player-hand-area .playing-card-face { width: 100%; height: auto; aspect-ratio: 1 / var(--playing-card-height-factor, 1.42); }
+.table-arena .playing-card-shell.playable .playing-card-face { box-shadow: 0 2px 5px rgb(0 0 0 / 18%), 0 8px 18px rgb(0 0 0 / 16%); }
+.table-arena .playing-card-shell.legal-choice .playing-card-face { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-gold-light) 68%, transparent), 0 2px 5px rgb(0 0 0 / 18%), 0 8px 18px rgb(0 0 0 / 16%); }
+.table-arena .playing-card-shell.playable:hover .playing-card-face,
+.table-arena .playing-card-shell.selected .playing-card-face { box-shadow: 0 3px 7px rgb(0 0 0 / 18%), 0 12px 24px rgb(0 0 0 / 22%); }
+.table-arena .playing-card-shell.legal-choice.playable:hover .playing-card-face,
+.table-arena .playing-card-shell.legal-choice.selected .playing-card-face { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-gold-light) 78%, transparent), 0 3px 7px rgb(0 0 0 / 20%), 0 13px 26px rgb(0 0 0 / 24%); }
+.table-arena .playing-card-shell.winning-card .playing-card-face { box-shadow: 0 0 0 2px var(--ui-gold), 0 4px 10px rgb(0 0 0 / 20%), 0 14px 28px rgb(0 0 0 / 24%); }
 .table-arena .playing-card-shell.blocked-choice { opacity: .78; }
 .table-arena .playing-card-shell.blocked-choice .playing-card-face { filter: saturate(.65); }
-.table-arena .playing-card-shell:focus-visible .playing-card-face { outline: 3px solid var(--ui-focus); outline-offset: 2px; }
+.table-arena .playing-card-shell:focus-visible .playing-card-face { outline: 2px solid var(--ui-focus); outline-offset: 3px; box-shadow: 0 4px 10px rgb(0 0 0 / 20%), 0 14px 28px rgb(0 0 0 / 24%); }
 .table-arena .south-inline-info { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; padding: 0; }
 .table-arena .south-inline-status-row { width: auto; display: flex; gap: 4px; order: 2; }
 .table-arena .south-inline-main { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; font-size: 12px; line-height: 1.35; white-space: normal; letter-spacing: 0; color: var(--ui-text); }
@@ -160,7 +168,7 @@
   .table-arena .game-data-section { padding: 6px 8px;     }
   .table-arena .game-data-section .data-list { display: flex; flex-wrap: wrap; gap: 3px 12px; }
   .table-arena .data-row { display: flex; gap: 4px; }
-  .table-arena .match-data-card { padding: 3px 6px;  background: var(--ui-glass);  color: var(--ui-muted); }
+  .table-arena .match-data-card { padding: 3px 6px; background: var(--ui-glass); color: var(--ui-muted); }
   .table-arena .match-summary { font-size: 11px; gap: 3px 8px; min-height: 32px; }
   .table-arena .player-hand-area { width: min(100%, 600px); }
   .game-layout .terminal-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -209,8 +217,8 @@
 .table-arena .trick-pool {
   /* Share the responsive cap with card faces and animation offsets.
      Reserve vertical space for padding and the ownership marker. */
-  --trick-card-width: max(32px, min(var(--trick-card-max), var(--trick-hand-limit, 80px), calc((100cqh - 66px) / 2.84), calc((100cqw - 24px) / 3.8)));
-  --trick-card-height: calc(var(--trick-card-width) * 1.42);
+  --trick-card-width: max(32px, min(var(--trick-card-max), var(--trick-hand-limit, 80px), calc((100cqh - 66px) / (var(--playing-card-height-factor, 1.42) * 2)), calc((100cqw - 24px) / 3.8)));
+  --trick-card-height: calc(var(--trick-card-width) * var(--playing-card-height-factor, 1.42));
   --trick-offset-y: calc(var(--trick-card-height) * .5);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
   --trick-entry-offset-y: calc(var(--trick-card-height) * .8);
@@ -226,7 +234,7 @@
   gap: 4px;
   /* Reserve each row from width alone. Its height must not depend on the
      trick guide: that guide measures the space left over above this hand. */
-  grid-auto-rows: calc(min(var(--trick-card-max), var(--trick-hand-limit, 80px)) * .95 * 1.42);
+  grid-auto-rows: calc(min(var(--trick-card-max), var(--trick-hand-limit, 80px)) * .95 * var(--playing-card-height-factor, 1.42));
   align-content: center;
 }
 .table-arena .south-inline-info { flex-wrap: nowrap; }

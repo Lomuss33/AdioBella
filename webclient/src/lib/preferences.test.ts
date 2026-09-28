@@ -9,7 +9,7 @@ test("restores appearance, names and next-match settings after a reload", () => 
   preferences.teams.yourTeam = "Friends";
   preferences.game.difficulty = "HARD";
   preferences.game.tableTheme = "DARK_BLUE";
-  preferences.visual = { cardStyle: "contrast", accent: "silver" };
+  preferences.visual = { cardStyle: "modern", accent: "silver" };
   expect(savePreferences(preferences)).toBe(true);
   expect(loadPreferences()).toEqual(preferences);
 });
@@ -29,6 +29,6 @@ test("keeps settings usable and reports when browser storage is unavailable", ()
   vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });
   const preferences = loadPreferences();
-  expect(preferences.visual.cardStyle).toBe("classic");
+  expect(preferences.visual.cardStyle).toBe("original");
   expect(savePreferences(preferences)).toBe(false);
 });

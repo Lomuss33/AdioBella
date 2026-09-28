@@ -1,4 +1,6 @@
 export const guideMessages = {
+  "book.fourColor": ["Four-color deck", "Vierfarbenblatt", "Špil u četiri boje"],
+  "book.cards": ["Cards", "Karten", "Karte"],
   "book.title": ["Brisnik Bela", "Brisnik Bela", "Brisnik Bela"],
   "book.open": ["Guide and settings", "Anleitung und Einstellungen", "Vodič i postavke"],
   "book.close": ["Close guide", "Anleitung schließen", "Zatvori vodič"],
@@ -20,7 +22,8 @@ export const guideMessages = {
   "book.nextMatch": ["Names, difficulty and match length saved here apply to the next match. Finish or leave the current match to start with them. Appearance updates now.", "Hier gespeicherte Namen, Schwierigkeit und Matchlänge gelten für das nächste Match. Beende oder verlasse das aktuelle Match, um sie zu nutzen. Die Darstellung ändert sich sofort.", "Ovdje spremljena imena, težina i duljina meča vrijede za sljedeći meč. Dovrši ili napusti trenutačni meč da ih primijeniš. Izgled se mijenja odmah."],
   "book.appearance": ["Appearance", "Darstellung", "Izgled"],
   "book.cardStyle": ["Card style", "Kartenstil", "Stil karata"],
-  "book.cardStylePrefix": ["Style:", "Stil:", "Stil:"],
+  "book.original": ["Original deck", "Originales Blatt", "Izvorni špil"],
+  "book.heritage": ["Heritage print", "Historischer Druck", "Klasični tisak"],
   "book.nextCardStyle": ["Next card style", "Nächster Kartenstil", "Sljedeći stil karata"],
   "book.accent": ["Interface accent", "Akzentfarbe", "Naglasak sučelja"],
   "book.classic": ["Classic paper", "Klassisches Papier", "Klasični papir"],

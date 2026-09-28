@@ -36,7 +36,7 @@ export default function LanguageSelect() {
       {options.map(option => <button key={option.value} type="button" lang={option.value === "auto" ? undefined : option.value} aria-pressed={preference === option.value} onClick={() => {
         if (isPreference(option.value)) setLanguage(option.value);
         setOpen(false);
-      }}><span className="language-option-flag" aria-hidden="true">{option.value === "auto" ? <span className="language-auto-icon">◎</span> : <FlagIcon language={option.value} />}</span><span>{option.label}</span><span className={`language-option-check ${preference === option.value ? "is-selected" : ""}`} aria-hidden="true"></span></button>)}
+      }}><span className="language-option-flag" aria-hidden="true">{option.value === "auto" ? <span className="language-auto-icon">◉</span> : <FlagIcon language={option.value} />}</span><span>{option.label}</span><span className={`language-option-check ${preference === option.value ? "is-selected" : ""}`} aria-hidden="true"></span></button>)}
     </div>}
   </div>;
 }

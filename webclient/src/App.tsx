@@ -2,10 +2,11 @@ import GuideBook from "./components/GuideBook";
 import { loadPreferences, savePreferences, readStorage, writeStorage, removeStorage, type VisualSettings } from "./lib/preferences";
 import { errorCode } from "./i18n/presentation";
 import { useLanguage } from "./i18n";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
 import ConfirmPopup from "./components/ConfirmPopup";
 import TableLayout from "./components/TableLayout";
+import { CardStyleProvider } from "./components/CardStyleContext";
 import TerminalLog from "./components/TerminalLog";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
 import { HttpError } from "./lib/serverGateway";
@@ -95,7 +96,7 @@ function App() {
   useEffect(() => {
     savePreferences({ version: 1, game: gameSettings, players: playerNames, teams: teamNames, visual });
   }, [gameSettings, playerNames, teamNames, visual]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.cardStyle = visual.cardStyle;
     document.documentElement.dataset.gameAccent = visual.accent;
   }, [visual]);
@@ -738,6 +739,7 @@ function App() {
     animatedTrick === null;
 
   return (
+    <CardStyleProvider value={visual.cardStyle}>
     <main className="app-shell game-layout">
       <div className={`table-stage ${snapshot?.pendingAction.type === "START_MATCH" ? "table-stage-setup" : ""}`}>
         <TableLayout
@@ -792,6 +794,7 @@ function App() {
         else void handleQuitMatch();
       }} /> : null}
     </main>
+    </CardStyleProvider>
   );
 }
 

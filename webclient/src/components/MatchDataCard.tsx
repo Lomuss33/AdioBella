@@ -9,19 +9,26 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
   const [showMelds, setShowMelds] = useState(false);
   const score = snapshot?.score;
   return (
-    <section className="match-data-card">
-      <div className="match-summary">
-        <span className="match-summary-title">{t("gameNumber", { count: score?.gameNumber || "—" })}</span>
-        <span>{tr((score?.difficulty ?? "NORMAL").toLowerCase())}</span>
-        <span>{t("firstTo", { count: score?.matchTargetWins ?? 3 })}</span>
-        <span>{countText("points", score?.gameTargetPoints ?? 1001)}</span>
-        <button type="button" className="match-details-label" aria-haspopup="dialog" onClick={() => setShowMelds(true)}>{t("Meld details")}</button>
-      </div>
+    <>
+      <button
+        type="button"
+        className="match-data-card"
+        aria-haspopup="dialog"
+        title={t("Meld details")}
+        onClick={() => setShowMelds(true)}
+      >
+        <span className="match-summary">
+          <span className="match-summary-title">{t("gameNumber", { count: score?.gameNumber || "—" })}</span>
+          <span>{tr((score?.difficulty ?? "NORMAL").toLowerCase())}</span>
+          <span>{t("firstTo", { count: score?.matchTargetWins ?? 3 })}</span>
+          <span>{countText("points", score?.gameTargetPoints ?? 1001)}</span>
+        </span>
+      </button>
       {showMelds && createPortal(
         <MeldDetails melds={score?.meldDeclarations ?? []} onClose={() => setShowMelds(false)} />,
         document.body
       )}
-    </section>
+    </>
   );
 }
 

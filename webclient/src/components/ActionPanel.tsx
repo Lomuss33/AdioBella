@@ -248,7 +248,7 @@ function ActionPanel({
                 </>
               ) : null}
               {isTrumpChoice
-                ? (pendingAction?.legalTrumpChoices ?? []).map((choice) =>
+                ? [...(pendingAction?.legalTrumpChoices ?? [])].sort((a, b) => (a === "SKIP" ? 1 : 0) - (b === "SKIP" ? 1 : 0)).map((choice) =>
                     choice === "SKIP" ? (
                       <button
                         key={choice}

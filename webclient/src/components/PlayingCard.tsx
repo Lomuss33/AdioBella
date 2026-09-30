@@ -31,53 +31,67 @@ function PlayingCard({
   const presentation = toCardPresentation(card);
   const deck = useCardStyle();
   const importedArtwork = deckCardAsset(deck, card);
+  const accessibleName = `${ownerName ? `${ownerName}: ` : ""}${cardDescription(card)}`;
+  const shellClassName = [
+    "playing-card-shell",
+    card.playable && !presentation.hidden && onClick && !disabled ? "playable" : "",
+    selected ? "selected" : "",
+    highlighted ? "winning-card" : "",
+    legalChoice ? "legal-choice" : "",
+    blockedChoice ? "blocked-choice" : "",
+    className ?? ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const face = (
+    <div className={`playing-card-face ${presentation.className}${importedArtwork ? " has-imported-art" : ""}`} data-card-style={deck}>
+      {importedArtwork ? (
+        <>
+          <img className="playing-card-imported-art" src={importedArtwork} alt="" draggable={false} aria-hidden="true" />
+          {card.faceUp && card.rank && card.suit && (deck === "italian" || deck === "german") && (
+            <span className="playing-card-center-index" aria-hidden="true">
+              <span>{presentation.rankText}</span>
+              <SuitMark suit={card.suit as CardSuit} />
+            </span>
+          )}
+        </>
+      ) : presentation.hidden ? (
+        <div className="playing-card-back-mark" aria-hidden="true" />
+      ) : (
+        <>
+          <span className="playing-card-corner playing-card-corner-top" aria-hidden="true">
+            <span className="playing-card-rank">{presentation.rankText}</span>
+            <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
+          </span>
+          <span className="playing-card-center" aria-hidden="true">{presentation.pipSymbol}</span>
+          <span className="playing-card-corner playing-card-corner-bottom" aria-hidden="true">
+            <span className="playing-card-rank">{presentation.rankText}</span>
+            <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
+          </span>
+        </>
+      )}
+    </div>
+  );
+
+  if (!onClick) {
+    return (
+      <div className={shellClassName} role="img" aria-label={accessibleName} data-card-style={deck}>
+        {face}
+      </div>
+    );
+  }
 
   return (
     <button
       type="button"
-      className={[
-        "playing-card-shell",
-        card.playable && !presentation.hidden ? "playable" : "",
-        selected ? "selected" : "",
-        highlighted ? "winning-card" : "",
-        legalChoice ? "legal-choice" : "",
-        blockedChoice ? "blocked-choice" : "",
-        className ?? ""
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={shellClassName}
       disabled={disabled}
       onClick={onClick}
-      aria-label={`${ownerName ? `${ownerName}: ` : ""}${cardDescription(card)}`}
+      aria-label={accessibleName}
       data-card-style={deck}
     >
-      <div className={`playing-card-face ${presentation.className}${importedArtwork ? " has-imported-art" : ""}`} data-card-style={deck}>
-        {importedArtwork ? (
-          <>
-            <img className="playing-card-imported-art" src={importedArtwork} alt="" draggable={false} aria-hidden="true" />
-            {card.faceUp && card.rank && card.suit && (deck === "italian" || deck === "german") && (
-              <span className="playing-card-center-index" aria-hidden="true">
-                <span>{presentation.rankText}</span>
-                <SuitMark suit={card.suit as CardSuit} />
-              </span>
-            )}
-          </>
-        ) : presentation.hidden ? (
-          <div className="playing-card-back-mark" aria-hidden="true" />
-        ) : (
-          <>
-            <span className="playing-card-corner playing-card-corner-top" aria-hidden="true">
-              <span className="playing-card-rank">{presentation.rankText}</span>
-              <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
-            </span>
-            <span className="playing-card-center" aria-hidden="true">{presentation.pipSymbol}</span>
-            <span className="playing-card-corner playing-card-corner-bottom" aria-hidden="true">
-              <span className="playing-card-rank">{presentation.rankText}</span>
-              <span className="playing-card-corner-suit">{presentation.pipSymbol}</span>
-            </span>
-          </>
-        )}
-      </div>
+      {face}
     </button>
   );
 }

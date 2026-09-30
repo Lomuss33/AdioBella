@@ -8,8 +8,11 @@ description = "Belot React frontend"
 
 val npmCommand = if (OperatingSystem.current().isWindows) "npm.cmd" else "npm"
 
-tasks.register<Exec>("npmInstall") {
-    commandLine(npmCommand, "install")
+tasks.register<Exec>("npmCi") {
+    inputs.file(layout.projectDirectory.file("package.json"))
+    inputs.file(layout.projectDirectory.file("package-lock.json"))
+    outputs.dir(layout.projectDirectory.dir("node_modules"))
+    commandLine(npmCommand, "ci")
     workingDir(projectDir)
 }
 
@@ -19,7 +22,7 @@ val syncFavicon by tasks.registering(Sync::class) {
 }
 
 tasks.register<Exec>("buildWebApp") {
-    dependsOn("npmInstall", syncFavicon)
+    dependsOn("npmCi", syncFavicon)
     commandLine(npmCommand, "run", "build")
     workingDir(projectDir)
 }

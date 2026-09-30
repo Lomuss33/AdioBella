@@ -13,7 +13,7 @@ The repository's [deployment workflow](../.github/workflows/deploy-pages.yml) ru
 | URL | <https://lomuss33.github.io/AdioBella/> |
 | Base path | `/AdioBella/` in [vite.config.ts](../webclient/vite.config.ts) |
 | Runtime | `VITE_GAME_RUNTIME=browser` in [.env.pages](../webclient/.env.pages) |
-| Node version | 20 in the workflow |
+| Node version | 24 in the workflow |
 
 Pages serves static files; it does not run the Java backend. The build workflow does not run application tests. Complete the [applicable validation](development.md#validation) before merging.
 

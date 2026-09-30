@@ -1,4 +1,4 @@
-import type { GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
+import type { Difficulty, GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts, TrumpChoice } from "../types";
 import { browserGateway } from "./browserGateway";
 import { serverGateway } from "./serverGateway";
 
@@ -13,13 +13,13 @@ export interface GameGateway {
   startMatch(sessionId: string): Promise<SessionResponse>;
   updateLobbySettings(
     sessionId: string,
-    difficulty: string,
+    difficulty: Difficulty,
     playerNamesBySeat: PlayerNameDrafts,
     teamNames: TeamNameDrafts,
     matchTargetWins: MatchTargetWins,
     gameLength: GameLength
   ): Promise<SessionResponse>;
-  chooseTrump(sessionId: string, choice: string): Promise<SessionResponse>;
+  chooseTrump(sessionId: string, choice: TrumpChoice): Promise<SessionResponse>;
   reportMelds(sessionId: string, declare: boolean): Promise<SessionResponse>;
   acknowledgeMelds(sessionId: string): Promise<SessionResponse>;
   playCard(sessionId: string, handIndex: number, callBela?: boolean): Promise<SessionResponse>;
@@ -30,6 +30,7 @@ export interface GameGateway {
     afterSequence: number,
     handlers: {
       onEvent: (event: GameEvent) => void;
+      onOpen: () => void;
       onError: () => void;
     }
   ): GameSubscription;

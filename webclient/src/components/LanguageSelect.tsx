@@ -43,6 +43,39 @@ export default function LanguageSelect() {
 
 function FlagIcon({ language }: { language: Locale }) {
   if (language === "de") return <svg className="language-flag-icon" viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#171717"/><rect y="5.33" width="24" height="5.34" fill="#d33b3b"/><rect y="10.66" width="24" height="5.34" fill="#f5c842"/></svg>;
-  if (language === "hr") return <svg className="language-flag-icon" viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#e33d4c"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.66" width="24" height="5.34" fill="#2672b9"/><path d="M9 4h6v1.1H9zm0 1.1h1.2v1H9zm2.4 0h1.2v1h-1.2zm2.4 0H15v1h-1.2zM10.2 6.1h1.2v1h-1.2zm2.4 0h1.2v1h-1.2z" fill="#d63849"/></svg>;
+  if (language === "hr") return <CroatianFlag />;
   return <svg className="language-flag-icon" viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#24477d"/><path d="M0 0 24 16M24 0 0 16" stroke="#fff" strokeWidth="4"/><path d="M0 0 24 16M24 0 0 16" stroke="#c93643" strokeWidth="1.6"/><path d="M12 0v16M0 8h24" stroke="#fff" strokeWidth="6"/><path d="M12 0v16M0 8h24" stroke="#c93643" strokeWidth="2.6"/></svg>;
+}
+
+function CroatianFlag() {
+  const shieldClipId = `${useId().replaceAll(":", "")}-croatian-shield`;
+  const checks = Array.from({ length: 25 }, (_, index) => {
+    const column = index % 5;
+    const row = Math.floor(index / 5);
+    return <rect key={index} x={8.9 + column * 1.24} y={6.1 + row * 1.24} width="1.25" height="1.25" fill={(column + row) % 2 === 0 ? "#d51f35" : "#fff"} />;
+  });
+
+  return <svg className="language-flag-icon" viewBox="0 0 24 16" aria-hidden="true">
+    <defs><clipPath id={shieldClipId}><path d="M8.55 5.55h6.9v4.35c0 2.05-1.48 3.55-3.45 4.8-1.97-1.25-3.45-2.75-3.45-4.8z" /></clipPath></defs>
+    <rect width="24" height="5.34" fill="#ed2939" />
+    <rect y="5.33" width="24" height="5.34" fill="#fff" />
+    <rect y="10.66" width="24" height="5.34" fill="#171796" />
+    <g fill="#1761a0" stroke="#fff" strokeWidth=".24">
+      <path d="M4.8 3.3h2.5v1.45c0 .62-.48 1.02-1.25 1.5-.77-.48-1.25-.88-1.25-1.5z" />
+      <path d="M7.65 3.3h2.5v1.45c0 .62-.48 1.02-1.25 1.5-.77-.48-1.25-.88-1.25-1.5z" />
+      <path d="M10.5 3.3H13v1.45c0 .62-.48 1.02-1.25 1.5-.77-.48-1.25-.88-1.25-1.5z" />
+      <path d="M13.35 3.3h2.5v1.45c0 .62-.48 1.02-1.25 1.5-.77-.48-1.25-.88-1.25-1.5z" />
+      <path d="M16.2 3.3h2.5v1.45c0 .62-.48 1.02-1.25 1.5-.77-.48-1.25-.88-1.25-1.5z" />
+    </g>
+    <g fill="#f4c542">
+      <path d="m5.45 4 .35-.45.35.45-.35.45z" />
+      <path d="M8.05 4h1.7v.28h-1.7zm0 .58h1.7v.28h-1.7z" />
+      <circle cx="11.2" cy="3.95" r=".22" /><circle cx="12.05" cy="3.95" r=".22" /><circle cx="11.62" cy="4.55" r=".22" />
+      <path d="m14 4.7.55-.95.55.95z" />
+      <path d="M16.7 3.85h1.5v.22h-1.5zm0 .48h1.5v.22h-1.5z" />
+    </g>
+    <path d="M8.55 5.55h6.9v4.35c0 2.05-1.48 3.55-3.45 4.8-1.97-1.25-3.45-2.75-3.45-4.8z" fill="#fff" stroke="#27313b" strokeWidth=".42" />
+    <g clipPath={`url(#${shieldClipId})`}>{checks}</g>
+    <path d="M8.55 5.55h6.9v4.35c0 2.05-1.48 3.55-3.45 4.8-1.97-1.25-3.45-2.75-3.45-4.8z" fill="none" stroke="#27313b" strokeWidth=".42" />
+  </svg>;
 }

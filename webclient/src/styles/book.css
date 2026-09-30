@@ -24,10 +24,10 @@
   display: block; overflow: visible; font-size: 12px; line-height: 1.3;
 }
 .table-arena .arena-status .score-header { justify-content: flex-start; gap: 3px 8px; }
-.table-arena .arena-controls { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: stretch; gap: 4px; min-width: 0; }
-.table-utilities { display: grid; grid-template-columns: 30px; grid-template-rows: repeat(2, 30px); align-content: center; gap: 3px; }
+.table-arena .arena-controls { --control-button-gap: 3px; display: grid; grid-template-columns: max-content max-content; align-items: stretch; justify-content: end; justify-self: end; gap: var(--control-button-gap); width: fit-content; max-width: 100%; min-width: 0; }
+.table-utilities { display: grid; grid-template-columns: 30px; grid-template-rows: repeat(2, 30px); align-content: center; justify-self: end; gap: var(--control-button-gap, 3px); }
 .table-utilities .table-square-button { width: 30px; min-width: 30px; height: 30px; padding: 4px; border-radius: 7px; }
-.table-arena .arena-controls .match-corner-controls { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(30px, 1fr)); gap: 3px; }
+.table-arena .arena-controls .match-corner-controls { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(30px, 1fr)); gap: var(--control-button-gap, 3px); }
 .table-arena .arena-controls .match-corner-button { min-height: 30px; padding: 4px 6px; }
 .language-dropup { position: relative; }
 .language-trigger { position: relative; }
@@ -92,7 +92,7 @@
   .table-arena .arena-bottom { grid-template-columns: minmax(0, 1fr) 90px; }
   .table-arena .arena-bottom > .player-hand-area { grid-column: 1 / -1; grid-row: 2; }
   .table-arena .arena-status > .arena-controls { grid-column: 2; }
-  .table-arena .arena-controls { grid-template-columns: minmax(0, 1fr) 30px; }
+  .table-arena .arena-controls { grid-template-columns: max-content 30px; }
   .table-utilities { grid-column: 2; grid-row: 1; }
   .table-arena .arena-controls .match-corner-controls { grid-column: 1; grid-row: 1; }
   .language-dropup-options { right: 0; }
@@ -125,9 +125,9 @@
   .table-arena .arena-status > .arena-controls {
     grid-column: 2;
     grid-row: 1;
-    grid-template-columns: 27px minmax(0, 1fr);
+    grid-template-columns: max-content max-content;
     align-items: center;
-    gap: 4px;
+    gap: var(--control-button-gap, 3px);
   }
   .table-arena .table-utilities { grid-template-columns: 27px; grid-template-rows: repeat(2, 27px); gap: 3px; }
   .table-arena .table-utilities .table-square-button { width: 27px; min-width: 27px; height: 27px; padding: 3px; }
@@ -159,7 +159,7 @@
   }
   .table-arena .arena-status > .score-bar,
   .table-arena .arena-status > .arena-controls { grid-column: 1; grid-row: auto; }
-  .table-arena .arena-controls { grid-template-columns: 27px minmax(0, 1fr); }
+  .table-arena .arena-controls { grid-template-columns: max-content 27px; }
   .table-arena .table-utilities { grid-template-columns: 27px; grid-template-rows: repeat(2, 27px); }
   .table-arena .table-utilities .table-square-button { width: 27px; min-width: 27px; height: 27px; padding: 3px; }
   .table-arena .arena-controls .match-corner-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(30px, auto); }

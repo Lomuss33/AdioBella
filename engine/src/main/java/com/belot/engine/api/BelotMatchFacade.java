@@ -192,7 +192,9 @@ public final class BelotMatchFacade {
         log("INFO", forfeitingTeam.name + " forfeited the game. " + winningTeam.name + " won by forfeit.", Map.of(
                 "eventKind", "GAME_FORFEIT",
                 "forfeitingTeam", forfeitingTeam.name,
-                "winner", winningTeam.name
+                "winner", winningTeam.name,
+                "winningScore", String.valueOf(winningTeam.gameScore),
+                "gameNumber", String.valueOf(state.gameNumber)
         ));
 
         finalizeGameWin(winningTeam, true);
@@ -213,13 +215,16 @@ public final class BelotMatchFacade {
         log("INFO", forfeitingTeam.name + " forfeited the match. " + winningTeam.name + " won by forfeit.", Map.of(
                 "eventKind", "MATCH_FORFEIT",
                 "forfeitingTeam", forfeitingTeam.name,
-                "winner", winningTeam.name
+                "winner", winningTeam.name,
+                "winningScore", String.valueOf(winningTeam.gameScore),
+                "gameNumber", String.valueOf(state.gameNumber)
         ));
         log("INFO", winningTeam.name + " won the game.", Map.of(
                 "eventKind", "GAME_WIN",
                 "winner", winningTeam.name,
                 "winningScore", String.valueOf(winningTeam.gameScore),
                 "matchWins", String.valueOf(winningTeam.matchWins),
+                "gameNumber", String.valueOf(state.gameNumber),
                 "byForfeit", "true"
         ));
 
@@ -232,6 +237,7 @@ public final class BelotMatchFacade {
                 "eventKind", "MATCH_WIN",
                 "winner", winningTeam.name,
                 "matchWins", String.valueOf(winningTeam.matchWins),
+                "gameNumber", String.valueOf(state.gameNumber),
                 "byForfeit", "true"
         ));
     }
@@ -475,19 +481,47 @@ public final class BelotMatchFacade {
         TeamState declarer = teamFor(state.declarer);
         TeamState defenders = otherTeam(state.declarer);
         int totalPoints = teamOnePoints + teamTwoPoints;
+        int teamOneAward = teamOnePoints;
+        int teamTwoAward = teamTwoPoints;
 
         if (declarer.totalHandPoints() > defenders.totalHandPoints()) {
             state.teamOne.gameScore += teamOnePoints;
             state.teamTwo.gameScore += teamTwoPoints;
-            log("SCORE", declarer.name + " passed the hand.", Map.of(
-                    "eventKind", "HAND_PASSED", "team", declarer.name,
-                    "teamOnePoints", String.valueOf(teamOnePoints),
-                    "teamTwoPoints", String.valueOf(teamTwoPoints)
+            log("SCORE", declarer.name + " passed the hand.", Map.ofEntries(
+                    Map.entry("eventKind", "HAND_PASSED"),
+                    Map.entry("team", declarer.name),
+                    Map.entry("teamOneName", state.teamOne.name),
+                    Map.entry("teamTwoName", state.teamTwo.name),
+                    Map.entry("teamOnePoints", String.valueOf(teamOneAward)),
+                    Map.entry("teamTwoPoints", String.valueOf(teamTwoAward)),
+                    Map.entry("gameNumber", String.valueOf(state.gameNumber)),
+                    Map.entry("dealerPlayerName", playerAt(state.dealerIndex).name),
+                    Map.entry("trumpPlayerName", playerAt(state.declarerPlayerIndex).name),
+                    Map.entry("trump", state.trumpSuit.name()),
+                    Map.entry("meldWinner", meldWinnerName()),
+                    Map.entry("meldPoints", String.valueOf(meldPointsAwarded()))
             ));
         } else {
             defenders.gameScore += totalPoints;
+            teamOneAward = defenders == state.teamOne ? totalPoints : 0;
+            teamTwoAward = defenders == state.teamTwo ? totalPoints : 0;
             log("SCORE", declarer.name + " failed the hand. " + defenders.name + " collected all " + totalPoints + " points.",
-                    Map.of("eventKind", "HAND_FAILED", "team", declarer.name, "winner", defenders.name, "points", String.valueOf(totalPoints)));
+                    Map.ofEntries(
+                            Map.entry("eventKind", "HAND_FAILED"),
+                            Map.entry("team", declarer.name),
+                            Map.entry("winner", defenders.name),
+                            Map.entry("points", String.valueOf(totalPoints)),
+                            Map.entry("teamOneName", state.teamOne.name),
+                            Map.entry("teamTwoName", state.teamTwo.name),
+                            Map.entry("teamOnePoints", String.valueOf(teamOneAward)),
+                            Map.entry("teamTwoPoints", String.valueOf(teamTwoAward)),
+                            Map.entry("gameNumber", String.valueOf(state.gameNumber)),
+                            Map.entry("dealerPlayerName", playerAt(state.dealerIndex).name),
+                            Map.entry("trumpPlayerName", playerAt(state.declarerPlayerIndex).name),
+                            Map.entry("trump", state.trumpSuit.name()),
+                            Map.entry("meldWinner", meldWinnerName()),
+                            Map.entry("meldPoints", String.valueOf(meldPointsAwarded()))
+                    ));
         }
 
         TeamState winner = state.teamOne.gameScore >= state.teamTwo.gameScore ? state.teamOne : state.teamTwo;
@@ -499,6 +533,14 @@ public final class BelotMatchFacade {
         startNextGame(true);
     }
 
+    private String meldWinnerName() {
+        return state.lastWinningMeldSets.isEmpty() ? "" : state.lastWinningMeldSets.get(0).player().team.name;
+    }
+
+    private int meldPointsAwarded() {
+        return state.lastWinningMeldSets.stream().mapToInt(MeldSet::totalPoints).sum();
+    }
+
     private void finalizeGameWin(TeamState winner, boolean byForfeit) {
         winner.matchWins += 1;
         log("INFO", winner.name + " won the game.", Map.of(
@@ -506,6 +548,7 @@ public final class BelotMatchFacade {
                 "winner", winner.name,
                 "winningScore", String.valueOf(winner.gameScore),
                 "matchWins", String.valueOf(winner.matchWins),
+                "gameNumber", String.valueOf(state.gameNumber),
                 "byForfeit", String.valueOf(byForfeit)
         ));
 
@@ -516,6 +559,7 @@ public final class BelotMatchFacade {
                     "eventKind", "MATCH_WIN",
                     "winner", winner.name,
                     "matchWins", String.valueOf(winner.matchWins),
+                    "gameNumber", String.valueOf(state.gameNumber),
                     "byForfeit", String.valueOf(byForfeit)
             ));
             return;
@@ -590,15 +634,6 @@ public final class BelotMatchFacade {
         state.phase = Phase.TRICK_PLAY;
         state.pendingType = ActionType.NONE;
         setupMeldFlow();
-    }
-
-    private void applyMelds() {
-        state.declaredMeldSets = state.players.stream()
-                .map(player -> MeldService.evaluate(player, state.trumpSuit))
-                .filter(meldSet -> meldSet.totalPoints() > 0)
-                .collect(Collectors.toCollection(ArrayList::new));
-        state.humanMeldOffer = null;
-        finalizeMeldDeclarations();
     }
 
     private void setupMeldFlow() {

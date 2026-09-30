@@ -12,6 +12,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", exception.getMessage(), "code", exception instanceof GameRuleException rule ? rule.code() : "error.unknown"));
+        String message = exception.getMessage();
+        String code = exception instanceof GameRuleException rule ? rule.code() : "error.unknown";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", message == null || message.isBlank() ? "Request was rejected." : message,
+                "code", code
+        ));
     }
 }

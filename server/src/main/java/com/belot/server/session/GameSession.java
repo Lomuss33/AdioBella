@@ -24,7 +24,7 @@ public final class GameSession {
     public GameSession(UUID id, Difficulty difficulty) {
         this.id = id;
         this.facade = new BelotMatchFacade(new Random(), difficulty);
-        this.broadcastSequence = 0L;
+        this.broadcastSequence = facade.getSnapshot().lastEventSequence();
     }
 
     public UUID id() {

@@ -36,4 +36,4 @@ AI assistants enter through the README link to [AI development guidance](docs/ai
 
 ## Current maintenance constraints
 
-Both game implementations require maintenance; there is no automatic translation between Java and TypeScript. Sessions are in memory, and some artwork remains placeholder material. Avoid documenting multiplayer, durable storage, or automated test gates as existing features.
+Both game implementations require maintenance; there is no automatic translation between Java and TypeScript. Sessions are in memory. Keep bundled card artwork credits and licenses aligned with the assets. Avoid documenting multiplayer, durable storage, or automated test gates as existing features.

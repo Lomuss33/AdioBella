@@ -6,7 +6,7 @@ A single-player Belot game built with React and TypeScript, with a Java engine a
 
 ## Play locally
 
-Install JDK 21 and Node.js with npm (the deployment workflow uses Node 20), then run from the repository root:
+Install JDK 21 and Node.js 24 with npm, then run from the repository root:
 
 ```powershell
 .\gradlew.bat runGame
@@ -23,7 +23,7 @@ npm run setup
 npm run dev
 ```
 
-Setup is needed once after cloning or when frontend dependencies change. Open the local URL printed by Vite (normally <http://localhost:5174>). Saved UI changes update automatically. Use `npm run dev:full` for live development with the Java backend.
+Setup is needed once after cloning or when frontend dependencies change. Open the local URL printed by Vite (normally <http://localhost:3003>). Saved UI changes update automatically. Use `npm run dev:full` for live development with the Java backend; that full-stack launcher uses port 5174 by default.
 
 ## Features
 

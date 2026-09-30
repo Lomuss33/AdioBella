@@ -31,7 +31,8 @@ import type {
   Seat,
   SessionResponse,
   TableTheme,
-  TeamNameDrafts
+  TeamNameDrafts,
+  TrumpChoice
 } from "./types";
 
 const SESSION_KEY = "belot-session-id";
@@ -117,6 +118,9 @@ function App() {
         lastSequenceRef.current = Math.max(lastSequenceRef.current, event.sequence);
         setEvents((current) => dedupeEvents([...current, event]).slice(-100));
         scheduleSnapshotRefresh(sessionId);
+      },
+      onOpen: () => {
+        setErrorMessage((current) => current === "error.stream" ? null : current);
       },
       onError: () => {
         setErrorMessage("error.stream");
@@ -221,7 +225,7 @@ function App() {
     }
   }
 
-  async function handleChooseTrump(choice: string) {
+  async function handleChooseTrump(choice: TrumpChoice) {
     if (!sessionId) {
       return;
     }
@@ -609,11 +613,11 @@ function App() {
           applySession(response, { forceCommit: true });
         })
         .catch(() => {
-        if (deferredSession) {
-          commitSessionSnapshot(deferredSession);
-          return;
-        }
-        setErrorMessage("error.refresh");
+          if (deferredSession) {
+            commitSessionSnapshot(deferredSession);
+            return;
+          }
+          setErrorMessage("error.refresh");
         });
       return;
     }

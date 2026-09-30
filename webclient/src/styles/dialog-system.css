@@ -504,7 +504,7 @@
 
 /* Keep the two action groups close while preserving their compact hit areas. */
 .table-arena .arena-status > .arena-controls {
-  column-gap: 2px;
+  column-gap: var(--control-button-gap, 3px);
 }
 
 /* Separate the north and south plays by a visible cushion at every card size. */

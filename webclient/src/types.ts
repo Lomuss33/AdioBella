@@ -1,6 +1,9 @@
 export type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "REPORT_MELDS" | "ACKNOWLEDGE_MELDS" | "PLAY_CARD";
 export type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
 export type Difficulty = "EASY" | "NORMAL" | "HARD";
+export type Suit = "SPADES" | "HEARTS" | "DIAMONDS" | "CLUBS";
+export type Rank = "SEVEN" | "EIGHT" | "NINE" | "TEN" | "JACK" | "QUEEN" | "KING" | "ACE";
+export type TrumpChoice = Suit | "SKIP";
 export type GameLength = "SHORT" | "LONG";
 export type MatchTargetWins = 1 | 3 | 5;
 export type TableTheme = "GREEN" | "DARK_BLUE" | "CHERRY_RED" | "WOODY_BROWN" | "FINE_BLACK";
@@ -48,7 +51,7 @@ export interface ScoreView {
   teamTwoGamePoints: number;
   declarerTeam: string | null;
   gameNumber: number;
-  difficulty: string;
+  difficulty: Difficulty;
   matchTargetWins: number;
   gameTargetPoints: number;
   teamOneMeldPoints: number;
@@ -91,7 +94,7 @@ export interface PendingAction {
   type: ActionType;
   actingPlayerId: string | null;
   legalCardIndices: number[];
-  legalTrumpChoices: string[];
+  legalTrumpChoices: TrumpChoice[];
   belaEligibleCardIndices: number[];
   availableMelds: MeldSetView[];
   meldWinner: MeldWinnerView | null;

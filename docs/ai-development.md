@@ -19,7 +19,7 @@ This page is linked from the root README. It is an explicit reading entry point;
 - Keep Java engine code independent of Spring and UI concerns.
 - The active React app uses `GameGateway`; implement operations in both gateways when the shared interface changes.
 - Keep Java view records, TypeScript types, session responses, pending actions, and events compatible.
-- Use `serverGateway.ts` for the active HTTP/SSE transport. The older `sessionApi.ts` and `eventStream.ts` are not the active app path.
+- Use `serverGateway.ts` for the active HTTP/SSE transport.
 - Keep card and suit mapping in `cardPresentation.ts`. Preserve established card classes and lowercase labels unless the task explicitly changes that presentation.
 - Keep development documentation under `docs/`. The root Markdown files are README, MAINTAINER, and USERGUIDE.
 - Avoid unrelated refactors, dependency updates, generated artifacts, and changes to archived material.

@@ -86,7 +86,7 @@
 .table-arena .seat-badge-placeholder, .table-arena .south-inline-badge-placeholder { display: none; }
 
 .table-arena .trick-pool-shell { grid-area: trick; width: 100%; max-width: 720px; min-width: 0; margin: 0; justify-self: center; padding: 0; }
-.table-arena .trick-pool { min-height: 0; padding: 18px 6px 24px; display: block; border: 1px solid color-mix(in srgb, var(--ui-muted) 34.90%, transparent); border-radius: 38%; background: radial-gradient(ellipse at center, var(--ui-highlight), rgb(0 0 0 / 12%)); box-shadow: inset 0 0 24px rgb(0 0 0 / 12%); overflow: visible; backdrop-filter: none;  border-color: color-mix(in srgb, var(--ui-gold) 24%, transparent); }
+.table-arena .trick-pool { min-height: 0; padding: 18px 6px 24px; display: block; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; backdrop-filter: none; }
 .table-arena .trick-cards { min-height: calc(var(--trick-card-height) * 2.4 + 28px); width: 100%; }
 .table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: var(--ui-muted); background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
 .table-arena .trick-cards .playing-card-face { width: var(--trick-card-width); height: var(--trick-card-height); }
@@ -192,7 +192,7 @@
   --trick-entry-offset-y: calc(var(--trick-card-height) * .8);
   --trick-entry-offset-x: calc(var(--trick-card-width) * 1.8);
   position: absolute; inset: 0; height: 100%; padding: 20px 6px 24px;
- border-color: color-mix(in srgb, var(--ui-gold) 24%, transparent);  background: radial-gradient(ellipse at center, var(--ui-highlight), rgb(0 0 0 / 12%));  box-shadow: inset 0 0 24px rgb(0 0 0 / 12%); }
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .table-arena .trick-cards { height: 100%; min-height: 0; }
 /* Measurable even before the first card is played; never occupies layout space. */
 .table-arena .trick-size-guide { position: absolute; width: var(--trick-card-width); height: 0; visibility: hidden; pointer-events: none; }
@@ -456,12 +456,43 @@
 .game-layout .terminal-play-row, .game-layout .terminal-round-winner, .game-layout .terminal-line { display: grid; min-width: 0; grid-template-columns: max-content minmax(0, 1fr); align-items: start; gap: 8px; padding: 6px 8px; border: 1px solid transparent; border-radius: 7px; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; }
 .game-layout .terminal-play-row, .game-layout .terminal-line { color: var(--ui-text); background: color-mix(in srgb, var(--ui-control) 76%, transparent); }
 .game-layout .terminal-round-winner, .game-layout .terminal-game-winner { border-color: color-mix(in srgb, var(--ui-gold-light) 24%, transparent); color: var(--ui-text); background: color-mix(in srgb, var(--ui-gold-light) 10%, var(--ui-solid)); }
+.game-layout .terminal-hand-result { border-color: color-mix(in srgb, var(--ui-focus) 25%, transparent); background: color-mix(in srgb, var(--ui-focus) 7%, var(--ui-control)); box-shadow: inset 2px 0 color-mix(in srgb, var(--ui-focus) 72%, transparent); }
+.game-layout .terminal-hand-summary { display: grid; min-width: 0; gap: 3px; }
+.game-layout .terminal-hand-context { color: var(--ui-muted); }
+.game-layout .terminal-hand-points { color: var(--ui-text); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .game-layout .terminal-round-winner strong { color: var(--ui-gold-light); font-size: 10px; letter-spacing: .035em; }
 .game-layout .terminal-match-winner { border-color: color-mix(in srgb, var(--ui-gold-light) 44%, transparent); color: var(--ui-text); background: color-mix(in srgb, var(--ui-gold-light) 17%, var(--ui-solid)); box-shadow: inset 3px 0 var(--ui-gold-light); }
 .game-layout .terminal-result-points { color: var(--ui-gold-light); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .game-layout .terminal-forfeit { display: inline-flex; margin-inline-start: 6px; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--ui-muted) 30%, transparent); border-radius: 999px; color: var(--ui-muted); font-size: 9px; line-height: 1.35; vertical-align: .08em; }
 .game-layout .terminal-seq { color: var(--ui-muted); font: 10px/1.45 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .game-layout .terminal-empty { display: grid; min-height: 80px; place-items: center; padding: 12px; border: 1px dashed color-mix(in srgb, var(--game-line) 75%, transparent); border-radius: 8px; color: var(--ui-muted); font-size: 12px; text-align: center; }
+.game-layout .terminal-round-group { gap: 6px; padding: 8px; }
+.game-layout .terminal-round-title { display: flex; min-width: 0; justify-content: space-between; align-items: center; gap: 8px; }
+.game-layout .terminal-trick-state { flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; color: var(--ui-muted); background: color-mix(in srgb, var(--ui-control) 76%, transparent); font-size: 9px; font-weight: 600; letter-spacing: 0; }
+.game-layout .terminal-trick-state.is-live { color: var(--ui-focus); }
+.game-layout .terminal-play-list { display: grid; gap: 3px; }
+.game-layout .terminal-play-row { display: grid; min-width: 0; grid-template-columns: 18px minmax(0, 1fr) max-content; align-items: center; gap: 7px; padding: 4px 6px; border: 0; border-radius: 6px; background: color-mix(in srgb, var(--ui-control) 58%, transparent); font-size: 11px; line-height: 1.35; }
+.game-layout .terminal-play-order { display: grid; width: 17px; height: 17px; place-items: center; border-radius: 50%; color: var(--ui-muted); background: color-mix(in srgb, var(--ui-solid) 72%, transparent); font-size: 9px; font-variant-numeric: tabular-nums; }
+.game-layout .terminal-play-player { min-width: 0; overflow: hidden; color: var(--ui-text); text-overflow: ellipsis; white-space: nowrap; }
+.game-layout .terminal-play-card { color: var(--ui-text); font-weight: 650; white-space: nowrap; }
+.game-layout .terminal-play-card.is-red-suit { color: #ff8c91; }
+.game-layout .terminal-round-winner { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 4px 7px; padding: 6px 7px; border: 1px solid color-mix(in srgb, var(--ui-gold-light) 25%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--ui-gold-light) 9%, var(--ui-solid)); }
+.game-layout .terminal-round-winner-label { color: var(--ui-gold-light); font-size: 9px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.game-layout .terminal-round-winner > strong:not(.terminal-round-points) { min-width: 0; color: var(--ui-text); font-size: 11px; overflow-wrap: anywhere; }
+.game-layout .terminal-round-winner-team { color: var(--ui-muted); font-size: 10px; }
+.game-layout .terminal-round-points { margin-inline-start: auto; color: var(--ui-gold-light); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.game-layout .terminal-last-trick-bonus { width: 100%; color: var(--ui-muted); font-size: 10px; }
+.game-layout .terminal-match-game { display: grid; min-width: 0; gap: 5px; padding: 7px; border: 1px solid color-mix(in srgb, var(--game-line) 62%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--ui-glass) 74%, transparent); }
+.game-layout .terminal-match-game-title { padding: 1px 2px 5px; border-bottom: 1px solid color-mix(in srgb, var(--game-line) 58%, transparent); color: var(--ui-gold-light); font-size: 10px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.game-layout .terminal-line { display: block; min-width: 0; padding: 7px 8px; border-radius: 7px; font-size: 11px; line-height: 1.4; }
+.game-layout .terminal-hand-result { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.game-layout .terminal-hand-context-row { display: flex; min-width: 0; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 3px 8px; }
+.game-layout .terminal-hand-context { min-width: 0; color: var(--ui-muted); }
+.game-layout .terminal-hand-contract { flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+.game-layout .terminal-hand-contract.is-passed { color: #9cdbb4; background: rgb(89 169 117 / 12%); }
+.game-layout .terminal-hand-contract.is-failed { color: #ff9b9b; background: rgb(204 83 83 / 14%); }
+.game-layout .terminal-hand-points { color: var(--ui-text); font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.game-layout .terminal-forfeit-result { border-color: color-mix(in srgb, var(--ui-danger) 28%, transparent); background: color-mix(in srgb, var(--ui-danger) 10%, var(--ui-solid)); }
 .game-layout .terminal-latest { display: inline-flex; min-height: 28px; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid color-mix(in srgb, var(--ui-gold-light) 32%, var(--game-line)); border-radius: 7px; color: var(--ui-text); background: color-mix(in srgb, var(--ui-gold-light) 10%, var(--ui-control)); cursor: pointer; font: 600 10px/1.2 "Segoe UI", system-ui, sans-serif; transition: border-color 140ms ease, background-color 140ms ease; }
 .game-layout .terminal-latest::before { content: ""; width: 7px; height: 7px; border: solid var(--ui-gold-light); border-width: 1.5px 1.5px 0 0; transform: translateY(2px) rotate(-45deg); }
 .game-layout .terminal-latest:hover { border-color: var(--ui-gold-light); background: color-mix(in srgb, var(--ui-gold-light) 17%, var(--ui-control)); }
@@ -474,4 +505,52 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .game-layout .terminal-disclosure, .game-layout .terminal-latest { transition: none; }
+}
+
+/* Compact, scan-friendly history rows that expand naturally with their content. */
+.game-layout .terminal-section { container: terminal-feed / inline-size; grid-template-rows: auto auto; align-content: start; gap: 8px; }
+.game-layout .terminal-subheader { min-height: 24px; gap: 5px 8px; }
+.game-layout .terminal-subheader h3 { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
+.game-layout .terminal-count { padding: 2px 7px; }
+.game-layout .terminal-lines { height: auto; min-height: 0; max-height: min(38svh, 340px); align-content: start; gap: 5px; padding: 0 3px 1px 0; }
+.game-layout .terminal-round-group, .game-layout .terminal-match-game { align-content: start; gap: 5px; padding: 7px; background: color-mix(in srgb, var(--ui-glass) 42%, transparent); }
+.game-layout .terminal-round-title { display: flex; min-width: 0; justify-content: space-between; align-items: center; gap: 7px; padding: 0 1px 5px; font-size: 10px; letter-spacing: .025em; }
+.game-layout .terminal-round-title > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.game-layout .terminal-trick-state { padding: 2px 6px; font-size: 9px; white-space: nowrap; }
+.game-layout .terminal-play-list { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 3px; }
+.game-layout .terminal-play-row { min-height: 28px; grid-template-columns: 18px minmax(0, 1fr) max-content; gap: 6px; padding: 3px 6px; border: 1px solid color-mix(in srgb, var(--game-line) 40%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--ui-control) 48%, transparent); }
+.game-layout .terminal-play-order { width: 16px; height: 16px; font-size: 9px; }
+.game-layout .terminal-play-player { font-size: 11px; font-weight: 550; }
+.game-layout .terminal-play-card { display: inline-flex; min-width: 34px; min-height: 23px; justify-content: center; align-items: center; gap: 2px; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--ui-line) 60%, transparent); border-radius: 5px; color: var(--ui-text); background: color-mix(in srgb, var(--ui-solid) 82%, transparent); font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1; }
+.game-layout .terminal-play-card.is-red-suit { color: #ff9a9e; }
+.game-layout .terminal-card-suit { font-size: 13px; line-height: 1; }
+.game-layout .terminal-round-winner { display: grid; min-height: 30px; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; align-items: center; gap: 3px 7px; padding: 3px 7px; }
+.game-layout .terminal-round-winner-label { grid-column: 1; color: var(--ui-gold-light); font-size: 8px; white-space: nowrap; }
+.game-layout .terminal-round-winner-identity { display: flex; min-width: 0; align-items: baseline; gap: 4px; overflow: hidden; white-space: nowrap; }
+.game-layout .terminal-round-winner-identity strong { min-width: 0; overflow: hidden; color: var(--ui-text); font-size: 11px; text-overflow: ellipsis; }
+.game-layout .terminal-round-winner-team { min-width: 0; overflow: hidden; color: var(--ui-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.game-layout .terminal-round-points { grid-column: 3; margin: 0; color: var(--ui-gold-light); font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.game-layout .terminal-last-trick-bonus { grid-column: 4; width: auto; padding: 2px 5px; border-radius: 999px; color: var(--ui-muted); background: color-mix(in srgb, var(--ui-solid) 58%, transparent); font-size: 8px; line-height: 1.2; white-space: nowrap; }
+.game-layout .terminal-match-game-title { padding: 1px 1px 5px; font-size: 9px; }
+.game-layout .terminal-line { padding: 6px 7px; }
+.game-layout .terminal-hand-context-row { align-items: center; }
+.game-layout .terminal-hand-context { line-height: 1.35; }
+
+@container terminal-feed (min-width: 420px) {
+  .game-layout .terminal-play-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container terminal-feed (max-width: 380px) {
+  .game-layout .terminal-round-winner { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+  .game-layout .terminal-last-trick-bonus { grid-column: 2 / -1; justify-self: start; }
+}
+@media (max-width: 700px) {
+  .game-layout .terminal-lines { max-height: min(34svh, 260px); }
+}
+@media (max-width: 380px) {
+  .game-layout .terminal-panel { padding: 8px; }
+  .game-layout .terminal-grid { gap: 7px; margin-top: 7px; }
+  .game-layout .terminal-section { gap: 6px; padding: 7px; }
+  .game-layout .terminal-lines { max-height: min(32svh, 210px); font-size: 11px; }
+  .game-layout .terminal-round-group, .game-layout .terminal-match-game { padding: 6px; }
+  .game-layout .terminal-play-row { grid-template-columns: 16px minmax(0, 1fr) max-content; gap: 4px; padding-inline: 4px; }
 }

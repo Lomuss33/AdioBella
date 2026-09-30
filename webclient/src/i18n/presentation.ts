@@ -1,4 +1,4 @@
-import { t, tr, getLocale } from ".";
+import { t, tr, getLocale, countText } from ".";
 import type { MessageKey } from "./catalog";
 import type { CardView, GameEvent, MeldCombinationView } from "../types";
 export function cardDescription(card: Pick<CardView, "rank" | "suit" | "faceUp">) {
@@ -29,7 +29,31 @@ export function eventDescription(event: GameEvent) {
   return t(keys[kind], { player: p.playerName ?? p.winnerPlayerName ?? p.dealerPlayerName ?? t("player"),
     winner: p.winner ?? t("team"), team: p.forfeitingTeam ?? p.team ?? t("team"),
     points: Number(p.trickPoints ?? p.points ?? 0), game: Number(p.gameNumber ?? 0), suit: tr(suit ?? p.trump ?? "trump"),
+    teamOne: p.teamOneName ?? t("team"), teamTwo: p.teamTwoName ?? t("team"),
+    teamOnePoints: Number(p.teamOnePoints ?? 0), teamTwoPoints: Number(p.teamTwoPoints ?? 0),
     card: cardDescription({ rank: p.rank, suit: p.suit, faceUp: true }) });
+}
+export function handSettlementDescription(event: GameEvent) {
+  const p = event.payload;
+  const suit = { SPADES: "spades", HEARTS: "hearts", DIAMONDS: "diamonds", CLUBS: "clubs" }[p.trump];
+  const meldOutcome = p.meldWinner
+    ? t("meldAwardSummary", { team: p.meldWinner, points: countText("points", Number(p.meldPoints ?? 0)) })
+    : t("No melds");
+
+  return {
+    context: t("handSettlementContext", {
+      dealer: p.dealerPlayerName ?? t("player"),
+      trumpPlayer: p.trumpPlayerName ?? t("player"),
+      suit: tr(suit ?? p.trump ?? "trump"),
+      meldOutcome
+    }),
+    points: t("handPointsSummary", {
+      teamOne: p.teamOneName ?? t("team"),
+      teamOnePoints: countText("points", Number(p.teamOnePoints ?? 0)),
+      teamTwo: p.teamTwoName ?? t("team"),
+      teamTwoPoints: countText("points", Number(p.teamTwoPoints ?? 0))
+    })
+  };
 }
 export function errorDescription(value: string) {
   const key = value.startsWith("error.") ? value : `error.${value}`;

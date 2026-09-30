@@ -11,7 +11,10 @@ import type {
   PendingAction,
   PlayedCardView,
   PlayerView,
-  ScoreView
+  Rank,
+  ScoreView,
+  Suit,
+  TrumpChoice
 } from "../../types";
 import type { RandomSource } from "./random";
 import { BrowserRandom } from "./random";
@@ -20,10 +23,6 @@ type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | 
 type Phase = "READY_TO_START" | "BETWEEN_GAMES" | "TRUMP_SELECTION" | "TRICK_PLAY" | "MATCH_COMPLETE";
 type TeamSide = "YOURS" | "ENEMIES";
 type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
-type Suit = "SPADES" | "HEARTS" | "DIAMONDS" | "CLUBS";
-type Rank = "SEVEN" | "EIGHT" | "NINE" | "TEN" | "JACK" | "QUEEN" | "KING" | "ACE";
-type TrumpChoice = Suit | "SKIP";
-
 interface Card {
   suit: Suit;
   rank: Rank;
@@ -296,7 +295,9 @@ export class BelotMatchFacade {
     this.log("INFO", `${forfeitingTeam.name} forfeited the game. ${winningTeam.name} won by forfeit.`, {
       eventKind: "GAME_FORFEIT",
       forfeitingTeam: forfeitingTeam.name,
-      winner: winningTeam.name
+      winner: winningTeam.name,
+      winningScore: String(winningTeam.gameScore),
+      gameNumber: String(this.state.gameNumber)
     });
 
     this.finalizeGameWin(winningTeam, true);
@@ -317,13 +318,16 @@ export class BelotMatchFacade {
     this.log("INFO", `${forfeitingTeam.name} forfeited the match. ${winningTeam.name} won by forfeit.`, {
       eventKind: "MATCH_FORFEIT",
       forfeitingTeam: forfeitingTeam.name,
-      winner: winningTeam.name
+      winner: winningTeam.name,
+      winningScore: String(winningTeam.gameScore),
+      gameNumber: String(this.state.gameNumber)
     });
     this.log("INFO", `${winningTeam.name} won the game.`, {
       eventKind: "GAME_WIN",
       winner: winningTeam.name,
       winningScore: String(winningTeam.gameScore),
       matchWins: String(winningTeam.matchWins),
+      gameNumber: String(this.state.gameNumber),
       byForfeit: "true"
     });
 
@@ -336,6 +340,7 @@ export class BelotMatchFacade {
       eventKind: "MATCH_WIN",
       winner: winningTeam.name,
       matchWins: String(winningTeam.matchWins),
+      gameNumber: String(this.state.gameNumber),
       byForfeit: "true"
     });
   }
@@ -599,16 +604,37 @@ export class BelotMatchFacade {
       this.state.teamOne.gameScore += teamOnePoints;
       this.state.teamTwo.gameScore += teamTwoPoints;
       this.log("SCORE", `${declarer.name} passed the hand.`, {
-        eventKind: "HAND_PASSED", team: declarer.name,
+        eventKind: "HAND_PASSED",
+        team: declarer.name,
+        teamOneName: this.state.teamOne.name,
+        teamTwoName: this.state.teamTwo.name,
         teamOnePoints: String(teamOnePoints),
-        teamTwoPoints: String(teamTwoPoints)
+        teamTwoPoints: String(teamTwoPoints),
+        gameNumber: String(this.state.gameNumber),
+        dealerPlayerName: this.playerAt(this.state.dealerIndex).name,
+        trumpPlayerName: this.playerAt(this.state.declarerPlayerIndex!).name,
+        trump: this.state.trumpSuit!,
+        meldWinner: this.state.lastWinningMeldSets[0]?.player.team.name ?? "",
+        meldPoints: String(this.state.lastWinningMeldSets.reduce((total, meldSet) => total + meldSet.totalPoints, 0))
       });
     } else {
       defenders.gameScore += totalPoints;
+      const teamOneAward = defenders === this.state.teamOne ? totalPoints : 0;
+      const teamTwoAward = defenders === this.state.teamTwo ? totalPoints : 0;
       this.log("SCORE", `${declarer.name} failed the hand. ${defenders.name} collected all ${totalPoints} points.`, {
         eventKind: "HAND_FAILED", team: declarer.name,
         winner: defenders.name,
-        points: String(totalPoints)
+        points: String(totalPoints),
+        teamOneName: this.state.teamOne.name,
+        teamTwoName: this.state.teamTwo.name,
+        teamOnePoints: String(teamOneAward),
+        teamTwoPoints: String(teamTwoAward),
+        gameNumber: String(this.state.gameNumber),
+        dealerPlayerName: this.playerAt(this.state.dealerIndex).name,
+        trumpPlayerName: this.playerAt(this.state.declarerPlayerIndex!).name,
+        trump: this.state.trumpSuit!,
+        meldWinner: this.state.lastWinningMeldSets[0]?.player.team.name ?? "",
+        meldPoints: String(this.state.lastWinningMeldSets.reduce((total, meldSet) => total + meldSet.totalPoints, 0))
       });
     }
 
@@ -628,6 +654,7 @@ export class BelotMatchFacade {
       winner: winner.name,
       winningScore: String(winner.gameScore),
       matchWins: String(winner.matchWins),
+      gameNumber: String(this.state.gameNumber),
       byForfeit: String(byForfeit)
     });
 
@@ -638,6 +665,7 @@ export class BelotMatchFacade {
         eventKind: "MATCH_WIN",
         winner: winner.name,
         matchWins: String(winner.matchWins),
+        gameNumber: String(this.state.gameNumber),
         byForfeit: String(byForfeit)
       });
       return;
@@ -712,18 +740,6 @@ export class BelotMatchFacade {
     this.state.phase = "TRICK_PLAY";
     this.state.pendingType = "NONE";
     this.setupMeldFlow();
-  }
-
-  private applyMelds() {
-    if (!this.state.trumpSuit) {
-      return;
-    }
-
-    this.state.declaredMeldSets = this.state.players
-      .map((player) => evaluateMeldSet(player, this.state.trumpSuit!))
-      .filter((meldSet) => meldSet.totalPoints > 0);
-    this.state.humanMeldOffer = null;
-    this.finalizeMeldDeclarations();
   }
 
   private dealCards(count: number) {

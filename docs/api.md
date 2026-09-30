@@ -32,11 +32,13 @@ Lobby settings fields are `difficulty` (`EASY`, `NORMAL`, `HARD`), `playerNamesB
 
 Session creation, snapshot reads, and command endpoints return `{ sessionId, snapshot }`. See [GameSnapshot.java](../engine/src/main/java/com/belot/engine/api/GameSnapshot.java) and [types.ts](../webclient/src/types.ts) for the snapshot shape.
 
-The events endpoint returns an array of events after the supplied sequence. The stream uses `text/event-stream` and sends JSON events; consumers track sequence numbers and close subscriptions when leaving a session.
+The events endpoint returns an array of events after the supplied sequence. The stream uses `text/event-stream` and sends JSON events with sequence IDs. On reconnect, `Last-Event-ID` resumes after the latest valid sequence, bounded to the session's current event sequence; otherwise the `afterSequence` query value is used. Consumers still track sequence numbers and close subscriptions when leaving a session.
+
+`HAND_PASSED` and `HAND_FAILED` events record each team's awarded hand points and names, along with the dealer, trump chooser and suit, meld winner and points, and game number. The Match Feed displays this settlement context and points in two rows after all cards in a hand have been played.
 
 `handIndex` is a zero-based index into the current hand. Use indices and choices from the current pending action rather than guessing valid moves.
 
-[ApiExceptionHandler](../server/src/main/java/com/belot/server/web/ApiExceptionHandler.java) maps `IllegalArgumentException` to HTTP 400 with `{"error":"..."}`. This includes application validation failures; do not assume every missing session produces a 404. Other framework errors may have a different response shape.
+[ApiExceptionHandler](../server/src/main/java/com/belot/server/web/ApiExceptionHandler.java) maps `IllegalArgumentException` to HTTP 400 with `{"error":"...","code":"..."}`. Required JSON bodies that are absent or `null` return HTTP 400. Missing sessions return 404; other framework errors may have a different response shape.
 
 ## Localization-compatible data
 

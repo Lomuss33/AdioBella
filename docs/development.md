@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - JDK 21: both Java modules select a Java 21 toolchain.
-- Node.js and npm: Node 20 is the version configured in the Pages workflow.
+- Node.js 24 and npm: this is the version configured in the Pages workflow.
 - Git and the repository's Gradle wrapper; no separate Gradle installation is needed.
 - Network access for the initial Gradle and npm dependency downloads.
 
@@ -22,9 +22,9 @@ npm run setup
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally <http://localhost:5174/>. This uses the browser game engine through `webclient/.env.browser`, so Java is not required. Vite watches source files and applies UI changes as you save. Some module changes may reload the page and reset the in-memory browser game. Stop with Ctrl+C.
+Open the local URL printed by Vite, normally <http://localhost:3003/>. This uses the browser game engine through `webclient/.env.browser`, so Java is not required. Vite watches source files and applies UI changes as you save. Some module changes may reload the page and reset the in-memory browser game. Stop with Ctrl+C.
 
-For another port, use `npm run dev -- --port 5175`. The existing Vite host setting also permits access from a phone on the same network through the printed Network URL, subject to the machine's firewall.
+For another port, use `npm run dev -- --port 5175`. Vite binds to localhost by default. To expose it to other devices on your network, use `npm run dev -- --host 0.0.0.0`; only do this on a trusted network. The full-stack launcher explicitly enables this network access.
 
 `npx serve .` serves static files; it does not compile this React/TypeScript source or provide the project's live development workflow.
 
@@ -108,7 +108,7 @@ npm --prefix webclient test
 npm --prefix webclient run build:pages
 ```
 
-Gradle builds the normal frontend bundle and runs Java tests. It does **not** run Vitest; run `npm test` separately. Frontend builds include TypeScript checking. The Gradle frontend task uses `npm install`, so review any lockfile changes it produces.
+Gradle builds the normal frontend bundle and runs Java tests. It does **not** run Vitest; run `npm test` separately. Frontend builds include TypeScript checking. The Gradle frontend task uses `npm ci` to install exactly the versions recorded in the lockfile.
 
 For gameplay changes, exercise setup, trump selection, melds, card play, Bela when available, scores, and the affected end-of-game behavior in both runtimes. For UI changes, also inspect narrow and wide layouts, card labels, hidden hands, animations, and the event log.
 

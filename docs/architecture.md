@@ -45,13 +45,11 @@ The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/
 | Runtime selection and Pages path | [.env.pages](../webclient/.env.pages), [vite.config.ts](../webclient/vite.config.ts) |
 | Frontend packaging into Spring Boot | [server/build.gradle.kts](../server/build.gradle.kts) |
 
-The older [sessionApi.ts](../webclient/src/lib/sessionApi.ts) and [eventStream.ts](../webclient/src/lib/eventStream.ts) remain in the tree but are not used by the active app. Extend the gateway path for current functionality.
-
 ## Presentation conventions
 
 Card CSS uses `playingCards`, `card`, and `card back`; suits use `clubs`, `diams`, `hearts`, and `spades`. Rank classes run from `rank-7` through `rank-a` for the Belot deck. Keep these conventions stable unless updating the presentation layer together.
 
-Visible card labels stay lowercase, such as `10c`, `ad`, and `7s`. Trump controls use lowercase full suit names. Asset placeholders live in [cards](../webclient/src/assets/cards) and [suits](../webclient/src/assets/suits); the root favicon is synced into `webclient/public/` by the Gradle frontend build.
+Visible card labels stay lowercase, such as `10c`, `ad`, and `7s`. Trump controls use lowercase full suit names. The original card symbols and back live in [src/assets](../webclient/src/assets); selectable deck artwork and its credits live in [public/assets/decks](../webclient/public/assets/decks). The root favicon is synced into `webclient/public/` by the Gradle frontend build.
 
 ## Boundaries
 

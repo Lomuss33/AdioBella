@@ -11,7 +11,7 @@
 | Find the implementation to change | [Architecture](architecture.md) |
 | Inspect the server contract | [Session API](api.md) |
 | Publish or diagnose a build | [Deployment](deployment.md) |
-| Plan the UI redesign | [UI and UX improvement plan](ui-ux-plan.md) (proposed) |
+| Review UI/UX changes and follow-up work | [UI and UX improvement plan](ui-ux-plan.md) (historical notes; current visuals unverified) |
 | Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |
 | Maintain English, German, and Croatian support | [Localization design and implementation](localization-plan.md) |
 | Review and integrate contributions | [Maintainer guide](../MAINTAINER.md) |

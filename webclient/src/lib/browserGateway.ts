@@ -1,4 +1,4 @@
-import type { GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
+import type { Difficulty, GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts, TrumpChoice } from "../types";
 import type { GameGateway } from "./gameGateway";
 import { GameSession } from "./local-game/gameSession";
 
@@ -30,7 +30,7 @@ export const browserGateway: GameGateway = {
 
   async updateLobbySettings(
     sessionId: string,
-    difficulty: string,
+    difficulty: Difficulty,
     playerNamesBySeat: PlayerNameDrafts,
     teamNames: TeamNameDrafts,
     matchTargetWins: MatchTargetWins,
@@ -40,7 +40,7 @@ export const browserGateway: GameGateway = {
     return {
       sessionId,
       snapshot: session.updateLobbySettings(
-        difficulty as never,
+        difficulty,
         playerNamesBySeat,
         teamNames.yourTeam,
         teamNames.enemyTeam,
@@ -50,7 +50,7 @@ export const browserGateway: GameGateway = {
     };
   },
 
-  async chooseTrump(sessionId: string, choice: string) {
+  async chooseTrump(sessionId: string, choice: TrumpChoice) {
     const session = requireSession(sessionId);
     return {
       sessionId,
@@ -100,6 +100,7 @@ export const browserGateway: GameGateway = {
 
   subscribe(sessionId: string, afterSequence: number, handlers) {
     const session = requireSession(sessionId);
+    handlers.onOpen();
     return session.subscribe(afterSequence, (event: GameEvent) => {
       try {
         handlers.onEvent(event);

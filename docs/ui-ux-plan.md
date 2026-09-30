@@ -6,6 +6,8 @@ Current color direction: [Casino color and material plan](color-material-plan.md
 
 Status: popup work has been followed by a requested **table and terminal** layout pass. Other items in the broader redesign below remain proposals.
 
+> **Historical audit:** The findings and screen proposal below predate several implementation passes. They are not a verified list of current defects. In particular, the original selected-trump rendering warning is addressed in `ScoreBar.tsx`, which now renders the trump symbol and translated label separately. Recheck the current app before treating older findings as active; visual behavior remains unverified without a browser review.
+
 Implemented popup work: viewport-level native dialogs, independently scrollable content with visible action footers, mobile keyboard viewport handling, dark felt and gold styling, touch-sized controls, keyboard focus containment, reduced motion, and matching forfeit/quit confirmations. The table layout and game rules are outside this change.
 
 The follow-up layout pass reduces outer margins and internal padding, removes nested frames, places setup fields in compact rows, and uses available landscape width to minimize scrolling. Overflow remains available for content that cannot fit. No tests, builds, or browser checks were run for this pass, as requested.
@@ -30,13 +32,13 @@ This plan is based on the current React components, CSS, action handlers, and th
 
 | Finding | Evidence | Priority |
 | --- | --- | --- |
-| Selected trump may crash status rendering | `ScoreBar.tsx` interpolates the object returned by `toTrumpMeta` directly as `{trump}` before rendering its fields | P0: reproduce and fix first |
-| Layout changes are difficult to reason about | `app.css` has 4,207 lines with repeated width, height, and orientation overrides | P1: consolidate with visual regression checks |
+| Selected trump may crash status rendering | Historical audit noted object interpolation; current `ScoreBar.tsx` renders the symbol and translated suit label individually | Resolved in source; browser rendering remains unverified |
+| Layout changes are difficult to reason about | The historical audit counted 4,207 lines in `app.css`; it currently has 3,422 lines and still carries layout overrides | P1: consolidate with visual review |
 | Small text is a readability risk | Root font size is 12.5px, with several labels below 0.7rem; effective sizes depend on later overrides | P1: measure rendered sizes and improve hierarchy |
 | Setup presents many equally weighted decisions | `ActionPanel.tsx` combines names, match length, game length, themes, and difficulty | P1: prioritize starting, progressively reveal customization |
 | Dialog semantics exceed implemented behavior | `ActionPanel.tsx` sets `aria-modal` but has no focus containment or restoration logic | P1: use proper modal behavior or a nonmodal action area |
 | Selection semantics need improvement | Setup pills communicate selection through CSS classes without radio or pressed-state semantics | P1: use accessible single-choice groups |
-| Noninteractive cards use button markup | `PlayingCard.tsx` always returns a button, including displayed cards without an action | P1: separate display cards from playable controls |
+| Noninteractive cards use button markup | `PlayingCard.tsx` now renders display-only cards as labeled images and reserves buttons for cards with an action | Resolved in source; browser rendering remains unverified |
 | History may interrupt reading | `TerminalLog.tsx` resets both scroll positions whenever groups change | P2: preserve reading position and indicate new events |
 | Copy is inconsistent or unclear | Labels include “Revenge,” “Play + Bela,” “MP,” and “GP” | P2: consistent plain-language labels |
 | Motion preference is not handled in app CSS | No `prefers-reduced-motion` rule found in `app.css`; animation timing is also managed in TypeScript | P1: cover both visual and state timing |

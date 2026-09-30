@@ -1,4 +1,4 @@
-import type { Difficulty, GameEvent, GameLength, GameSnapshot, MatchTargetWins, PlayerNameDrafts } from "../../types";
+import type { Difficulty, GameEvent, GameLength, GameSnapshot, MatchTargetWins, PlayerNameDrafts, TrumpChoice } from "../../types";
 import { BelotMatchFacade } from "./belotMatchFacade";
 import type { RandomSource } from "./random";
 import { BrowserRandom } from "./random";
@@ -16,6 +16,7 @@ export class GameSession {
     random: RandomSource = new BrowserRandom()
   ) {
     this.facade = new BelotMatchFacade(random, difficulty);
+    this.broadcastSequence = this.facade.getSnapshot().lastEventSequence;
   }
 
   id() {
@@ -45,8 +46,8 @@ export class GameSession {
     return this.facade.getSnapshot();
   }
 
-  chooseTrump(choice: string) {
-    this.facade.chooseTrump(choice as never);
+  chooseTrump(choice: TrumpChoice) {
+    this.facade.chooseTrump(choice);
     this.broadcastNewEvents();
     return this.facade.getSnapshot();
   }

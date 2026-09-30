@@ -3,7 +3,7 @@ import clubsSymbol from "../assets/suits/clubs.svg";
 import diamondsSymbol from "../assets/suits/diamonds.svg";
 import heartsSymbol from "../assets/suits/hearts.svg";
 import spadesSymbol from "../assets/suits/spades.svg";
-import type { CardView } from "../types";
+import type { CardView, Suit } from "../types";
 
 export interface CardPresentation {
   className: string;
@@ -20,7 +20,7 @@ export interface CardPresentation {
 }
 
 export interface SuitPresentation {
-  choice: string;
+  choice: Suit;
   className: string;
   label: string;
   assetSrc: string;
@@ -51,7 +51,7 @@ export function toCardPresentation(card: CardView): CardPresentation {
       className: "card back",
       label: "",
       assetSrc: cardBack,
-      assetAlt: "Hidden card placeholder",
+      assetAlt: "Hidden card",
       suitName: null,
       hidden: true,
       pipSymbol: "",
@@ -82,13 +82,13 @@ export function toCardPresentation(card: CardView): CardPresentation {
   };
 }
 
-export function toSuitPresentation(choice: string): SuitPresentation {
-  const suit = suitMap[choice as keyof typeof suitMap];
+export function toSuitPresentation(choice: Suit): SuitPresentation {
+  const suit = suitMap[choice];
   return {
     choice,
     className: suit.className,
     label: suit.label,
     assetSrc: suit.assetSrc,
-    assetAlt: `${suit.label} placeholder symbol`
+    assetAlt: `${suit.label} symbol`
   };
 }

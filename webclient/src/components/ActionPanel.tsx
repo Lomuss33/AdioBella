@@ -14,7 +14,8 @@ import type {
   MeldWinnerView,
   PendingAction,
   PlayerNameDrafts,
-  TeamNameDrafts
+  TeamNameDrafts,
+  TrumpChoice
 } from "../types";
 import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
@@ -34,7 +35,7 @@ interface ActionPanelProps {
   onStart: () => void;
   onStartRematch: () => void;
   onOpenSettingsMenu: () => void;
-  onChooseTrump: (choice: string) => void;
+  onChooseTrump: (choice: TrumpChoice) => void;
   onReportMelds: (declare: boolean) => void;
   onAcknowledgeMelds: () => void;
   pendingBelaChoiceCard: CardView | null;
@@ -336,7 +337,7 @@ function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary 
           <strong>{t("matchWinner", { name: summary.winnerName })}</strong>
         </p>
       </div>
-      <div className="match-complete-grid" aria-label={t("Final match score")}>
+      <div className="match-complete-grid" role="group" aria-label={t("Final match score")}>
         <div className="match-complete-team match-complete-team-winner">{summary.winnerName}</div>
         <div className="match-complete-team">{summary.loserName}</div>
         <div className="match-complete-score match-complete-score-winner">{summary.winnerMatchWins}</div>

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     base: mode === "pages" ? "/AdioBella/" : "/",
     plugins: [react()],
     server: {
-      host: "0.0.0.0",
+      host: env.VITE_DEV_HOST || "127.0.0.1",
       port: Number(env.VITE_DEV_PORT || 5174),
       proxy: {
         "/api": {

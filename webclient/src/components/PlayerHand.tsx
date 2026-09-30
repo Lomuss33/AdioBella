@@ -46,7 +46,7 @@ function PlayerHand({
   });
 
   return (
-    <div className="player-hand-area" aria-label={t("Your hand")}>
+    <div className="player-hand-area" role="group" aria-label={t("Your hand")}>
       <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
         <div className="south-inline-status-row">
           <span className="south-inline-side south-inline-left">

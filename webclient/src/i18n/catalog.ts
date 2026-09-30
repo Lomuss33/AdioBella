@@ -557,6 +557,21 @@ export const messages = {
     "Stichgewinner",
     "Pobjednik štiha"
   ],
+  "Trick complete": [
+    "Complete",
+    "Vollständig",
+    "Završen"
+  ],
+  "Trick in progress": [
+    "In progress",
+    "Läuft",
+    "U tijeku"
+  ],
+  "lastTrickBonusSummary": [
+    "Last trick bonus · {points}",
+    "Letzter Stich · {points} Bonus",
+    "Bonus za zadnji štih · {points}"
+  ],
   "Match Feed": [
     "Match Feed",
     "Matchverlauf",
@@ -567,10 +582,45 @@ export const messages = {
     "Matchverlauf",
     "Povijest meča"
   ],
-  "No game or match winners yet.": [
-    "No game or match winners yet.",
-    "Noch keine Spiel- oder Matchsieger.",
-    "Još nema pobjednika partije ili meča."
+  "No hand or game results yet.": [
+    "No hand or game results yet.",
+    "Noch keine Ergebnisse aus Runden oder Spielen.",
+    "Još nema rezultata dijeljenja ili partije."
+  ],
+  "matchGameHeading": [
+    "Game {game}",
+    "Spiel {game}",
+    "Partija {game}"
+  ],
+  "Contract fulfilled": [
+    "Contract made",
+    "Kontrakt erfüllt",
+    "Zvanje ispunjeno"
+  ],
+  "Contract failed": [
+    "Contract failed",
+    "Kontrakt nicht erfüllt",
+    "Zvanje nije ispunjeno"
+  ],
+  "handSettlementContext": [
+    "Dealer: {dealer} · Trump: {trumpPlayer} ({suit}) · Melds: {meldOutcome}",
+    "Geber: {dealer} · Trumpf: {trumpPlayer} ({suit}) · Meldungen: {meldOutcome}",
+    "Dijelio: {dealer} · Adut: {trumpPlayer} ({suit}) · Zvanja: {meldOutcome}"
+  ],
+  "meldAwardSummary": [
+    "{team} +{points}",
+    "{team} +{points}",
+    "{team} +{points}"
+  ],
+  "No melds": [
+    "none",
+    "keine",
+    "nema"
+  ],
+  "handPointsSummary": [
+    "Points: {teamOne} +{teamOnePoints} · {teamTwo} +{teamTwoPoints}",
+    "Punkte: {teamOne} +{teamOnePoints} · {teamTwo} +{teamTwoPoints}",
+    "Bodovi: {teamOne} +{teamOnePoints} · {teamTwo} +{teamTwoPoints}"
   ],
   "Belot table": [
     "Belot table",
@@ -833,14 +883,14 @@ export const messages = {
     "Počinje partija {game}. Dijeli: {player}."
   ],
   "event.HAND_PASSED": [
-    "{team} passed the hand.",
-    "{team} erfüllt den Vertrag.",
-    "{team} prolazi dijeljenje."
+    "{team} made the contract. {teamOne}: +{teamOnePoints} points; {teamTwo}: +{teamTwoPoints} points.",
+    "{team} hat den Kontrakt erfüllt. {teamOne}: +{teamOnePoints} Punkte; {teamTwo}: +{teamTwoPoints} Punkte.",
+    "{team} je ispunio zvanje. {teamOne}: +{teamOnePoints} bodova; {teamTwo}: +{teamTwoPoints} bodova."
   ],
   "event.HAND_FAILED": [
-    "{team} failed the hand. {winner} collected {points} points.",
-    "{team} fällt. {winner} erhält {points} Punkte.",
-    "{team} pada. {winner} dobiva bodove: {points}."
+    "{team} failed the contract. {teamOne}: +{teamOnePoints} points; {teamTwo}: +{teamTwoPoints} points.",
+    "{team} hat den Kontrakt nicht erfüllt. {teamOne}: +{teamOnePoints} Punkte; {teamTwo}: +{teamTwoPoints} Punkte.",
+    "{team} nije ispunio zvanje. {teamOne}: +{teamOnePoints} bodova; {teamTwo}: +{teamTwoPoints} bodova."
   ],
   "event.SESSION_CREATED": [
     "New Belot session created.",

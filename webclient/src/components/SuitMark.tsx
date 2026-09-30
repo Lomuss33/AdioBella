@@ -1,4 +1,6 @@
-export type CardSuit = "CLUBS" | "DIAMONDS" | "HEARTS" | "SPADES";
+import type { Suit } from "../types";
+
+export type CardSuit = Suit;
 
 const marks: Record<CardSuit, string> = {
   CLUBS: "\u2663",

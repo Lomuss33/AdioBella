@@ -1,4 +1,4 @@
-import type { GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts } from "../types";
+import type { Difficulty, GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts, TrumpChoice } from "../types";
 import type { GameGateway } from "./gameGateway";
 
 export class HttpError extends Error {
@@ -36,7 +36,7 @@ export const serverGateway: GameGateway = {
 
   updateLobbySettings(
     sessionId: string,
-    difficulty: string,
+    difficulty: Difficulty,
     playerNamesBySeat: PlayerNameDrafts,
     teamNames: TeamNameDrafts,
     matchTargetWins: MatchTargetWins,
@@ -55,7 +55,7 @@ export const serverGateway: GameGateway = {
     });
   },
 
-  chooseTrump(sessionId: string, choice: string) {
+  chooseTrump(sessionId: string, choice: TrumpChoice) {
     return sendRequest<SessionResponse>(`/api/sessions/${sessionId}/trump`, {
       method: "POST",
       body: JSON.stringify({ choice })
@@ -97,6 +97,9 @@ export const serverGateway: GameGateway = {
 
   subscribe(sessionId: string, afterSequence: number, handlers) {
     const source = new EventSource(`/api/sessions/${sessionId}/stream?afterSequence=${afterSequence}`);
+    source.onopen = () => {
+      handlers.onOpen();
+    };
     source.onmessage = (message) => {
       handlers.onEvent(JSON.parse(message.data) as GameEvent);
     };

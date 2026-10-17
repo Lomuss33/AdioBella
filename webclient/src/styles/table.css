@@ -554,3 +554,51 @@
   .game-layout .terminal-round-group, .game-layout .terminal-match-game { padding: 6px; }
   .game-layout .terminal-play-row { grid-template-columns: 16px minmax(0, 1fr) max-content; gap: 4px; padding-inline: 4px; }
 }
+
+/* Keep the trick score attached to the card area, with a clear, readable marker. */
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
+  top: auto;
+  right: auto;
+  bottom: clamp(3px, 1.2cqh, 12px);
+  left: 50%;
+  display: grid;
+  width: max-content;
+  min-width: 56px;
+  height: auto;
+  min-height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow: 0 2px 5px rgb(0 0 0 / 40%);
+  color: var(--ui-gold-light);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip.pulse {
+  animation: table-trick-points-pulse 260ms ease;
+}
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip.collect-north {
+  transform: translate(-50%, calc(-100% - 1.25rem));
+  opacity: 0;
+}
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip.collect-south {
+  transform: translate(-50%, calc(100% + 1.25rem));
+  opacity: 0;
+}
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip.collect-west {
+  transform: translate(calc(-50% - 8.5rem), 0);
+  opacity: 0;
+}
+.table-arena .arena-play > .trick-pool-shell > .trick-points-chip.collect-east {
+  transform: translate(calc(-50% + 8.5rem), 0);
+  opacity: 0;
+}
+@keyframes table-trick-points-pulse {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-50%, 0) scale(1.1); }
+}

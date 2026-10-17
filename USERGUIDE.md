@@ -45,7 +45,7 @@ The online version keeps the game in the current page's memory. Reloading or clo
 
 The local server version stores a session identifier in your browser and can restore the session while that server still holds it in memory. Restarting the server loses its games.
 
-Language, player and team names, match settings, card style, table color, and interface accent are saved automatically in this browser without a login. These preferences survive reloads; they do not save an online match. Clearing site data removes them, and private browsing or blocked storage may prevent them from being retained. Preferences are specific to the browser and site address.
+Language, player and team names, match settings, card style, table color, and interface accent are saved automatically in this browser without a login. Table color changes the felt and surrounding background. Interface accent changes buttons, selections, highlights, and keyboard focus; menus retain a neutral background. Team and card suit colors stay consistent across combinations. These preferences survive reloads; they do not save an online match. Clearing site data removes them, and private browsing or blocked storage may prevent them from being retained. Preferences are specific to the browser and site address.
 
 Use the square globe button beside the scores to open the language dropup. Choose English, German, Croatian, or automatic browser language.
 

@@ -1,0 +1,102 @@
+/* One layout for both team panels. Fields stay in the foreground; the seating
+   diagram is independent of layout, focus and pointer interaction. */
+.belot-dialog.belot-dialog-setup .team-settings-row {
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 24px repeat(3, minmax(0, 1fr));
+  align-content: stretch;
+  gap: clamp(5px, 1vh, 8px);
+  min-width: 0;
+  padding: clamp(8px, 1.8vw, 14px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--team-tone) 24%, transparent);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+.belot-dialog.belot-dialog-setup .team-settings-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: 1;
+  min-height: 24px;
+  margin: 0;
+  text-align: center;
+  color: var(--team-tone);
+}
+.belot-dialog.belot-dialog-setup .team-settings-label > .panel-caption { display: none; }
+.belot-dialog.belot-dialog-setup .team-settings-label strong {
+  position: relative;
+  z-index: 1;
+  font: 750 11px/1.2 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .15em;
+}
+.belot-dialog.belot-dialog-setup .team-settings-label strong::before { content: none; }
+.belot-dialog.belot-dialog-setup [data-team="your"] .team-settings-label strong { color: #b3f2dd; }
+.belot-dialog.belot-dialog-setup [data-team="opponent"] .team-settings-label strong { color: #ffe1d2; }
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-column: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: max-content minmax(32px, 1fr);
+  align-content: stretch;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  letter-spacing: .04em;
+}
+.belot-dialog.belot-dialog-setup .name-setting-field > .panel-caption {
+  color: #edf5f2;
+  font: 600 clamp(9px, 4.5cqw, 11px)/1.2 "Segoe UI", system-ui, sans-serif;
+  text-align: left;
+  white-space: normal;
+  text-overflow: clip;
+  overflow: visible;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 32%);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 32px;
+  max-height: 56px;
+  align-self: start;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--team-tone) 30%, transparent);
+  border-radius: 8px;
+  background: rgb(7 15 22 / 34%);
+  color: #f1f5f3;
+  font: 600 clamp(14px, 6.5cqw, 16px)/1.2 "Segoe UI", system-ui, sans-serif;
+  text-align: left;
+  caret-color: var(--team-tone);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input::placeholder { color: #d3dfdc; opacity: .9; }
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input:focus {
+  background: rgb(7 15 22 / 48%);
+  border-color: var(--team-tone);
+  outline: 2px solid var(--team-tone);
+  outline-offset: 1px;
+}
+.team-seat-pair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  display: block;
+  width: clamp(150px, 36vw, 260px);
+  max-width: 110%;
+  height: auto;
+  aspect-ratio: 1;
+  opacity: .4;
+  pointer-events: none;
+}
+.team-seat-table { fill: color-mix(in srgb, currentColor 10%, transparent); stroke: currentColor; stroke-opacity: .5; stroke-width: 1; }
+.team-seat-link { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: .45; }
+.team-seat-active { fill: currentColor; }
+.team-seat-other { fill: var(--ui-muted); opacity: .3; }

@@ -129,7 +129,7 @@
 .belot-dialog .setting-pill-theme-green { --swatch: #183e32; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
 .belot-dialog .setting-pill-theme-dark_blue { --swatch: #1b2e40; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
 .belot-dialog .setting-pill-theme-cherry_red { --swatch: #40232b; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
-.belot-dialog .setting-pill-theme-woody_brown { --swatch: #3c3024; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
+.belot-dialog .setting-pill-theme-woody_brown { --swatch: #3d241a; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
 .belot-dialog .setting-pill-theme-fine_black { --swatch: #252927; --section-accent: var(--ui-gold); --section-surface: var(--ui-control); --section-ink: var(--ui-text); }
 .belot-dialog .start-action-row { display: block; }
 .belot-dialog .start-difficulty-group { max-width: 400px; margin-inline: auto; }
@@ -248,7 +248,8 @@
 .belot-dialog-setup .setup-theme-green { --swatch: #34745c; }
 .belot-dialog-setup .setup-theme-dark_blue { --swatch: #355b7a; }
 .belot-dialog-setup .setup-theme-cherry_red { --swatch: #813b4a; }
-.belot-dialog-setup .setup-theme-woody_brown { --swatch: #725539; }
+.belot-dialog-setup .setup-theme-woody_brown { --swatch: #3d241a; }
+.belot-dialog-setup .setup-theme-light_brown { --swatch: #c38b50; }
 .belot-dialog-setup .setup-theme-fine_black { --swatch: #303a36; }
 .belot-dialog-setup .setup-theme-choice[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ui-dialog), 0 0 0 4px var(--ui-gold-light), 0 0 14px color-mix(in srgb, var(--swatch) 50%, transparent); transform: translateY(-1px); }
 .belot-dialog-setup .setup-theme-choice[aria-pressed="true"]::after { content: "\2713"; color: white; font: 700 13px/1 system-ui; text-shadow: 0 1px 4px #000; }

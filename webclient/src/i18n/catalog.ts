@@ -1,5 +1,7 @@
 import { guideMessages } from "./guide";
 export const messages = {
+  "team.yourSeats": ["You and your teammate sit opposite each other", "Dein Partner sitzt dir gegenüber", "Ti i partner sjedite jedno nasuprot drugome"],
+  "team.opponentSeats": ["Your opponents sit to your left and right", "Deine Gegner sitzen links und rechts von dir", "Protivnici sjede s tvoje lijeve i desne strane"],
   ...guideMessages,
   "Language": [
     "Language",
@@ -41,6 +43,26 @@ export const messages = {
     "Ansagen",
     "Zvanja"
   ],
+  "Your melds": [
+    "Your melds",
+    "Deine Ansagen",
+    "Tvoja zvanja"
+  ],
+  "Meld review": [
+    "Meld review",
+    "Ansagenübersicht",
+    "Pregled zvanja"
+  ],
+  "Review your combinations and points, then declare them or pass.": [
+    "Review your combinations and points, then declare them or pass.",
+    "Prüfe deine Kombinationen und Punkte. Sage sie an oder passe.",
+    "Pregledaj kombinacije i bodove pa prijavi zvanja ili preskoči."
+  ],
+  "Review the winning team, its players, and the points before play begins.": [
+    "These are the winning team's melds. Review its players and points before the first trick.",
+    "Das sind die Ansagen des siegreichen Teams. Prüfe Spieler und Punkte vor dem ersten Stich.",
+    "Ovo su zvanja pobjedničkog tima. Pregledaj igrače i bodove prije prvog štiha."
+  ],
   "Bela": [
     "Bela",
     "Bela",
@@ -60,16 +82,6 @@ export const messages = {
     "Choose the trump suit.",
     "Wähle die Trumpffarbe.",
     "Odaberi adut."
-  ],
-  "Declare your melds or keep them hidden.": [
-    "Declare your melds or keep them hidden.",
-    "Sage deine Kombinationen an oder passe.",
-    "Prijavi zvanja ili preskoči."
-  ],
-  "Review the winning melds before the first trick.": [
-    "Review the winning melds before the first trick.",
-    "Prüfe die gewinnenden Ansagen vor dem ersten Stich.",
-    "Pregledaj pobjednička zvanja prije prvog štiha."
   ],
   "Call Bela with this card or play it quietly.": [
     "Call Bela with this card or play it quietly.",
@@ -167,6 +179,8 @@ export const messages = {
     "Burgunderrot",
     "Bordo"
   ],
+  "dark brown": ["dark brown", "Dunkelbraun", "Tamnosmeđa"],
+  "light brown": ["light brown", "Hellbraun", "Svijetlosmeđa"],
   "woody brown": [
     "woody brown",
     "Walnussbraun",
@@ -219,7 +233,7 @@ export const messages = {
   ],
   "Declare melds": [
     "Declare melds",
-    "Ansagen melden",
+    "Ansagen",
     "Prijavi zvanja"
   ],
   "Continue": [
@@ -311,6 +325,16 @@ export const messages = {
     "team",
     "Team",
     "Tim"
+  ],
+  "Combination": [
+    "Combination",
+    "Kombination",
+    "Kombinacija"
+  ],
+  "Combined points": [
+    "Combined points",
+    "Gesamtpunkte",
+    "Ukupno bodova"
   ],
   "Forfeit this game?": [
     "Forfeit this game?",

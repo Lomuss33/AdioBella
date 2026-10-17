@@ -72,6 +72,235 @@
   gap: 14px;
 }
 
+/* Meld declaration and review use a compact player summary followed by distinct
+   meld cards, so scores and card combinations scan as one clear unit. */
+.belot-dialog-meld-action .popup-content {
+  overflow-x: hidden;
+  padding: clamp(12px, 2.2vw, 18px);
+}
+.belot-dialog-meld-action .action-popup-header {
+  width: min(100%, 440px);
+  justify-self: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ui-line);
+  text-align: center;
+  justify-items: center;
+}
+.belot-dialog-meld-action .start-heading-row { display: block; width: 100%; }
+.belot-dialog-meld-action .start-heading-copy {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.belot-dialog-meld-action .action-popup-title {
+  width: auto;
+  font-size: clamp(24px, 3.4vw, 28px);
+}
+.belot-dialog-meld-action .action-popup-subtitle {
+  width: auto;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.belot-dialog-meld-action .meld-popup-body {
+  gap: 10px;
+  justify-items: stretch;
+  text-align: left;
+}
+.belot-dialog-meld-action .meld-popup-stack {
+  display: grid;
+  justify-items: stretch;
+  width: min(100%, 440px);
+  justify-self: center;
+  gap: 5px;
+  text-align: left;
+}
+.belot-dialog-meld-action .meld-popup-player-block {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.belot-dialog-meld-action .meld-player-summary,
+.belot-dialog-meld-action .meld-team-summary,
+.belot-dialog-meld-action .meld-winner-team-summary {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ui-line);
+  border-radius: 0;
+  background: none;
+}
+.belot-dialog-meld-action .meld-team-summary,
+.belot-dialog-meld-action .meld-winner-team-summary {
+  justify-content: center;
+  border-bottom-color: color-mix(in srgb, var(--ui-gold) 48%, var(--ui-line));
+}
+.belot-dialog-meld-action .meld-player-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-block: 8px;
+}
+.belot-dialog-meld-action .meld-player-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-width: 0;
+  gap: 7px;
+}
+.belot-dialog-meld-action .meld-player-identity > span,
+.belot-dialog-meld-action .meld-team-identity > span,
+.belot-dialog-meld-action .meld-combination-name > span {
+  color: var(--ui-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.belot-dialog-meld-action .meld-player-identity strong,
+.belot-dialog-meld-action .meld-team-identity strong {
+  min-width: 0;
+  color: var(--ui-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.belot-dialog-meld-action .meld-player-total {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 6px;
+  margin-left: 0;
+  color: var(--ui-gold-light);
+  white-space: nowrap;
+}
+.belot-dialog-meld-action .meld-player-total strong {
+  font: 600 23px/1 Georgia, serif;
+  font-variant-numeric: tabular-nums;
+}
+.belot-dialog-meld-action .meld-player-total span {
+  color: var(--ui-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.belot-dialog-meld-action .meld-team-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 0;
+  gap: 7px;
+}
+.belot-dialog-meld-action .meld-combination-list {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 3px;
+}
+.belot-dialog-meld-action .meld-combination-block {
+  display: grid;
+  justify-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: center;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 2px 8px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-line) 72%, transparent);
+  border-radius: 0;
+  background: none;
+}
+.belot-dialog-meld-action .meld-combination-block:last-child { border-bottom: 0; }
+.belot-dialog-meld-action .meld-combination-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.belot-dialog-meld-action .meld-combination-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-width: 0;
+  gap: 8px;
+}
+.belot-dialog-meld-action .meld-combination-name strong {
+  color: var(--ui-text);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.belot-dialog-meld-action .meld-combination-points {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ui-gold-light);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.belot-dialog-meld-action .meld-card-row {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+}
+.belot-dialog-meld-action .meld-card-row .playing-card-shell {
+  flex: 0 0 clamp(48px, 9vw, 62px);
+  width: clamp(48px, 9vw, 62px);
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1 / var(--playing-card-height-factor, 1.44);
+  pointer-events: none;
+  opacity: 1;
+}
+.belot-dialog-meld-action .meld-card-row .playing-card-face {
+  width: 100%;
+  height: 100%;
+}
+.belot-dialog-meld-action .meld-card-row .playing-card-corner-bottom {
+  display: none;
+}
+.belot-dialog-meld-action .meld-details-note {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--ui-line);
+  border-radius: 12px;
+  color: var(--ui-muted);
+  text-align: center;
+}
+.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block {
+  width: 100%;
+  padding-block: 5px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-line) 68%, transparent);
+}
+.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block:last-child { border-bottom: 0; }
+
 .belot-dialog .popup-footer {
   display: flex;
   flex: 0 0 auto;
@@ -163,10 +392,11 @@
 .belot-dialog-trump .suit-choice-button:active { transform: translateY(0); }
 .belot-dialog-trump .suit-choice-button[data-suit="HEARTS"],
 .belot-dialog-trump .suit-choice-button[data-suit="DIAMONDS"] { color: var(--card-red); }
-.belot-dialog-trump .suit-choice-visual { display: grid; width: 40px; height: 40px; place-items: center; background: none; }
+.belot-dialog-trump .suit-choice-visual { display: grid; width: clamp(52px, 13cqw, 72px); height: clamp(52px, 13cqw, 72px); place-items: center; background: none; }
+.belot-dialog-trump .suit-choice-visual .deck-suit-mark { display: block; font-size: clamp(48px, 12cqw, 68px); font-weight: 800; line-height: .82; }
 .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { display: block; width: auto; max-width: 26px; height: 36px; object-fit: contain; }
 .belot-dialog-trump .suit-choice-label { color: currentColor; font: 750 11px/1.2 "Segoe UI", system-ui, sans-serif; letter-spacing: .1em; text-align: center; text-transform: uppercase; }
-.belot-dialog-trump .suit-choice-skip-icon { display: block; width: 22px; height: 22px; }
+.belot-dialog-trump .suit-choice-skip-icon { display: block; width: 48px; height: 48px; color: currentColor; }
 .belot-dialog-trump .suit-choice-skip {
   grid-column: auto;
   justify-self: center;
@@ -215,8 +445,9 @@
   .belot-dialog-trump .popup-content { padding: 18px 16px 12px; }
   .belot-dialog-trump .popup-footer.trump-controls { gap: 6px; padding: 6px 14px 12px; }
   .belot-dialog-trump .suit-choice-button { min-height: 66px; padding: 6px 3px; }
-  .belot-dialog-trump .suit-choice-visual { width: 34px; height: 34px; }
-  .belot-dialog-trump .suit-choice-skip-icon { width: 20px; height: 20px; }
+  .belot-dialog-trump .suit-choice-visual { width: 48px; height: 48px; }
+  .belot-dialog-trump .suit-choice-visual .deck-suit-mark { font-size: 46px; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 44px; height: 44px; }
   .belot-dialog-trump .suit-choice-skip { min-height: 66px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 22px; height: 32px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; letter-spacing: .06em; }
@@ -548,7 +779,8 @@
   .belot-dialog-trump .action-popup-header { margin-bottom: 0; }
   .belot-dialog-trump .popup-footer.trump-controls { gap: 4px; padding: 5px 9px 8px; }
   .belot-dialog-trump .suit-choice-button { min-height: 58px; gap: 4px; padding: 4px 2px; border-radius: 8px; }
-  .belot-dialog-trump .suit-choice-visual { width: 28px; height: 28px; }
+  .belot-dialog-trump .suit-choice-visual { width: 42px; height: 42px; }
+  .belot-dialog-trump .suit-choice-visual .deck-suit-mark { font-size: 40px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 19px; height: 26px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; line-height: 1.15; letter-spacing: .04em; }
   .belot-dialog-trump .suit-choice-skip { min-height: 34px; }
@@ -662,10 +894,11 @@
 @container trump-choice (max-width: 390px) {
   .belot-dialog-trump .popup-footer.trump-controls { gap: 4px; padding-inline: 10px; }
   .belot-dialog-trump .suit-choice-button { min-height: 0; gap: 3px; padding: 4px; border-radius: 10px; }
-  .belot-dialog-trump .suit-choice-visual { width: 27px; height: 27px; }
+  .belot-dialog-trump .suit-choice-visual { width: 44px; height: 44px; }
+  .belot-dialog-trump .suit-choice-visual .deck-suit-mark { font-size: 42px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 19px; height: 25px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; letter-spacing: .04em; }
-  .belot-dialog-trump .suit-choice-skip-icon { width: 18px; height: 18px; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 40px; height: 40px; }
 }
 
 @container trump-choice (max-width: 330px) {
@@ -678,8 +911,9 @@
   .belot-dialog-trump .popup-content { padding-block: 8px 5px; }
   .belot-dialog-trump .popup-footer.trump-controls { gap: 5px; padding-block: 5px 8px; }
   .belot-dialog-trump .suit-choice-button { min-height: 0; padding-block: 4px; }
-  .belot-dialog-trump .suit-choice-visual { width: 30px; height: 30px; }
-  .belot-dialog-trump .suit-choice-skip-icon { width: 18px; height: 18px; }
+  .belot-dialog-trump .suit-choice-visual { width: 40px; height: 40px; }
+  .belot-dialog-trump .suit-choice-visual .deck-suit-mark { font-size: 38px; }
+  .belot-dialog-trump .suit-choice-skip-icon { width: 38px; height: 38px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 20px; height: 28px; }
   .belot-dialog-trump .suit-choice-skip { min-height: 0; }
 }
@@ -690,8 +924,157 @@
   .belot-dialog-trump .action-popup-subtitle { font-size: 11px; }
   .belot-dialog-trump .popup-footer.trump-controls { gap: 3px; padding-block: 3px 5px; }
   .belot-dialog-trump .suit-choice-button { aspect-ratio: auto; min-height: 48px; padding-block: 3px; }
-  .belot-dialog-trump .suit-choice-visual { width: 25px; height: 25px; }
+  .belot-dialog-trump .suit-choice-visual { width: 34px; height: 34px; }
+  .belot-dialog-trump .suit-choice-visual .deck-suit-mark { font-size: 32px; }
   .belot-dialog-trump .popup-footer.trump-controls .suit-choice-visual img { max-width: 17px; height: 23px; }
   .belot-dialog-trump .suit-choice-label { font-size: 9px; }
   .belot-dialog-trump .suit-choice-skip { aspect-ratio: auto; min-height: 48px; }
+}
+
+
+/* Setup details: distinct team palettes, legible numerals and a complete locale control. */
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="your"] {
+  --team-tone: #79dfc0;
+  --team-surface: #123b35;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="opponent"] {
+  --team-tone: #f4c8b6;
+  --team-surface: #402b37;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row {
+  border-color: color-mix(in srgb, var(--team-tone) 42%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--team-tone) 13%, var(--team-surface)), var(--team-surface));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 4px 14px rgb(0 0 0 / 12%);
+}
+.belot-dialog.belot-dialog-setup .team-settings-label strong { color: var(--team-tone); }
+.belot-dialog.belot-dialog-setup .name-setting-field .panel-caption {
+  color: color-mix(in srgb, var(--team-tone) 72%, white);
+}
+.belot-dialog.belot-dialog-setup .name-setting-field input {
+  min-height: 36px;
+  padding: 7px 9px;
+  font-size: 14px;
+  line-height: 1.25;
+  border-color: color-mix(in srgb, var(--team-tone) 30%, transparent);
+  background: rgb(7 15 22 / 34%);
+  color: #f1f5f3;
+}
+.belot-dialog.belot-dialog-setup .name-setting-field input::placeholder {
+  color: #d3dfdc;
+  opacity: .9;
+}
+.belot-dialog.belot-dialog-setup .name-setting-field input:focus {
+  border-color: var(--team-tone);
+  background: rgb(7 15 22 / 48%);
+}
+.belot-dialog.belot-dialog-setup .match-length-choices button {
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.belot-dialog.belot-dialog-setup .start-heading-row {
+  position: relative;
+  min-height: 40px;
+  padding-inline: 80px;
+}
+.belot-dialog.belot-dialog-setup .setup-toolbar .language-select {
+  top: 50%;
+  left: 0;
+  right: auto;
+  bottom: auto;
+  transform: translateY(-50%);
+  display: block;
+}
+.belot-dialog.belot-dialog-setup .language-flag-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  min-width: 74px;
+  height: 36px;
+  padding: 7px 9px;
+  border-color: color-mix(in srgb, var(--ui-gold-light) 32%, var(--ui-line));
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ui-gold) 14%, var(--ui-solid)), var(--ui-solid));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%);
+}
+.belot-dialog-setup .language-code { color: var(--ui-text); font: 700 12px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .04em; }
+.belot-dialog-setup .language-flag-chevron { flex: 0 0 13px; width: 13px; height: 13px; color: var(--ui-gold-light); transition: transform 140ms ease; }
+.belot-dialog-setup .language-flag-trigger[aria-expanded="true"] .language-flag-chevron { transform: rotate(180deg); }
+.belot-dialog.belot-dialog-setup .setup-toolbar .table-square-button { top: 50%; right: 0; transform: translateY(-50%); }
+.belot-dialog.belot-dialog-setup .language-flag-options {
+  top: calc(100% + 8px);
+  width: 210px;
+  max-width: calc(100vw - 40px);
+  padding: 5px;
+  border-color: color-mix(in srgb, var(--ui-gold-light) 32%, var(--ui-line));
+  border-radius: 12px;
+  background: var(--ui-dialog);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 48%);
+}
+.belot-dialog.belot-dialog-setup .language-flag-options button {
+  grid-template-columns: 24px minmax(0, 1fr) 16px;
+  min-height: 38px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+@media (max-width: 380px), (max-height: 520px) {
+  .belot-dialog.belot-dialog-setup .match-length-choices button { font-size: 21px; }
+  .belot-dialog.belot-dialog-setup .start-heading-row { padding-inline: 72px; min-height: 36px; }
+  .belot-dialog.belot-dialog-setup .language-flag-trigger { min-width: 66px; height: 32px; gap: 5px; padding: 5px 7px; }
+}
+
+/* Text and numeric options share their spacing, with larger score values. */
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-segment-control button {
+  min-height: 36px;
+  padding: 6px 5px;
+  color: #d9e3e2;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-segment-numeric button {
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+.belot-dialog.belot-dialog-setup .match-length-choices {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.belot-dialog.belot-dialog-setup .match-length-choices button {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) button[aria-pressed="true"] {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ui-gold) 35%, var(--ui-solid)), color-mix(in srgb, var(--ui-gold) 20%, var(--ui-solid)));
+  color: var(--ui-focus);
+  border-color: var(--ui-gold-light);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 2px 5px rgb(0 0 0 / 16%);
+}
+.belot-dialog.belot-dialog-setup .language-flag-trigger .language-flag-icon { flex-shrink: 0; width: 22px; height: 16px; }
+.belot-dialog.belot-dialog-setup .popup-content { overflow-y: auto; overflow-x: hidden; }
+@media (max-width: 540px) {
+  .belot-dialog.belot-dialog-setup .name-setting-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    font-size: 9px;
+    letter-spacing: .05em;
+  }
+  .belot-dialog.belot-dialog-setup .name-setting-field > .panel-caption {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+  .belot-dialog.belot-dialog-setup .team-settings-row { gap: 9px; padding: 10px; }
+}
+@media (max-height: 500px) and (min-width: 541px) {
+  .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 30px; padding-block: 4px; }
 }

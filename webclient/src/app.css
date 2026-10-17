@@ -32,6 +32,18 @@ html {
   min-height: 100%;
   background-color: var(--page-bottom);
   color-scheme: dark;
+  cursor: default;
+  caret-color: transparent;
+}
+
+/* Show typing indicators only in editable controls, including inside dialogs. */
+:where(input, textarea, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"]) {
+  cursor: auto;
+  caret-color: auto;
+}
+
+:where(button:enabled, a[href], [role="button"]:not([aria-disabled="true"])) {
+  cursor: pointer;
 }
 
 body {

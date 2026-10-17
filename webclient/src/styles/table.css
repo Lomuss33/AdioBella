@@ -602,3 +602,18 @@
   0%, 100% { transform: translate(-50%, 0) scale(1); }
   50% { transform: translate(-50%, 0) scale(1.1); }
 }
+@media (min-width: 701px) {
+  /* Give the points their own clear lane below the played cards. */
+  .table-arena .arena-play > .trick-pool-shell > .trick-pool {
+    bottom: 38px;
+    height: auto;
+  }
+  .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
+    bottom: 0;
+  }
+}
+@media (max-width: 700px) {
+  .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
+    bottom: calc(-1 * clamp(4px, 1.5svh, 10px));
+  }
+}

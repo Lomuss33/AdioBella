@@ -416,6 +416,16 @@ export const messages = {
     "Trumpf",
     "Adut"
   ],
+  "Trump": [
+    "Trump",
+    "Trumpf",
+    "Adut"
+  ],
+  "Trump not chosen yet": [
+    "Trump not chosen yet",
+    "Trumpf noch nicht gewählt",
+    "Adut još nije odabran"
+  ],
   "spades": [
     "spades",
     "Pik",

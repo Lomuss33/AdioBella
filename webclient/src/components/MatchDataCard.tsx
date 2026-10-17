@@ -8,21 +8,38 @@ import { usePopupDialog } from "../lib/usePopupDialog";
 export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
   const [showMelds, setShowMelds] = useState(false);
   const score = snapshot?.score;
+  const gameTitle = t("gameNumber", { count: score?.gameNumber || "—" });
+  const difficulty = tr((score?.difficulty ?? "NORMAL").toLowerCase());
+  const targetWins = t("firstTo", { count: score?.matchTargetWins ?? 3 });
+  const targetPoints = countText("points", score?.gameTargetPoints ?? 1001);
   return (
     <>
       <button
         type="button"
         className="match-data-card"
         aria-haspopup="dialog"
+        aria-expanded={showMelds}
+        aria-label={`${t("Meld details")}: ${gameTitle}, ${difficulty}, ${targetWins}, ${targetPoints}`}
         title={t("Meld details")}
         onClick={() => setShowMelds(true)}
       >
         <span className="match-summary">
-          <span className="match-summary-title">{t("gameNumber", { count: score?.gameNumber || "—" })}</span>
-          <span>{tr((score?.difficulty ?? "NORMAL").toLowerCase())}</span>
-          <span>{t("firstTo", { count: score?.matchTargetWins ?? 3 })}</span>
-          <span>{countText("points", score?.gameTargetPoints ?? 1001)}</span>
+          <span className="match-summary-heading">
+            <strong className="match-summary-title">{gameTitle}</strong>
+            <span className="match-summary-mode">{difficulty}</span>
+          </span>
+          <span className="match-summary-stat" title={targetWins}>
+            <small>{t("Match length")}</small>
+            <strong>{targetWins}</strong>
+          </span>
+          <span className="match-summary-stat">
+            <small>{t("Game length")}</small>
+            <strong>{targetPoints}</strong>
+          </span>
         </span>
+        <svg className="match-summary-open" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 6h10M3 12h7M3 18h10M17 8l4 4-4 4" />
+        </svg>
       </button>
       {showMelds && createPortal(
         <MeldDetails melds={score?.meldDeclarations ?? []} onClose={() => setShowMelds(false)} />,

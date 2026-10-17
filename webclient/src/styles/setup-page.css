@@ -1,0 +1,233 @@
+/* Setup is a full-screen destination; in-game dialogs keep their own layout. */
+.belot-dialog.belot-dialog-setup {
+  padding: 0;
+  background: var(--ui-dialog);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.belot-dialog.belot-dialog-setup[open] { display: block; }
+.belot-dialog.belot-dialog-setup .popup-card {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100%;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.belot-dialog.belot-dialog-setup .popup-content {
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: clamp(8px, 1.5vh, 16px);
+  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+  overflow: auto;
+}
+.belot-dialog.belot-dialog-setup :is(.action-popup-header, .action-popup-body) {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  flex: 0 0 auto;
+}
+.belot-dialog.belot-dialog-setup .start-heading-row {
+  display: grid;
+  width: 100%;
+  justify-self: stretch;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(40px, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0;
+}
+.belot-dialog.belot-dialog-setup .start-heading-copy {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+.belot-dialog.belot-dialog-setup .setup-toolbar { display: contents; }
+.belot-dialog.belot-dialog-setup .setup-toolbar .language-select {
+  position: relative;
+  inset: auto;
+  transform: none;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+.belot-dialog.belot-dialog-setup .setup-toolbar .table-square-button {
+  position: static;
+  transform: none;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+.belot-dialog.belot-dialog-setup .language-flag-trigger {
+  min-width: 0;
+  height: 38px;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--ui-text) 16%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--ui-text) 5%, transparent);
+  box-shadow: none;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.belot-dialog.belot-dialog-setup .language-flag-trigger:hover,
+.belot-dialog.belot-dialog-setup .language-flag-trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--ui-gold-light) 55%, transparent);
+  background: color-mix(in srgb, var(--ui-gold) 12%, var(--ui-solid));
+}
+.belot-dialog.belot-dialog-setup .language-code { font-weight: 650; letter-spacing: .05em; }
+.belot-dialog.belot-dialog-setup .language-flag-chevron { width: 12px; height: 12px; flex-basis: 12px; color: var(--ui-muted); }
+.belot-dialog.belot-dialog-setup .language-flag-icon { border: 0; border-radius: 3px; box-shadow: none; }
+.belot-dialog.belot-dialog-setup .language-flag-options {
+  width: 232px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--ui-text) 16%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ui-solid) 96%, #fff);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+}
+.belot-dialog.belot-dialog-setup .language-menu-heading {
+  padding: 7px 10px 9px;
+  color: var(--ui-muted);
+  font: 650 10px/1.2 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: left;
+}
+.belot-dialog.belot-dialog-setup .language-flag-options button {
+  min-height: 42px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 550;
+  transition: background 140ms ease;
+}
+.belot-dialog.belot-dialog-setup .language-flag-options button:first-of-type {
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--ui-line);
+  border-radius: 8px 8px 0 0;
+}
+.belot-dialog.belot-dialog-setup .language-flag-options button[aria-pressed="true"] {
+  color: var(--ui-focus);
+  background: color-mix(in srgb, var(--ui-gold) 17%, transparent);
+}
+.belot-dialog.belot-dialog-setup .language-option-check {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  font-size: 11px;
+}
+.belot-dialog.belot-dialog-setup .language-option-check.is-selected {
+  color: var(--ui-ink);
+  background: var(--ui-gold-light);
+}
+.belot-dialog.belot-dialog-setup .action-popup-body { gap: 12px; }
+.belot-dialog.belot-dialog-setup .team-settings-grid { gap: 12px; }
+.belot-dialog.belot-dialog-setup .team-settings-row {
+  border: 0;
+  padding: 12px;
+  box-shadow: none;
+}
+.belot-dialog.belot-dialog-setup .setup-options-grid { gap: 6px; }
+.belot-dialog.belot-dialog-setup .setup-options-row { gap: 24px; }
+.belot-dialog.belot-dialog-setup .setup-options-row > * {
+  padding: 5px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.belot-dialog.belot-dialog-setup .popup-footer {
+  width: 100%;
+  padding: 8px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  border: 0;
+  background: var(--ui-dialog);
+}
+.belot-dialog.belot-dialog-setup .popup-footer .action-button-primary {
+  width: 100%;
+  max-width: 480px;
+  min-height: 46px;
+  flex: 1 1 auto;
+}
+@media (max-width: 540px) {
+  .belot-dialog.belot-dialog-setup .action-popup-title { font-size: clamp(20px, 5vw, 26px); }
+  .belot-dialog.belot-dialog-setup .start-heading-row { gap: 8px; }
+  .belot-dialog.belot-dialog-setup .team-settings-grid { gap: 12px; }
+  .belot-dialog.belot-dialog-setup .team-settings-row { padding: 10px; gap: 6px; }
+  .belot-dialog.belot-dialog-setup .setup-options-row { gap: 16px; }
+}
+@media (max-width: 350px) {
+  .belot-dialog.belot-dialog-setup .language-flag-trigger { gap: 4px; padding-inline: 7px; }
+  .belot-dialog.belot-dialog-setup .language-flag-trigger .language-flag-icon { width: 18px; height: 13px; }
+
+}
+
+@media (max-width: 400px) {
+  .belot-dialog.belot-dialog-setup .setup-options-row .setup-segment-control:not(.setup-segment-numeric) button {
+    padding-inline: 2px;
+    font-size: 12px;
+    letter-spacing: -.02em;
+  }
+}
+@media (max-width: 350px) {
+  .belot-dialog.belot-dialog-setup .setup-options-row .setup-segment-control:not(.setup-segment-numeric) button { font-size: 11px; }
+}
+
+.belot-dialog.belot-dialog-setup .action-popup-header { justify-items: stretch; }
+@media (max-width: 540px) {
+  .belot-dialog.belot-dialog-setup .team-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 34px; padding: 6px 8px; }
+}
+@media (max-height: 620px) {
+  .belot-dialog.belot-dialog-setup .popup-content { gap: 8px; padding-block: 8px; }
+  .belot-dialog.belot-dialog-setup .start-heading-row { min-height: 38px; }
+  .belot-dialog.belot-dialog-setup .action-popup-body { gap: 8px; }
+  .belot-dialog.belot-dialog-setup .team-settings-row { padding: 8px; gap: 5px; }
+  .belot-dialog.belot-dialog-setup .name-setting-field input { min-height: 32px; padding-block: 5px; }
+  .belot-dialog.belot-dialog-setup .setup-options-grid { gap: 4px; }
+  .belot-dialog.belot-dialog-setup .setup-options-row > * { min-height: 0; padding-block: 3px; gap: 4px; }
+  .belot-dialog.belot-dialog-setup .popup-footer { padding-top: 5px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+}
+
+/* Keep the accent and table-color settings on the same caption and control grid. */
+.belot-dialog.belot-dialog-setup .setup-options-row > .appearance-accent-setting,
+.belot-dialog.belot-dialog-setup .setup-options-row > .appearance-table-colors {
+  grid-template-rows: 10px 44px;
+  align-content: center;
+  gap: 3px;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row > .appearance-accent-setting > span,
+.belot-dialog.belot-dialog-setup .setup-options-row > .appearance-table-colors > span {
+  display: flex;
+  height: 10px;
+  min-height: 10px;
+  align-items: center;
+  justify-content: center;
+  line-height: 10px;
+  white-space: nowrap;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .accent-color-choices,
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-theme-buttons {
+  height: 44px;
+  min-height: 44px;
+  align-self: stretch;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-theme-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 4px 5px;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .accent-color-choice,
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-theme-choice {
+  height: 20px;
+  min-height: 20px;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row .setup-theme-choice {
+  flex: 0 0 calc((100% - 10px) / 3);
+}

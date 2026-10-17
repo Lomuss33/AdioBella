@@ -1,3 +1,4 @@
+import { accentPalettes, tablePalettes } from "../lib/appearanceTheme";
 import type { CSSProperties } from "react";
 import { t, tr } from "../i18n";
 import type { MessageKey } from "../i18n/catalog";
@@ -21,14 +22,6 @@ const accentLabels: Record<VisualSettings["accent"], MessageKey> = {
   gold: "book.gold",
   silver: "book.silver",
   copper: "book.copper"
-};
-const accentSwatches: Record<VisualSettings["accent"], string> = {
-  purple: "#8665c8",
-  azure: "#4f92c8",
-  jade: "#3f9b78",
-  gold: "#b99a60",
-  silver: "#a9b6bc",
-  copper: "#bc9279"
 };
 
 const deckPreviewCards = [
@@ -68,7 +61,7 @@ export function CardStylePicker({ value, onChange }: { value: VisualSettings["ca
 export function AccentColorPicker({ value, onChange }: { value: VisualSettings["accent"]; onChange: (value: VisualSettings["accent"]) => void }) {
   return <div className="appearance-setting appearance-accent-setting"><span>{t("book.accent")}</span>
     <div className="accent-color-choices" role="group" aria-label={t("book.accent")}>
-      {ACCENT_COLORS.map(accent => <button key={accent} type="button" className="accent-color-choice" style={{ "--accent-swatch": accentSwatches[accent] } as CSSProperties} title={t(accentLabels[accent])} aria-label={t(accentLabels[accent])} aria-pressed={value === accent} onClick={() => onChange(accent)} />)}
+      {ACCENT_COLORS.map(accent => <button key={accent} type="button" className="accent-color-choice" style={{ "--accent-swatch": accentPalettes[accent].swatch } as CSSProperties} title={t(accentLabels[accent])} aria-label={t(accentLabels[accent])} aria-pressed={value === accent} onClick={() => onChange(accent)} />)}
     </div>
   </div>;
 }
@@ -77,8 +70,8 @@ export function TableColorPicker({ value, onChange }: { value: TableTheme; onCha
   return <div className="appearance-setting appearance-table-colors"><span>{t("table color")}</span>
     <div className="setup-theme-buttons" role="group" aria-label={t("table color")}>
       {([
-        { value: "GREEN", label: "green" }, { value: "DARK_BLUE", label: "dark blue" }, { value: "CHERRY_RED", label: "cherry red" }, { value: "WOODY_BROWN", label: "woody brown" }, { value: "FINE_BLACK", label: "fine black" }
-      ] as const).map(theme => <button key={theme.value} type="button" className={`setup-theme-choice setup-theme-${theme.value.toLowerCase()}`} title={tr(theme.label)} aria-label={tr(theme.label)} aria-pressed={value === theme.value} onClick={() => onChange(theme.value)} />)}
+        { value: "GREEN", label: "green" }, { value: "DARK_BLUE", label: "dark blue" }, { value: "CHERRY_RED", label: "cherry red" }, { value: "WOODY_BROWN", label: "dark brown" }, { value: "LIGHT_BROWN", label: "light brown" }, { value: "FINE_BLACK", label: "fine black" }
+      ] as const).map(theme => <button key={theme.value} type="button" className={`setup-theme-choice setup-theme-${theme.value.toLowerCase()}`} style={{ "--swatch": tablePalettes[theme.value].swatch } as CSSProperties} title={tr(theme.label)} aria-label={tr(theme.label)} aria-pressed={value === theme.value} onClick={() => onChange(theme.value)} />)}
     </div>
   </div>;
 }

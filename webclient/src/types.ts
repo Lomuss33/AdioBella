@@ -6,7 +6,7 @@ export type Rank = "SEVEN" | "EIGHT" | "NINE" | "TEN" | "JACK" | "QUEEN" | "KING
 export type TrumpChoice = Suit | "SKIP";
 export type GameLength = "SHORT" | "LONG";
 export type MatchTargetWins = 1 | 3 | 5;
-export type TableTheme = "GREEN" | "DARK_BLUE" | "CHERRY_RED" | "WOODY_BROWN" | "FINE_BLACK";
+export type TableTheme = "GREEN" | "DARK_BLUE" | "CHERRY_RED" | "WOODY_BROWN" | "LIGHT_BROWN" | "FINE_BLACK";
 
 export interface CardView {
   suit: string | null;

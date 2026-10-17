@@ -9,6 +9,7 @@ export default function LanguageSelect() {
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const active = preference === "auto" ? locale : preference;
   const options: { value: Flag; label: string }[] = [
     { value: "auto", label: t("Automatic (browser)") },
@@ -27,15 +28,21 @@ export default function LanguageSelect() {
   }, [open]);
 
   return <div className="language-select language-flag-select" onKeyDown={event => {
-    if (event.key === "Escape") setOpen(false);
+    if (event.key === "Escape" && open) {
+      event.stopPropagation();
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
   }} ref={ref}>
-    <button type="button" className="language-flag-trigger" aria-label={`${t("Language")}: ${options.find(option => option.value === preference)?.label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
-      <FlagIcon language={active} /><span className="language-flag-chevron" aria-hidden="true">&#x2304;</span>
+    <button ref={triggerRef} type="button" className="language-flag-trigger" aria-label={`${t("Language")}: ${options.find(option => option.value === preference)?.label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
+      <FlagIcon language={active} /><span className="language-code" aria-hidden="true">{active.toUpperCase()}</span><svg className="language-flag-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </button>
     {open && <div id={id} className="language-flag-options" role="group" aria-label={t("Language")}>
+      <div className="language-menu-heading" aria-hidden="true">{t("Language")}</div>
       {options.map(option => <button key={option.value} type="button" lang={option.value === "auto" ? undefined : option.value} aria-pressed={preference === option.value} onClick={() => {
         if (isPreference(option.value)) setLanguage(option.value);
         setOpen(false);
+        triggerRef.current?.focus();
       }}><span className="language-option-flag" aria-hidden="true">{option.value === "auto" ? <span className="language-auto-icon">◉</span> : <FlagIcon language={option.value} />}</span><span>{option.label}</span><span className={`language-option-check ${preference === option.value ? "is-selected" : ""}`} aria-hidden="true"></span></button>)}
     </div>}
   </div>;

@@ -42,10 +42,13 @@ The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/
 | App layout and themes | [app.css](../webclient/src/app.css) |
 | Active table and terminal layout | [table.css](../webclient/src/styles/table.css); one responsive seat layout, theme-colored felt, and team-colored scores |
 | Responsive popups and confirmations | [popups.css](../webclient/src/styles/popups.css), [usePopupDialog.ts](../webclient/src/lib/usePopupDialog.ts), [ConfirmPopup.tsx](../webclient/src/components/ConfirmPopup.tsx) |
+| Full-screen match setup and header layout | [setup-page.css](../webclient/src/styles/setup-page.css), loaded after the dialog styles; header controls occupy separate grid columns and the setup content scrolls above the start button |
 | Runtime selection and Pages path | [.env.pages](../webclient/.env.pages), [vite.config.ts](../webclient/vite.config.ts) |
 | Frontend packaging into Spring Boot | [server/build.gradle.kts](../server/build.gradle.kts) |
 
 ## Presentation conventions
+
+Color palettes live in `webclient/src/lib/appearanceTheme.ts`. Table color owns the felt gradient and surrounding page background; interface accent owns actions, selected controls, decorative highlights, and keyboard focus. App applies their separate CSS variables before paint. Dialogs and control surfaces use fixed neutral materials from `tokens.css`, so changing the table cannot recolor the interface. Team identities and card suit colors remain independent of both settings. Picker swatches use the same palette definitions as the actual theme, with neutral selection badges. `appearanceTheme.test.ts` checks color contrast and variable ownership across all 36 combinations.
 
 Card CSS uses `playingCards`, `card`, and `card back`; suits use `clubs`, `diams`, `hearts`, and `spades`. Rank classes run from `rank-7` through `rank-a` for the Belot deck. Keep these conventions stable unless updating the presentation layer together.
 
@@ -57,4 +60,4 @@ Keep rules and action validation in the engines, session lifecycle in session cl
 
 ## Localization
 
-The client locale store in `webclient/src/i18n/index.ts` resolves and persists `auto`, `en`, `de`, or `hr` independently of sessions and gameplay settings. App subscribes without remounting the game tree. The starting dialog uses `LanguageSelect`; all three catalogs ship together for offline browser play. `presentation.ts` translates stable event/error/meld data at render time, so history can follow a locale change. Keep enum values, card identity, names, and numeric game state untranslated. See [localization design and implementation](localization-plan.md) for compatibility and validation details.
+The client locale store in `webclient/src/i18n/index.ts` resolves and persists `auto`, `en`, `de`, or `hr` independently of sessions and gameplay settings. App subscribes without remounting the game tree. The starting dialog uses `LanguageSelect`; all three catalogs ship together for offline browser play. `presentation.ts` translates stable event/error/meld data at render time, so history can follow a locale change. Keep enum values, card identity, user-entered names, and numeric game state untranslated. Player and team defaults live in `webclient/src/i18n/defaultNames.ts` and follow the setup locale. Empty name fields show these defaults as placeholders; only user drafts are stored in preferences, so changing language never replaces a custom entry. The shared UI sends resolved names through either gateway before starting a match; names remain fixed during play. See [localization design and implementation](localization-plan.md) for compatibility and validation details.

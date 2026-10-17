@@ -32,3 +32,16 @@ test("keeps settings usable and reports when browser storage is unavailable", ()
   expect(preferences.visual.cardStyle).toBe("original");
   expect(savePreferences(preferences)).toBe(false);
 });
+
+
+test("migrates only the untouched legacy name set and keeps explicitly saved names", () => {
+  const legacy = { version: 1, players: { SOUTH: "You", NORTH: "Ti", WEST: "Zapad", EAST: "Istok" }, teams: { yourTeam: "Us", enemyTeam: "Them" } };
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(legacy));
+  expect(loadPreferences().players).toEqual({ SOUTH: "", NORTH: "", WEST: "", EAST: "" });
+  expect(loadPreferences().teams).toEqual({ yourTeam: "", enemyTeam: "" });
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ ...legacy, players: { ...legacy.players, SOUTH: "Ivana" } }));
+  expect(loadPreferences().players.SOUTH).toBe("Ivana");
+  expect(loadPreferences().teams).toEqual(legacy.teams);
+  savePreferences({ ...loadPreferences(), players: legacy.players });
+  expect(loadPreferences().players).toEqual(legacy.players);
+});

@@ -1,8 +1,9 @@
+import { defaultNames } from "../i18n/defaultNames";
 import { InfoButton } from "./TableUtilities";
 import { AccentColorPicker, CardStylePicker, TableColorPicker } from "./AppearanceSettings";
 import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
-import { t, tr, countText } from "../i18n";
+import { t, tr, countText, getLocale } from "../i18n";
 import LanguageSelect from "./LanguageSelect";
 import { useEffect, useRef, type ReactNode } from "react";
 import type {
@@ -45,6 +46,14 @@ interface ActionPanelProps {
   visual?: VisualSettings;
   onVisualChange?: (patch: Partial<VisualSettings>) => void;
 }
+
+const TRUMP_CHOICE_ORDER: Record<TrumpChoice, number> = {
+  HEARTS: 0,
+  SPADES: 1,
+  DIAMONDS: 2,
+  CLUBS: 3,
+  SKIP: 4
+};
 
 function ActionPanel({
   pendingAction,
@@ -99,7 +108,7 @@ function ActionPanel({
       : isTrumpChoice
         ? t("Choose the trump suit")
         : isReportMelds || isAcknowledgeMelds
-          ? t("Melds")
+          ? isReportMelds ? t("Your melds") : t("Meld review")
           : t("Bela");
   const subtitle = isStart
     ? null
@@ -110,15 +119,15 @@ function ActionPanel({
       : isTrumpChoice
         ? (pendingAction?.legalTrumpChoices.includes("SKIP") ? t("Choose the trump suit or skip.") : t("Choose the trump suit."))
         : isReportMelds
-          ? t("Declare your melds or keep them hidden.")
+          ? t("Review your combinations and points, then declare them or pass.")
           : isAcknowledgeMelds
-            ? t("Review the winning melds before the first trick.")
+            ? t("Review the winning team, its players, and the points before play begins.")
             : t("Call Bela with this card or play it quietly.");
 
   return (
     <dialog
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
@@ -144,12 +153,15 @@ function ActionPanel({
                       heading={t("Us")}
                       teamLabel={t("your team")}
                       teamValue={teamNames.yourTeam}
+                      teamPlaceholder={defaultNames[getLocale()].teams.yourTeam}
                       onTeamChange={(value) => onTeamNameChange("yourTeam", value)}
                       firstPlayerLabel={t("you")}
                       firstPlayerValue={playerNames.SOUTH}
+                      firstPlayerPlaceholder={defaultNames[getLocale()].players.SOUTH}
                       onFirstPlayerChange={(value) => onPlayerNameChange("SOUTH", value)}
                       secondPlayerLabel={t("teammate")}
                       secondPlayerValue={playerNames.NORTH}
+                      secondPlayerPlaceholder={defaultNames[getLocale()].players.NORTH}
                       onSecondPlayerChange={(value) => onPlayerNameChange("NORTH", value)}
                     />
                     <TeamSettingsRow
@@ -157,12 +169,15 @@ function ActionPanel({
                       heading={t("Them")}
                       teamLabel={t("enemy team")}
                       teamValue={teamNames.enemyTeam}
+                      teamPlaceholder={defaultNames[getLocale()].teams.enemyTeam}
                       onTeamChange={(value) => onTeamNameChange("enemyTeam", value)}
                       firstPlayerLabel={t("west")}
                       firstPlayerValue={playerNames.WEST}
+                      firstPlayerPlaceholder={defaultNames[getLocale()].players.WEST}
                       onFirstPlayerChange={(value) => onPlayerNameChange("WEST", value)}
                       secondPlayerLabel={t("east")}
                       secondPlayerValue={playerNames.EAST}
+                      secondPlayerPlaceholder={defaultNames[getLocale()].players.EAST}
                       onSecondPlayerChange={(value) => onPlayerNameChange("EAST", value)}
                     />
                   </div>
@@ -180,7 +195,7 @@ function ActionPanel({
                     </div>
                     <div className="setup-options-row">
                       <SettingGroup label="game length" boxed>
-                        <CompactChoices ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
+                        <CompactChoices numeric ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
                       </SettingGroup>
                       {visual && onVisualChange ? <CardStylePicker value={visual.cardStyle} onChange={cardStyle => onVisualChange({ cardStyle })} /> : null}
                     </div>
@@ -193,7 +208,7 @@ function ActionPanel({
               ) : null}
               {isReportMelds ? (
                 <div className="action-popup-body meld-popup-body">
-                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} />
+                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} showTeam />
                 </div>
               ) : null}
               {isAcknowledgeMelds ? (
@@ -250,7 +265,7 @@ function ActionPanel({
                 </>
               ) : null}
               {isTrumpChoice
-                ? [...(pendingAction?.legalTrumpChoices ?? [])].sort((a, b) => (a === "SKIP" ? 1 : 0) - (b === "SKIP" ? 1 : 0)).map((choice) =>
+                ? [...(pendingAction?.legalTrumpChoices ?? [])].sort((a, b) => TRUMP_CHOICE_ORDER[a] - TRUMP_CHOICE_ORDER[b]).map((choice) =>
                     choice === "SKIP" ? (
                       <button
                         key={choice}
@@ -260,8 +275,8 @@ function ActionPanel({
                         aria-label={t("skip")}
                       >
                         <svg className="suit-choice-skip-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-                          <path d="m5 5 14 7-14 7V5Z" fill="currentColor" />
-                          <path d="M20 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M12.5 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M10 12h10m-4-4 4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="suit-choice-label">{t("skip")}</span>
                       </button>
@@ -354,40 +369,51 @@ function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary 
   );
 }
 
-function MeldSetSection({ meldSet }: { meldSet: MeldSetView | null }) {
+function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | null; showTeam?: boolean }) {
   if (!meldSet) {
     return <p className="panel-caption">{t("No melds available.")}</p>;
   }
 
   return (
     <div className="meld-popup-stack meld-popup-player-block">
-      <div className="meld-detail-row">
-        <span className="panel-caption">{t("player")}</span>
-        <span className="meld-detail-separator" aria-hidden="true">
-          {" : "}
-        </span>
-        <strong>{meldSet.playerName}</strong>
-        <span className="meld-detail-separator" aria-hidden="true">
-          {" : "}
-        </span>
-        <strong>{meldSet.totalPoints}</strong>
-      </div>
-      {meldSet.melds.map((meld) => (
-        <div key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
-          <div className="meld-detail-row">
-            <span className="panel-caption">{t("meld")}</span>
-            <span className="meld-detail-separator" aria-hidden="true">
-              {" : "}
-            </span>
-            <strong>{meldDescription(meld)}</strong>
-          </div>
-          <div className="meld-card-row">
-            {meld.cards.map((card) => (
-              <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
-            ))}
+      {showTeam ? (
+        <div className="meld-team-summary">
+          <div className="meld-team-identity">
+            <span>{t("team")}</span>
+            <strong>{meldSet.teamName}</strong>
           </div>
         </div>
-      ))}
+      ) : null}
+      <div className="meld-player-summary">
+        <div className="meld-player-identity">
+          <span>{t("player")}</span>
+          <strong>{meldSet.playerName}</strong>
+        </div>
+        <div className="meld-player-total" aria-label={countText("points", meldSet.totalPoints)}>
+          <strong>{meldSet.totalPoints}</strong>
+          <span>{t("Combined points")}</span>
+        </div>
+      </div>
+      <div className="meld-combination-list">
+        {meldSet.melds.length > 0 ? meldSet.melds.map((meld) => (
+          <section key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
+            <div className="meld-combination-heading">
+              <div className="meld-combination-name">
+                <span>{t("Combination")}</span>
+                <strong>{meldDescription(meld)}</strong>
+              </div>
+              <span className="meld-combination-points">+{countText("points", meld.points)}</span>
+            </div>
+            <div className="meld-card-row">
+              {meld.cards.map((card) => (
+                <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
+              ))}
+            </div>
+          </section>
+        )) : (
+          <p className="meld-details-note">{t("No melds available.")}</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -396,15 +422,19 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
   if (!meldWinner) {
     return <p className="panel-caption">{t("No melds this game.")}</p>;
   }
+  const combinedPoints = meldWinner.players.reduce((total, player) => total + player.totalPoints, 0);
 
   return (
-    <div className="meld-popup-stack">
-      <div className="meld-detail-row">
-        <span className="panel-caption">{t("team")}</span>
-        <span className="meld-detail-separator" aria-hidden="true">
-          {" : "}
-        </span>
-        <strong>{meldWinner.teamName}</strong>
+    <div className="meld-popup-stack meld-winner-stack">
+      <div className="meld-winner-team-summary">
+        <div className="meld-team-identity">
+          <span>{t("team")}</span>
+          <strong>{meldWinner.teamName}</strong>
+        </div>
+        <div className="meld-player-total" aria-label={countText("points", combinedPoints)}>
+          <strong>{combinedPoints}</strong>
+          <span>{t("Combined points")}</span>
+        </div>
       </div>
       {meldWinner.players.map((meldSet) => (
         <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} />
@@ -419,12 +449,15 @@ interface TeamSettingsRowProps {
   heading: string;
   teamLabel: string;
   teamValue: string;
+  teamPlaceholder: string;
   onTeamChange: (value: string) => void;
   firstPlayerLabel: string;
   firstPlayerValue: string;
+  firstPlayerPlaceholder: string;
   onFirstPlayerChange: (value: string) => void;
   secondPlayerLabel: string;
   secondPlayerValue: string;
+  secondPlayerPlaceholder: string;
   onSecondPlayerChange: (value: string) => void;
 }
 
@@ -433,12 +466,15 @@ function TeamSettingsRow({
   heading,
   teamLabel,
   teamValue,
+  teamPlaceholder,
   onTeamChange,
   firstPlayerLabel,
   firstPlayerValue,
+  firstPlayerPlaceholder,
   onFirstPlayerChange,
   secondPlayerLabel,
   secondPlayerValue,
+  secondPlayerPlaceholder,
   onSecondPlayerChange
 }: TeamSettingsRowProps) {
   return (
@@ -449,15 +485,15 @@ function TeamSettingsRow({
       </div>
       <label className="name-setting-field team-name-field">
         <span className="panel-caption">{teamLabel}</span>
-        <input type="text" value={teamValue} maxLength={30} onChange={(event) => onTeamChange(event.target.value)} />
+        <input type="text" value={teamValue} placeholder={teamPlaceholder} maxLength={30} onChange={(event) => onTeamChange(event.target.value)} />
       </label>
       <label className="name-setting-field player-name-field">
         <span className="panel-caption">{firstPlayerLabel}</span>
-        <input type="text" value={firstPlayerValue} maxLength={24} onChange={(event) => onFirstPlayerChange(event.target.value)} />
+        <input type="text" value={firstPlayerValue} placeholder={firstPlayerPlaceholder} maxLength={24} onChange={(event) => onFirstPlayerChange(event.target.value)} />
       </label>
       <label className="name-setting-field player-name-field">
         <span className="panel-caption">{secondPlayerLabel}</span>
-        <input type="text" value={secondPlayerValue} maxLength={24} onChange={(event) => onSecondPlayerChange(event.target.value)} />
+        <input type="text" value={secondPlayerValue} placeholder={secondPlayerPlaceholder} maxLength={24} onChange={(event) => onSecondPlayerChange(event.target.value)} />
       </label>
     </section>
   );
@@ -490,6 +526,7 @@ function ChoiceStepper<T extends string | number>({
   onChange
 }: {
   ariaLabel: string;
+  numeric?: boolean;
   values: readonly T[];
   value: T;
   label: (value: T) => string;
@@ -505,15 +542,16 @@ function ChoiceStepper<T extends string | number>({
   </div>;
 }
 
-function CompactChoices<T extends string>({ ariaLabel, values, value, label, describe, onChange }: {
+function CompactChoices<T extends string>({ ariaLabel, values, value, label, describe, onChange, numeric = false }: {
   ariaLabel: string;
+  numeric?: boolean;
   values: readonly T[];
   value: T;
   label: (value: T) => string;
   describe?: (value: T) => string;
   onChange: (value: T) => void;
 }) {
-  return <div className="setup-segment-control" role="group" aria-label={ariaLabel}>
+  return <div className={`setup-segment-control${numeric ? " setup-segment-numeric" : ""}`} role="group" aria-label={ariaLabel}>
     {values.map(option => <button key={option} type="button" title={describe?.(option) ?? label(option)} aria-label={describe?.(option) ?? label(option)} aria-pressed={value === option} onClick={() => onChange(option)}>{label(option)}</button>)}
   </div>;
 }

@@ -8,6 +8,8 @@ import "./styles/popups.css";
 import "./styles/book.css";
 import "./styles/setup.css";
 import "./styles/dialog-system.css";
+import "./styles/setup-page.css";
+import "./styles/appearance.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

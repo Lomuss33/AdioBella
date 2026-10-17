@@ -1,7 +1,9 @@
+import { accentVariables, tableVariables, tablePalettes, TABLE_THEMES } from "./lib/appearanceTheme";
 import GuideBook from "./components/GuideBook";
 import { loadPreferences, savePreferences, readStorage, writeStorage, removeStorage, type VisualSettings } from "./lib/preferences";
 import { errorCode } from "./i18n/presentation";
 import { useLanguage } from "./i18n";
+import { resolveNames } from "./i18n/defaultNames";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
 import ConfirmPopup from "./components/ConfirmPopup";
@@ -38,16 +40,9 @@ import type {
 const SESSION_KEY = "belot-session-id";
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
-const THEME_META_COLOR: Record<TableTheme, string> = {
-  GREEN: "#080c0b",
-  DARK_BLUE: "#080b10",
-  CHERRY_RED: "#100a0d",
-  WOODY_BROWN: "#0e0c09",
-  FINE_BLACK: "#090b0a"
-};
 
 function App() {
-  useLanguage();
+  const { locale } = useLanguage();
   const [initialPreferences] = useState(loadPreferences);
   const [showBook, setShowBook] = useState(false);
   const [visual, setVisual] = useState<VisualSettings>(initialPreferences.visual);
@@ -55,12 +50,14 @@ function App() {
   const gateway = getGameGateway();
   const persistSession = shouldPersistSession();
   const bootstrapStartedRef = useRef(false);
+  const previousLocaleRef = useRef(locale);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [playerNames, setPlayerNames] = useState<PlayerNameDrafts>(initialPreferences.players);
-  const [teamNames, setTeamNames] = useState<TeamNameDrafts>(initialPreferences.teams);
+  const [playerNameDrafts, setPlayerNames] = useState<PlayerNameDrafts>(initialPreferences.players);
+  const [teamNameDrafts, setTeamNames] = useState<TeamNameDrafts>(initialPreferences.teams);
+  const { players: playerNames, teams: teamNames } = resolveNames(locale, playerNameDrafts, teamNameDrafts);
   const [gameSettings, setGameSettings] = useState<GameSettingsDrafts>(initialPreferences.game);
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
   const [pendingBelaChoiceIndex, setPendingBelaChoiceIndex] = useState<number | null>(null);
@@ -95,16 +92,26 @@ function App() {
   }, [animatedTrick]);
 
   useEffect(() => {
-    savePreferences({ version: 1, game: gameSettings, players: playerNames, teams: teamNames, visual });
-  }, [gameSettings, playerNames, teamNames, visual]);
+    savePreferences({ version: 1, namesVersion: initialPreferences.namesVersion, game: gameSettings, players: playerNameDrafts, teams: teamNameDrafts, visual });
+  }, [gameSettings, playerNameDrafts, teamNameDrafts, visual]);
+  useEffect(() => {
+    if (previousLocaleRef.current === locale) return;
+    previousLocaleRef.current = locale;
+    if (sessionId && snapshot?.pendingAction.type === "START_MATCH") {
+      void persistLobbySettingsIfNeeded(sessionId).catch(error => setErrorMessage(errorCode(error)));
+    }
+  }, [locale]);
   useLayoutEffect(() => {
     document.documentElement.dataset.cardStyle = visual.cardStyle;
     document.documentElement.dataset.gameAccent = visual.accent;
-  }, [visual]);
+    document.documentElement.dataset.tableTheme = gameSettings.tableTheme;
+    for (const [key, value] of Object.entries({ ...tableVariables(gameSettings.tableTheme), ...accentVariables(visual.accent) })) {
+      document.documentElement.style.setProperty(key, value);
+    }
+  }, [visual, gameSettings.tableTheme]);
   useEffect(() => {
-    document.documentElement.setAttribute("data-table-theme", gameSettings.tableTheme);
     writeStorage(THEME_KEY, gameSettings.tableTheme);
-    syncThemeColorMeta(THEME_META_COLOR[gameSettings.tableTheme]);
+    syncThemeColorMeta(tablePalettes[gameSettings.tableTheme].backdrop);
   }, [gameSettings.tableTheme]);
 
   useEffect(() => {
@@ -595,8 +602,6 @@ function App() {
     setSnapshot(response.snapshot);
     setHiddenHandIndex(null);
     setPendingBelaChoiceIndex(null);
-    setPlayerNames((current) => mergePlayerNames(current, response.snapshot.players));
-    setTeamNames((current) => mergeTeamNames(current, response.snapshot));
     // Local preferences also describe the next match; snapshots must not overwrite them.
     setErrorMessage(response.snapshot.pendingAction.validationCode ?? (response.snapshot.pendingAction.validationMessage ? "error.unknown" : null));
   }
@@ -766,8 +771,8 @@ function App() {
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
           errorMessage={errorMessage}
-          playerNames={playerNames}
-          teamNames={teamNames}
+          playerNames={playerNameDrafts}
+          teamNames={teamNameDrafts}
           gameSettings={gameSettings}
           gameCompleteSummary={gameCompleteSummary}
           matchCompleteSummary={matchCompleteSummary}
@@ -861,24 +866,6 @@ function toTeamNames(snapshot: GameSnapshot): TeamNameDrafts {
   };
 }
 
-function mergePlayerNames(current: PlayerNameDrafts, players: PlayerView[]): PlayerNameDrafts {
-  const incoming = toPlayerNames(players);
-  return {
-    SOUTH: current.SOUTH || incoming.SOUTH,
-    WEST: current.WEST || incoming.WEST,
-    NORTH: current.NORTH || incoming.NORTH,
-    EAST: current.EAST || incoming.EAST
-  };
-}
-
-function mergeTeamNames(current: TeamNameDrafts, snapshot: GameSnapshot): TeamNameDrafts {
-  const incoming = toTeamNames(snapshot);
-  return {
-    yourTeam: current.yourTeam || incoming.yourTeam,
-    enemyTeam: current.enemyTeam || incoming.enemyTeam
-  };
-}
-
 function toDifficulty(value: string | null | undefined): GameSettingsDrafts["difficulty"] {
   return value === "EASY" || value === "HARD" ? value : "NORMAL";
 }
@@ -888,7 +875,7 @@ function toMatchTargetWins(value: number | null | undefined): MatchTargetWins {
 }
 
 function isTableTheme(value: string | null): value is TableTheme {
-  return value === "GREEN" || value === "DARK_BLUE" || value === "CHERRY_RED" || value === "WOODY_BROWN" || value === "FINE_BLACK";
+  return TABLE_THEMES.includes(value as TableTheme);
 }
 
 function latestGameCompleteSummary(snapshot: GameSnapshot | null, events: GameEvent[]): GameCompleteSummary | null {

@@ -15,19 +15,20 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
   return (
     <section className="score-bar">
       <div className="score-item score-prompt">
+        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
         <div className="score-header">
-          <span className="score-label">{t("Status")}</span>
-          <small className="trump-line">{t("trump")}{" "}
+          <small className="trump-line">
             {trump ? (
               <>
-                <span className={`trump-suit-symbol ${trump.className}`}>{trump.symbol}</span> {tr(trump.label)}
+                {t("Trump")}: {" "}
+                <span className={`trump-suit-symbol ${trump.className}`} aria-hidden="true">{trump.symbol}</span>{" "}
+                {tr(trump.label).replace(/^./, letter => letter.toUpperCase())}
               </>
             ) : (
-              t("pending")
+              t("Trump not chosen yet")
             )}
           </small>
         </div>
-        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
         {errorMessage ? <small className="error-line" role="alert">{errorDescription(errorMessage)}</small> : null}
       </div>
     </section>

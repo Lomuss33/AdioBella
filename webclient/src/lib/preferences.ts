@@ -28,11 +28,11 @@ export function loadPreferences(): Preferences {
       difficulty: choice(game.difficulty, ["EASY", "NORMAL", "HARD"], "NORMAL"),
       matchTargetWins: choice(game.matchTargetWins, [1, 3, 5], 3),
       gameLength: choice(game.gameLength, ["SHORT", "LONG"], "LONG"),
-      tableTheme: choice(game.tableTheme ?? readStorage("belot-table-theme"), TABLE_THEMES, "GREEN")
+      tableTheme: choice(game.tableTheme ?? readStorage("belot-table-theme"), TABLE_THEMES, "DARK_BLUE")
     },
     players: { SOUTH: legacyDefaults ? "" : name(players.SOUTH, 24), NORTH: legacyDefaults ? "" : name(players.NORTH, 24), WEST: legacyDefaults ? "" : name(players.WEST, 24), EAST: legacyDefaults ? "" : name(players.EAST, 24) },
     teams: { yourTeam: legacyDefaults ? "" : name(teams.yourTeam, 30), enemyTeam: legacyDefaults ? "" : name(teams.enemyTeam, 30) },
-    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: choice(visual.accent, ACCENT_COLORS, "purple") }
+    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: choice(visual.accent, ACCENT_COLORS, "jade") }
   };
 }
 function isLegacyDefaultNames(players: { SOUTH?: unknown; NORTH?: unknown; WEST?: unknown; EAST?: unknown }, teams: { yourTeam?: unknown; enemyTeam?: unknown }) {

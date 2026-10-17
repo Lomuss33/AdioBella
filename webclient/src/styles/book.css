@@ -14,7 +14,11 @@
 /* The status wrapper has no box: both groups occupy their own hand-side tracks. */
 .table-arena .arena-status { display: contents; }
 .table-arena .arena-bottom > .player-hand-area { grid-column: 2; grid-row: 1; }
-.table-arena .arena-status > .score-bar { grid-column: 1; grid-row: 1; }
+.table-arena .arena-status > .score-bar {
+  grid-column: 1; grid-row: 1;
+  align-self: end; align-content: end;
+  min-height: 0; height: auto;
+}
 .table-arena .arena-status > .arena-controls { grid-column: 3; grid-row: 1; }
 .table-arena .arena-status .score-item {
   min-height: 0; height: auto; padding: 4px 7px; gap: 2px;
@@ -146,7 +150,7 @@
   .table-arena .arena-bottom {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
-    align-content: center;
+    align-content: end;
     gap: 4px;
   }
   .table-arena .arena-bottom > .player-hand-area { grid-column: 1; grid-row: 1; }

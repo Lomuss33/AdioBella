@@ -32,16 +32,52 @@
 }
 .table-arena .game-data-section .data-target { font-size: 10px; font-weight: 500; }
 .table-arena .match-data-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  container: match-summary-card / inline-size;
   border: 1px solid var(--ui-line);
   border-radius: 3px;
   background: var(--ui-glass);
   box-shadow: none;
-  padding: 6px 9px;
+  padding: 8px 10px;
 }
-.table-arena .match-summary { min-height: 24px; gap: 5px 9px; font-size: 11px; line-height: 1.4; }
-.table-arena .match-summary > span:not(:first-child) {
-  padding-left: 9px;
-  border-left: 1px solid var(--ui-line);
+.table-arena .match-summary {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+  gap: 7px 12px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.table-arena .match-summary-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.table-arena .match-summary-title { font-size: clamp(12px, 2.8cqw, 14px); font-weight: 750; }
+.table-arena .match-summary-mode { color: var(--ui-muted); font-size: 10px; text-transform: capitalize; }
+.table-arena .match-summary-stat { display: grid; align-content: start; gap: 2px; min-width: 0; }
+.table-arena .match-summary-stat small { color: var(--ui-muted); font-size: clamp(9px, 2cqw, 10px); line-height: 1.25; }
+.table-arena .match-summary-stat strong { color: var(--ui-text); font-size: clamp(11px, 2.6cqw, 13px); font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.table-arena .match-summary-open {
+  width: 22px;
+  height: 22px;
+  stroke: var(--ui-accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.table-arena .match-data-card:hover .match-summary-open { stroke: var(--ui-text); }
+@container match-summary-card (min-width: 350px) {
+  .table-arena .match-summary { grid-template-columns: 1fr 1.2fr 1.2fr; align-items: center; }
+  .table-arena .match-summary-heading { grid-column: auto; display: grid; gap: 2px; }
+  .table-arena .match-summary-stat { border-left: 1px solid var(--ui-line); padding-left: 12px; }
 }
 .table-arena .seat-panel {
   padding: 6px 8px;

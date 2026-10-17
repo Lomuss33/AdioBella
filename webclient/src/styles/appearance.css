@@ -1,4 +1,11 @@
 /* Color ownership: neutral materials, accent actions, independent felt palettes. */
+.belot-dialog.belot-dialog-setup {
+  --setup-start-height: clamp(48px, 7svh, 60px);
+  --setup-swatch-max-height: calc(var(--setup-start-height) - 12px);
+}
+.belot-dialog.belot-dialog-setup .popup-footer .action-button-primary {
+  min-height: var(--setup-start-height);
+}
 .belot-dialog .action-button-primary {
   border-color: var(--ui-accent);
   background: var(--ui-accent);
@@ -57,7 +64,7 @@
   align-self: stretch;
   height: auto;
   min-height: 67px;
-  max-height: none;
+  max-height: calc(2 * var(--setup-swatch-max-height) + 27px);
 }
 .belot-dialog.belot-dialog-setup .setup-colors-row > :is(.appearance-accent-setting, .appearance-table-colors) {
   align-content: stretch;
@@ -65,7 +72,7 @@
 .belot-dialog.belot-dialog-setup .setup-colors-row :is(.accent-color-choices, .setup-theme-buttons) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(20px, 1fr));
+  grid-template-rows: repeat(2, minmax(20px, var(--setup-swatch-max-height)));
   height: 100%;
   gap: 4px 5px;
   align-content: stretch;
@@ -73,6 +80,7 @@
 .belot-dialog.belot-dialog-setup .setup-colors-row :is(.accent-color-choice, .setup-theme-choice) {
   height: 100%;
   min-height: 20px;
+  max-height: var(--setup-swatch-max-height);
 }
 @media (min-width: 600px) and (max-height: 520px) {
   .belot-dialog.belot-dialog-setup .action-popup-body {

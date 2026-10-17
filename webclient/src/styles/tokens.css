@@ -2,12 +2,12 @@
 :root {
   --ui-text: #f5f7fb;
   --ui-muted: #c5ced8;
-  --ui-accent-strong: #9a7bd2;
-  --ui-accent: #cbb6f2;
+  --ui-accent-strong: #58b48c;
+  --ui-accent: #9eddbc;
   /* Compatibility aliases for existing controls; these are accent roles. */
   --ui-gold: var(--ui-accent-strong);
   --ui-gold-light: var(--ui-accent);
-  --ui-focus: #e3d4ff;
+  --ui-focus: #d0f5e1;
   --ui-ink: #0b141d;
   --ui-team-your: #79dfc0;
   --ui-team-opponent: #f4c8b6;
@@ -30,10 +30,10 @@
   --card-red: #992d35;
   --card-black: #19201d;
   --page-glow: transparent;
-  --page-top: #101a15;
-  --page-bottom: #080c0b;
-  --felt-center: #183e32;
-  --felt-edge: #0b211b;
+  --page-top: #10161d;
+  --page-bottom: #080b10;
+  --felt-center: #1b2e40;
+  --felt-edge: #0c1823;
 }
 /* Palette values are applied before paint by appearanceTheme.ts. */
 @media (max-width: 700px) {

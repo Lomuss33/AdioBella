@@ -12,6 +12,7 @@ import "./styles/setup-page.css";
 import "./styles/appearance.css";
 import "./styles/team-settings.css";
 import "./styles/table-panels.css";
+import "./styles/setup-typography.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

@@ -855,7 +855,7 @@ function defaultGameSettings(): GameSettingsDrafts {
     difficulty: "NORMAL",
     matchTargetWins: 3,
     gameLength: "LONG",
-    tableTheme: isTableTheme(storedTheme) ? storedTheme : "GREEN"
+    tableTheme: isTableTheme(storedTheme) ? storedTheme : "DARK_BLUE"
   };
 }
 

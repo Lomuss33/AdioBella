@@ -1,14 +1,14 @@
 /* Shared materials also reach dialogs portaled directly into document.body. */
 :root {
-  --ui-text: #edf1f5;
-  --ui-muted: #acb7c3;
+  --ui-text: #f5f7fb;
+  --ui-muted: #c5ced8;
   --ui-accent-strong: #9a7bd2;
   --ui-accent: #cbb6f2;
   /* Compatibility aliases for existing controls; these are accent roles. */
   --ui-gold: var(--ui-accent-strong);
   --ui-gold-light: var(--ui-accent);
   --ui-focus: #e3d4ff;
-  --ui-ink: #10161d;
+  --ui-ink: #0b141d;
   --ui-team-your: #79dfc0;
   --ui-team-opponent: #f4c8b6;
   --ui-danger: #d29c94;

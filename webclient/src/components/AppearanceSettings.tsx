@@ -47,7 +47,7 @@ export function CardStylePicker({ value, onChange }: { value: VisualSettings["ca
     <div className="card-style-preview-row">
       <output className="card-style-name" aria-live="polite">{t("book.cards")}: {t(cardStyleMessages[value])}</output>
       <div className="card-style-preview-gallery">
-        <div className="appearance-preview" role="group" aria-label={t("book.preview")}>
+        <div className="appearance-preview" data-card-style={value} role="group" aria-label={t("book.preview")}>
           {previewCards.map(card => <PlayingCard key={card.label} card={card} disabled />)}
         </div>
         <button className="card-style-next" type="button" aria-label={t("book.nextCardStyle")} title={t("book.nextCardStyle")} onClick={() => onChange(values[(index + 1) % values.length])}>

@@ -17,6 +17,7 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
   backdrop?: boolean;
 }) {
   const position = POSITION[seat];
+  const backdropAngle = seat === "WEST" ? POSITION.EAST.angle : seat === "EAST" ? POSITION.WEST.angle : position.angle;
   const label = `${playerName ? `${playerName}, ` : ""}${tr(position.label)}${active ? `, ${t("playing now")}` : ""}${winner ? `, ${t("trick winner")}` : ""}`;
 
   return (
@@ -30,7 +31,7 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
     >
       <title>{label}</title>
       {backdrop ? (
-        <g transform={`rotate(${position.angle} 16 16)`} className="seat-backdrop-pointer">
+        <g transform={`rotate(${backdropAngle} 16 16)`} className="seat-backdrop-pointer">
           <path className="seat-backdrop-chevron" d="M2 2 L16 16 L30 2 L30 11 L16 25 L2 11 Z" />
           <path className="seat-backdrop-echo" d="M2 17 L16 31 L30 17" />
         </g>

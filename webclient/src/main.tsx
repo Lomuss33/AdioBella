@@ -10,6 +10,8 @@ import "./styles/setup.css";
 import "./styles/dialog-system.css";
 import "./styles/setup-page.css";
 import "./styles/appearance.css";
+import "./styles/team-settings.css";
+import "./styles/table-panels.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

@@ -1,5 +1,7 @@
 import { guideMessages } from "./guide";
 export const messages = {
+  "team.yourSeats": ["You and your teammate sit opposite each other", "Dein Partner sitzt dir gegenüber", "Ti i partner sjedite jedno nasuprot drugome"],
+  "team.opponentSeats": ["Your opponents sit to your left and right", "Deine Gegner sitzen links und rechts von dir", "Protivnici sjede s tvoje lijeve i desne strane"],
   ...guideMessages,
   "Language": [
     "Language",

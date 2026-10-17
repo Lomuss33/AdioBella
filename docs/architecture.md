@@ -35,7 +35,7 @@ The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/
 | HTTP endpoints and request records | [SessionController.java](../server/src/main/java/com/belot/server/web/SessionController.java) |
 | API error mapping | [ApiExceptionHandler.java](../server/src/main/java/com/belot/server/web/ApiExceptionHandler.java) |
 | Lobby, action overlays, meld/Bela prompts | [ActionPanel.tsx](../webclient/src/components/ActionPanel.tsx) |
-| Table and seats | [TableLayout.tsx](../webclient/src/components/TableLayout.tsx) and [components](../webclient/src/components) |
+| Table and seats | [TableLayout.tsx](../webclient/src/components/TableLayout.tsx), [components](../webclient/src/components), and [table-panels.css](../webclient/src/styles/table-panels.css) for scoreboard and seat surfaces |
 | Animation timing and sequencing | [trickAnimation.ts](../webclient/src/lib/trickAnimation.ts) |
 | Card labels and asset mapping | [cardPresentation.ts](../webclient/src/lib/cardPresentation.ts) |
 | Card appearance | [PlayingCard.tsx](../webclient/src/components/PlayingCard.tsx), [playing-cards.css](../webclient/src/styles/playing-cards.css) |

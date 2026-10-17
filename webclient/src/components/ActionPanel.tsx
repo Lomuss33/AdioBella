@@ -184,22 +184,22 @@ function ActionPanel({
 
                   <div className="setup-options-grid">
                     <div className="setup-options-row">
-                      <SettingGroup label="mode">
-                        <CompactChoices ariaLabel={t("mode")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
+                      <SettingGroup label="game length" boxed>
+                        <CompactChoices numeric ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
                       </SettingGroup>
                       <SettingGroup label="match length" boxed>
                         <div className="match-length-choices" role="group" aria-label={t("match length")}>
-                          {([1, 3, 5] as const).map(value => <button key={value} type="button" aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
+                          {([1, 3, 5] as const).map(value => <button key={value} type="button" data-choice={value} aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
                         </div>
                       </SettingGroup>
                     </div>
                     <div className="setup-options-row">
-                      <SettingGroup label="game length" boxed>
-                        <CompactChoices numeric ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
+                      <SettingGroup label="mode">
+                        <CompactChoices ariaLabel={t("mode")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
                       </SettingGroup>
                       {visual && onVisualChange ? <CardStylePicker value={visual.cardStyle} onChange={cardStyle => onVisualChange({ cardStyle })} /> : null}
                     </div>
-                    {visual && onVisualChange ? <div className="setup-options-row">
+                    {visual && onVisualChange ? <div className="setup-options-row setup-colors-row">
                       <AccentColorPicker value={visual.accent} onChange={accent => onVisualChange({ accent })} />
                       <TableColorPicker value={gameSettings.tableTheme} onChange={tableTheme => onGameSettingsChange({ tableTheme })} />
                     </div> : null}
@@ -481,6 +481,15 @@ function TeamSettingsRow({
     <section className="team-settings-row" data-team={side}>
       <div className="team-settings-label">
         <span className="panel-caption">{t("team")}</span>
+        <svg className="team-seat-pair" viewBox="0 0 28 28" role="img" aria-label={t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}>
+          <title>{t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}</title>
+          <rect className="team-seat-table" x="7" y="7" width="14" height="14" rx="4" />
+          <path className="team-seat-link" d={side === "your" ? "M14 5v18" : "M5 14h18"} />
+          <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="1" width="8" height="4" rx="1.5" />
+          <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="23" width="8" height="4" rx="1.5" />
+          <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="1" y="10" width="4" height="8" rx="1.5" />
+          <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="23" y="10" width="4" height="8" rx="1.5" />
+        </svg>
         <strong>{heading}</strong>
       </div>
       <label className="name-setting-field team-name-field">
@@ -552,7 +561,7 @@ function CompactChoices<T extends string>({ ariaLabel, values, value, label, des
   onChange: (value: T) => void;
 }) {
   return <div className={`setup-segment-control${numeric ? " setup-segment-numeric" : ""}`} role="group" aria-label={ariaLabel}>
-    {values.map(option => <button key={option} type="button" title={describe?.(option) ?? label(option)} aria-label={describe?.(option) ?? label(option)} aria-pressed={value === option} onClick={() => onChange(option)}>{label(option)}</button>)}
+    {values.map(option => <button key={option} type="button" data-choice={option} title={describe?.(option) ?? label(option)} aria-label={describe?.(option) ?? label(option)} aria-pressed={value === option} onClick={() => onChange(option)}>{label(option)}</button>)}
   </div>;
 }
 

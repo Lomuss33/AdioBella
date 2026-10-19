@@ -513,8 +513,11 @@ test("renders a match-complete popup with rematch and settings actions", async (
   render(<App />);
 
   const dialog = await screen.findByRole("dialog", { name: "Match complete" });
-  expect(dialog).toHaveTextContent("Them win the match 3-1.");
-  expect(dialog).toHaveTextContent("Final game: 1001-854.");
-  expect(screen.getByRole("button", { name: "Revenge" })).toBeEnabled();
+  expect(dialog).toHaveTextContent("Them won the match 3–1.");
+  const scoreboard = within(dialog).getByRole("group", { name: "Final match score" });
+  expect(within(scoreboard).getByRole("group", { name: "Them" })).toHaveTextContent("Match winnerThem3Games won");
+  expect(within(scoreboard).getByRole("group", { name: "Us" })).toHaveTextContent("Runner-upUs1Games won");
+  expect(within(dialog).getByText("1,001–854")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Rematch" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Settings" })).toBeEnabled();
 });

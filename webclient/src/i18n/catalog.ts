@@ -28,6 +28,12 @@ export const messages = {
     "Match beendet",
     "Meč je završen"
   ],
+  "Match winner": ["Match winner", "Matchsieger", "Pobjednik meča"],
+  "Runner-up": ["Runner-up", "Zweitplatzierter", "Drugoplasirani"],
+  "Games won": ["Games won", "Gewonnene Spiele", "Osvojene partije"],
+  "Final game": ["Final game", "Letztes Spiel", "Posljednja partija"],
+  "Target wins": ["Target wins", "Siegziel", "Cilj pobjeda"],
+  "Rematch": ["Rematch", "Revanche", "Revanš"],
   "Game complete": [
     "Game complete",
     "Spiel beendet",

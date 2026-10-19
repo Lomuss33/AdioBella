@@ -28,7 +28,7 @@
   box-shadow: 0 28px 90px rgb(0 0 0 / 55%), inset 0 1px 0 var(--ui-highlight);
 }
 
-.belot-dialog:not(.belot-dialog-setup):not(.guide-dialog):not(.belot-dialog-melds) .popup-card {
+.belot-dialog:not(.belot-dialog-setup):not(.guide-dialog):not(.belot-dialog-melds):not(.belot-dialog-match-result) .popup-card {
   width: min(100%, 560px);
 }
 
@@ -584,11 +584,6 @@
 .belot-dialog .between-games-chip { justify-self: center; padding: 5px 9px; border: 1px solid var(--ui-line); border-radius: 999px; color: var(--ui-gold-light); background: var(--ui-selected); font-size: 10px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
 .belot-dialog .between-games-outcome { text-align: center; }
 .belot-dialog .between-games-outcome strong { color: var(--ui-gold-light); font-size: clamp(21px, 4vw, 28px); }
-.belot-dialog .match-complete-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 12px; padding: 13px; border: 1px solid var(--ui-line); border-radius: 13px; background: color-mix(in srgb, var(--ui-solid) 65%, var(--ui-control)); }
-.belot-dialog .match-complete-team { min-width: 0; overflow-wrap: anywhere; color: var(--ui-muted); font-size: 14px; }
-.belot-dialog .match-complete-team-winner { color: var(--ui-gold-light); font-weight: 750; }
-.belot-dialog .match-complete-score { color: var(--ui-muted); font-size: 24px; font-weight: 750; font-variant-numeric: tabular-nums; }
-.belot-dialog .match-complete-score-winner { color: var(--ui-gold-light); }
 .belot-dialog .between-games-matchline { color: var(--ui-muted); text-align: center; }
 
 @media (max-width: 540px) {
@@ -826,8 +821,6 @@
   .belot-dialog .between-games-outcome-line,
   .belot-dialog .between-games-matchline { font-size: 12px; line-height: 1.35; }
   .belot-dialog .between-games-outcome strong { font-size: 18px; }
-  .belot-dialog .match-complete-team { font-size: 11px; }
-  .belot-dialog .match-complete-score { font-size: 34px; }
   .belot-dialog .game-complete-box { gap: 6px; padding: 9px; }
   .belot-dialog .game-complete-box-title { font-size: 9px; }
   .belot-dialog :is(.game-complete-box-row, .game-complete-score-row) span { font-size: 10px; }

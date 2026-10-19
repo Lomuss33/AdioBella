@@ -1,0 +1,141 @@
+/* Match results have their own layout, independent of setup and meld dialogs. */
+.belot-dialog.belot-dialog-match-result {
+  --result-space: clamp(16px, 2vw, 32px);
+  --result-copy: clamp(14px, calc(12px + .25vw), 18px);
+}
+.belot-dialog.belot-dialog-match-result .popup-card {
+  width: min(100%, clamp(520px, 42vw, 760px));
+  max-height: calc(100% - 16px);
+  background: var(--ui-dialog);
+}
+.belot-dialog.belot-dialog-match-result .popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--result-space);
+  padding: var(--result-space);
+  overflow-x: hidden;
+  font-size: var(--result-copy);
+  line-height: 1.4;
+}
+.belot-dialog-match-result .action-popup-header {
+  justify-items: center;
+  gap: 12px;
+  margin: 0;
+  text-align: center;
+}
+.belot-dialog-match-result .match-result-emblem {
+  display: grid;
+  place-items: center;
+  width: clamp(40px, 3.5vw, 56px);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 28%, var(--ui-line));
+  border-radius: 50%;
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+}
+.belot-dialog-match-result .match-result-emblem svg { width: 56%; height: 56%; }
+.belot-dialog-match-result .start-heading-row { display: block; width: 100%; padding: 0; }
+.belot-dialog-match-result .start-heading-copy { display: grid; gap: 8px; min-width: 0; }
+.belot-dialog-match-result .action-popup-title {
+  font: 750 clamp(26px, calc(20px + .8vw), 40px)/1.2 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+.belot-dialog-match-result .action-popup-subtitle {
+  max-width: 40ch;
+  margin: 0 auto;
+  font-size: var(--result-copy);
+  line-height: 1.45;
+}
+.match-result-summary { display: grid; gap: var(--result-space); min-width: 0; }
+.match-result-scoreboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.match-result-team {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  min-width: 0;
+  padding: clamp(14px, 1.5vw, 24px) 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-control);
+  text-align: center;
+}
+.match-result-team-winner {
+  border-color: color-mix(in srgb, var(--ui-accent) 48%, var(--ui-line));
+  background: color-mix(in srgb, var(--ui-accent) 7%, var(--ui-dialog));
+}
+.match-result-place {
+  color: var(--ui-muted);
+  font-size: clamp(11px, calc(10px + .15vw), 14px);
+  font-weight: 650;
+  line-height: 1.3;
+}
+.match-result-team-winner .match-result-place { color: var(--ui-accent); }
+.match-result-name {
+  margin: 0;
+  color: var(--ui-text);
+  font: 650 clamp(15px, calc(12px + .3vw), 22px)/1.3 "Segoe UI", system-ui, sans-serif;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.match-result-score {
+  margin-top: 4px;
+  color: var(--ui-text);
+  font: 750 clamp(44px, calc(32px + 1.5vw), 72px)/1.2 "Segoe UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.04em;
+}
+.match-result-team-winner .match-result-score { color: var(--ui-accent); }
+.match-result-unit { color: var(--ui-muted); font-size: clamp(12px, calc(10px + .2vw), 16px); }
+.match-result-details { display: grid; gap: 12px; margin: 0; }
+.match-result-details > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 12px; align-items: baseline; }
+.match-result-details dt { color: var(--ui-muted); }
+.match-result-details dd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px 8px;
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-text);
+  text-align: right;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.match-result-forfeit {
+  padding: 3px 7px;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  color: var(--ui-muted);
+  font-size: .85em;
+  font-weight: 500;
+}
+.belot-dialog.belot-dialog-match-result .popup-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px var(--result-space) max(16px, env(safe-area-inset-bottom));
+  background: var(--ui-dialog);
+}
+.belot-dialog-match-result .popup-footer .action-button {
+  width: 100%;
+  max-width: none;
+  min-height: 46px;
+  font-size: var(--result-copy);
+}
+@media (max-height: 560px) {
+  .belot-dialog.belot-dialog-match-result { --result-space: 14px; }
+  .belot-dialog-match-result .match-result-emblem { display: none; }
+  .match-result-team { gap: 5px; padding-block: 10px; }
+  .match-result-score { font-size: 40px; }
+  .belot-dialog.belot-dialog-match-result .popup-footer { padding-block: 10px; }
+}
+@media (min-width: 640px) and (max-height: 560px) {
+  .belot-dialog.belot-dialog-match-result .popup-card { width: min(100%, 820px); }
+  .belot-dialog.belot-dialog-match-result .popup-content {
+    display: grid;
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.65fr);
+    align-items: center;
+  }
+  .belot-dialog-match-result .action-popup-title { font-size: 26px; }
+}

@@ -3,7 +3,7 @@ import { InfoButton } from "./TableUtilities";
 import { AccentColorPicker, CardStylePicker, TableColorPicker } from "./AppearanceSettings";
 import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
-import { t, tr, countText, getLocale } from "../i18n";
+import { t, tr, countText, getLocale, number } from "../i18n";
 import LanguageSelect from "./LanguageSelect";
 import { useEffect, useRef, type ReactNode } from "react";
 import type {
@@ -127,7 +127,7 @@ function ActionPanel({
   return (
     <dialog
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
@@ -135,6 +135,12 @@ function ActionPanel({
       <div className="popup-card">
             <div ref={contentRef} tabIndex={-1} className="popup-content">
               <div className={`action-popup-header ${isStart ? "action-popup-header-start" : ""}`}>
+                {isMatchComplete ? <div className="match-result-emblem" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3h8v6a4 4 0 0 1-8 0V3Zm4 10v5m-4 3h8m-7-3h6v3H9v-3Z" />
+                    <path d="M8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4" />
+                  </svg>
+                </div> : null}
                 <div className="start-heading-row">
                   <div className="start-heading-copy">
                     <h2 className="action-popup-title">{title}</h2>
@@ -229,10 +235,7 @@ function ActionPanel({
                 </div>
               ) : null}
               {isMatchComplete ? (
-                <div className="between-games-summary">
-                  <div className="between-games-chip">{t("match result")}</div>
-                  {matchCompleteSummary ? <MatchCompleteSummaryPanel summary={matchCompleteSummary} /> : null}
-                </div>
+                <MatchCompleteSummaryPanel summary={matchCompleteSummary} />
               ) : null}
             </div>
             <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
@@ -243,7 +246,7 @@ function ActionPanel({
               {isMatchComplete ? (
                 <>
                   <button type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
-                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Revenge")}</button>
+                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Rematch")}</button>
                 </>
               ) : null}
               {isNextGame ? (
@@ -346,25 +349,34 @@ function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary })
 
 function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary }) {
   return (
-    <div className="between-games-result-grid">
-      <div className="between-games-outcome">
-        <p className="between-games-outcome-line">
-          <strong>{t("matchWinner", { name: summary.winnerName })}</strong>
-        </p>
+    <div className="match-result-summary">
+      <div className="match-result-scoreboard" role="group" aria-label={t("Final match score")}>
+        <div className="match-result-team match-result-team-winner" role="group" aria-label={summary.winnerName}>
+          <span className="match-result-place">{t("Match winner")}</span>
+          <h3 className="match-result-name">{summary.winnerName}</h3>
+          <strong className="match-result-score">{number(summary.winnerMatchWins)}</strong>
+          <span className="match-result-unit">{t("Games won")}</span>
+        </div>
+        <div className="match-result-team" role="group" aria-label={summary.loserName}>
+          <span className="match-result-place">{t("Runner-up")}</span>
+          <h3 className="match-result-name">{summary.loserName}</h3>
+          <strong className="match-result-score">{number(summary.loserMatchWins)}</strong>
+          <span className="match-result-unit">{t("Games won")}</span>
+        </div>
       </div>
-      <div className="match-complete-grid" role="group" aria-label={t("Final match score")}>
-        <div className="match-complete-team match-complete-team-winner">{summary.winnerName}</div>
-        <div className="match-complete-team">{summary.loserName}</div>
-        <div className="match-complete-score match-complete-score-winner">{summary.winnerMatchWins}</div>
-        <div className="match-complete-score">{summary.loserMatchWins}</div>
-      </div>
-      <div className="between-games-matchline">
-        {t("finalGame", { win: summary.finalGameWinnerPoints, loss: summary.finalGameLoserPoints })}
-        {summary.finalGameByForfeit ? ` / ${t("byForfeit")}` : ""}
-      </div>
-      <div className="between-games-matchline">
-        {t("firstTo", { count: summary.matchTargetWins })}
-      </div>
+      <dl className="match-result-details">
+        <div>
+          <dt>{t("Final game")}</dt>
+          <dd>
+            <span>{number(summary.finalGameWinnerPoints)}–{number(summary.finalGameLoserPoints)}</span>
+            {summary.finalGameByForfeit ? <span className="match-result-forfeit">{t("byForfeit")}</span> : null}
+          </dd>
+        </div>
+        <div>
+          <dt>{t("Target wins")}</dt>
+          <dd>{number(summary.matchTargetWins)}</dd>
+        </div>
+      </dl>
     </div>
   );
 }

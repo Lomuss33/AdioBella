@@ -15,7 +15,6 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
   return (
     <section className="score-bar">
       <div className="score-item score-prompt">
-        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
         <div className="score-header">
           <small className="trump-line">
             {trump ? (
@@ -30,6 +29,7 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
           </small>
         </div>
         {errorMessage ? <small className="error-line" role="alert">{errorDescription(errorMessage)}</small> : null}
+        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
       </div>
     </section>
   );

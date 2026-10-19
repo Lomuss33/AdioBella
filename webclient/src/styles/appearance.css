@@ -128,11 +128,18 @@
 
 /* A spread hand: larger card faces use the available preview height while
    overlapping slightly so all six samples remain visible beside the arrow. */
+.belot-dialog.belot-dialog-setup .setup-options-row > .appearance-card-style { padding-inline: 0; }
+.belot-dialog.belot-dialog-setup .card-style-preview-row,
+.belot-dialog.belot-dialog-setup .card-style-preview-gallery { width: 100%; min-width: 0; }
+.belot-dialog.belot-dialog-setup .card-style-preview-gallery > .card-style-next {
+  align-self: stretch;
+  height: auto;
+}
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery > .appearance-preview {
   --preview-card-ratio: 1.42;
   --preview-card-height: clamp(50px, 8vh, 62px);
   --preview-card-width: calc(var(--preview-card-height) / var(--preview-card-ratio));
-  width: min(100%, calc(6 * var(--preview-card-width) + 15px));
+  width: 100%;
   height: var(--preview-card-height);
   grid-template-columns: repeat(5, minmax(0, 1fr)) var(--preview-card-width);
   grid-template-rows: var(--preview-card-height);

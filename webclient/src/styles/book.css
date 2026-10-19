@@ -28,6 +28,16 @@
   display: block; overflow: visible; font-size: 12px; line-height: 1.3;
 }
 .table-arena .arena-status .score-header { justify-content: flex-start; gap: 3px 8px; }
+.table-arena .arena-status > .score-bar { display: grid; align-self: stretch; align-content: stretch; }
+.table-arena .arena-status .score-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  padding-block: 0;
+  gap: 4px;
+}
+.table-arena .arena-status .score-prompt > strong { margin-top: auto; }
 .table-arena .arena-controls { --control-button-gap: 3px; display: grid; grid-template-columns: max-content max-content; align-items: stretch; justify-content: end; justify-self: end; gap: var(--control-button-gap); width: fit-content; max-width: 100%; min-width: 0; }
 .table-utilities { display: grid; grid-template-columns: 30px; grid-template-rows: repeat(2, 30px); align-content: center; justify-self: end; gap: var(--control-button-gap, 3px); }
 .table-utilities .table-square-button { width: 30px; min-width: 30px; height: 30px; padding: 4px; border-radius: 7px; }
@@ -176,7 +186,7 @@
   container-name: table-arena;
   container-type: inline-size;
 }
-@container table-arena (min-width: 500px) {
+@container table-arena (min-width: 780px) {
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); }
   .table-arena .arena-header > .game-data-card,
   .table-arena .arena-header .game-data-grid { display: contents; }
@@ -184,7 +194,7 @@
   .table-arena .arena-header > .match-data-card { grid-column: 2; grid-row: 1; }
   .table-arena .arena-header [data-team="your"] { grid-column: 3; grid-row: 1; }
 }
-@container table-arena (max-width: 499px) {
+@container table-arena (max-width: 779px) {
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); }
   .table-arena .arena-header > .game-data-card { display: block; grid-column: auto; grid-row: auto; }
   .table-arena .arena-header .game-data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

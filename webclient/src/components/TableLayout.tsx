@@ -55,7 +55,9 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         }
       }
       const width = Math.floor(guide.getBoundingClientRect().width * .95 * 4) / 4;
-      if (width > 0 && width !== previousWidth) {
+      // The hand height changes the trick's available height. Ignore subpixel
+      // differences so rounding cannot bounce between neighboring sizes forever.
+      if (width > 0 && Math.abs(width - previousWidth) > .5) {
         previousWidth = width;
         arena.style.setProperty("--hand-card-max", `${width}px`);
       }

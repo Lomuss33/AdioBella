@@ -6,11 +6,13 @@
   container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 24px repeat(3, minmax(0, 1fr));
-  align-content: stretch;
-  gap: clamp(5px, 1vh, 8px);
+  grid-template-rows: max-content repeat(3, auto);
+  align-content: start;
+  align-self: start;
+  gap: 5px;
   min-width: 0;
   padding: clamp(8px, 1.8vw, 14px);
+  padding-block: 6px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--team-tone) 24%, transparent);
   border-radius: 14px;
@@ -21,7 +23,8 @@
   align-items: center;
   justify-content: center;
   grid-column: 1;
-  min-height: 24px;
+  min-height: 0;
+  line-height: 1.2;
   margin: 0;
   text-align: center;
   color: var(--team-tone);
@@ -34,16 +37,16 @@
   letter-spacing: .15em;
 }
 .belot-dialog.belot-dialog-setup .team-settings-label strong::before { content: none; }
-.belot-dialog.belot-dialog-setup [data-team="your"] .team-settings-label strong { color: #b3f2dd; }
-.belot-dialog.belot-dialog-setup [data-team="opponent"] .team-settings-label strong { color: #ffe1d2; }
+.belot-dialog.belot-dialog-setup [data-team="your"] .team-settings-label strong { color: var(--ui-team-your); }
+.belot-dialog.belot-dialog-setup [data-team="opponent"] .team-settings-label strong { color: var(--ui-team-opponent); }
 .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field {
   position: relative;
   z-index: 1;
   display: grid;
   grid-column: 1;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: max-content minmax(32px, 1fr);
-  align-content: stretch;
+  grid-template-rows: max-content auto;
+  align-content: start;
   gap: 4px;
   min-width: 0;
   margin: 0;

@@ -1,6 +1,7 @@
 import { t } from "../i18n";
 import type { PlayerView } from "../types";
 import PlayingCard from "./PlayingCard";
+import SeatMarker from "./SeatMarker";
 
 interface PlayerHandProps {
   player?: PlayerView;
@@ -46,31 +47,12 @@ function PlayerHand({
   });
 
   return (
-    <div className="player-hand-area" role="group" aria-label={t("Your hand")}>
-      <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
-        <div className="south-inline-status-row">
-          <span className="south-inline-side south-inline-left">
-            <span
-              className={`south-inline-badge ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
-              aria-hidden={showDealer ? undefined : true}
-            >
-              {showDealer ? t("dealer") : ""}
-            </span>
-          </span>
-          <span className="south-inline-side south-inline-right">
-            <span
-              className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
-              aria-hidden={showTrumpCaller ? undefined : true}
-            >
-              {showTrumpCaller ? t("trump") : ""}
-            </span>
-          </span>
-        </div>
-        <div className="south-inline-main">
-          <strong title={player.name}>{player.name}</strong>
-          <span className="south-inline-separator">:</span>
-          <span title={player.team}>{player.team}</span>
-        </div>
+    <div
+      className={["player-hand-area", player.currentTurn ? "seat-active" : "", winnerGlow ? "seat-winner-glow" : ""].filter(Boolean).join(" ")}
+      data-team="your" role="group" aria-label={t("Your hand")}
+    >
+      <div className="player-hand-decoration" aria-hidden="true">
+        <SeatMarker seat="SOUTH" active={player.currentTurn} winner={winnerGlow} backdrop />
       </div>
       <div className="card-fan-row" data-card-count={visibleCards.length}>
         {slots.map((slot, slotIndex) =>
@@ -89,6 +71,24 @@ function PlayerHand({
             <div key={`slot-${slotIndex}`} className="hand-slot hand-slot-empty" aria-hidden="true" />
           )
         )}
+      </div>
+      <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
+        <span className="south-player-team" title={player.team}>{player.team}</span>
+        <strong className="south-player-name" title={player.name}>{player.name}</strong>
+        <div className="south-inline-status-row">
+          <span
+            className={`south-inline-badge ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
+            aria-hidden={showDealer ? undefined : true}
+          >
+            {showDealer ? t("dealer") : ""}
+          </span>
+          <span
+            className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
+            aria-hidden={showTrumpCaller ? undefined : true}
+          >
+            {showTrumpCaller ? t("trump") : ""}
+          </span>
+        </div>
       </div>
     </div>
   );

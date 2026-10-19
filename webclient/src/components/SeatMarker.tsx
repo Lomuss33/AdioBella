@@ -17,7 +17,7 @@ export default function SeatMarker({ seat, active = false, winner = false, playe
   backdrop?: boolean;
 }) {
   const position = POSITION[seat];
-  const backdropAngle = seat === "WEST" ? POSITION.EAST.angle : seat === "EAST" ? POSITION.WEST.angle : position.angle;
+  const backdropAngle = (position.angle + 180) % 360;
   const label = `${playerName ? `${playerName}, ` : ""}${tr(position.label)}${active ? `, ${t("playing now")}` : ""}${winner ? `, ${t("trick winner")}` : ""}`;
 
   return (

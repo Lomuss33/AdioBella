@@ -27,10 +27,28 @@ test("every accent/table combination preserves separate ownership and readable c
         expect(contrast("#c5ced8", surface)).toBeGreaterThanOrEqual(4.5);
       }
       // Exposed player/team text stays legible against every felt palette.
-      for (const text of ["#edf1f5", "#79dfc0", "#f4c8b6"]) {
+      for (const text of ["#edf1f5", tablePalettes[theme].teamYour, tablePalettes[theme].teamOpponent]) {
         expect(contrast(text, tablePalettes[theme].center)).toBeGreaterThanOrEqual(4.5);
         expect(contrast(text, tablePalettes[theme].edge)).toBeGreaterThanOrEqual(4.5);
       }
     }
   }
+});
+
+test("each table supplies its own readable pair of team colors", () => {
+  const pairs = new Set<string>();
+  for (const theme of TABLE_THEMES) {
+    const palette = tablePalettes[theme];
+    const variables = tableVariables(theme);
+    expect(variables["--ui-team-your"]).toBe(palette.teamYour);
+    expect(variables["--ui-team-opponent"]).toBe(palette.teamOpponent);
+    expect(palette.teamYour).not.toBe(palette.teamOpponent);
+    pairs.add(`${palette.teamYour}/${palette.teamOpponent}`);
+    for (const color of [palette.teamYour, palette.teamOpponent]) {
+      for (const surface of [palette.center, palette.edge, "#10171f", "#17212b"]) {
+        expect(contrast(color, surface)).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+  expect(pairs.size).toBe(TABLE_THEMES.length);
 });

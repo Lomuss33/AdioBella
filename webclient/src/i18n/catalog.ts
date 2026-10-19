@@ -33,6 +33,10 @@ export const messages = {
   "Games won": ["Games won", "Gewonnene Spiele", "Osvojene partije"],
   "Final game": ["Final game", "Letztes Spiel", "Posljednja partija"],
   "Target wins": ["Target wins", "Siegziel", "Cilj pobjeda"],
+  "First to": ["First to", "Zuerst", "Prvi do"],
+  "matchSummary.one": ["First to {wins} win with {points} points", "Zuerst {wins} Sieg mit {points} Punkten", "Prvi do {wins} pobjede uz {points} bod"],
+  "matchSummary.few": ["First to {wins} wins with {points} points", "Zuerst {wins} Siege mit {points} Punkten", "Prvi do {wins} pobjede uz {points} bod"],
+  "matchSummary.other": ["First to {wins} wins with {points} points", "Zuerst {wins} Siege mit {points} Punkten", "Prvi do {wins} pobjeda uz {points} bod"],
   "Rematch": ["Rematch", "Revanche", "Revanš"],
   "Game complete": [
     "Game complete",

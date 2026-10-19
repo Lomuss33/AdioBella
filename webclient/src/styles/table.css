@@ -23,6 +23,7 @@
   zoom: 1; transform: none; scroll-snap-align: none; align-self: start;
 }
 .table-arena {
+  --arena-inset: clamp(8px, 1vw, 14px);
   caret-color: transparent;
   cursor: default;
   --trick-card-max: 80px;
@@ -39,7 +40,7 @@
   min-width: 0;
   height: var(--arena-height);
   min-height: 560px;
-  padding: clamp(8px, 1vw, 14px);
+  padding: var(--arena-inset);
   border: 1px solid color-mix(in srgb, var(--ui-muted) 21.96%, transparent);
   border-radius: 16px;
   background: radial-gradient(ellipse at center, var(--felt-center), var(--felt-edge));
@@ -91,8 +92,6 @@
 .table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: var(--ui-muted); background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
 .table-arena .trick-cards .playing-card-face { width: var(--trick-card-width); height: var(--trick-card-height); }
 .table-arena .trick-cards .playing-card-shell { width: var(--trick-card-width); height: var(--trick-card-height); }
-.table-arena .trick-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; font: 28px/1 Georgia, serif; color: color-mix(in srgb, var(--ui-muted) 27.06%, transparent); pointer-events: none; }
-.table-arena .trick-empty span { color: color-mix(in srgb, var(--ui-muted) 27.06%, transparent); }
 .table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: var(--ui-gold-light); background: var(--ui-solid); border: 0; box-shadow: var(--ui-shadow); }
 .table-arena .trick-points-chip[class*="collect-"] { opacity: 0; }
 
@@ -130,7 +129,7 @@
 .game-layout :is(summary, button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
 
 @media (max-width: 700px) {
-  .table-arena { --trick-card-max: clamp(44px, 14vw, 58px); border-radius: 12px; padding: 6px; gap: 6px;     }
+  .table-arena { --arena-inset: 6px; --trick-card-max: clamp(44px, 14vw, 58px); border-radius: 12px; padding: var(--arena-inset); gap: 6px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .table-arena .arena-play { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; gap: 6px; }
   .table-arena .seat-panel { padding: 5px; align-self: start;     }
@@ -200,9 +199,8 @@
 .table-arena .player-hand-area { width: min(100%, 640px); padding-top: 0; gap: 3px; }
 .table-arena .player-hand-area .card-fan-row {
   gap: 4px;
-  /* Reserve each row from width alone. Its height must not depend on the
-     trick guide: that guide measures the space left over above this hand. */
-  grid-auto-rows: calc(min(var(--trick-card-max), var(--trick-hand-limit, 80px)) * .95 * var(--playing-card-height-factor, 1.42));
+  /* Cards and empty slots share an aspect ratio, so rows fit the actual faces. */
+  grid-auto-rows: auto;
   align-content: center;
 }
 .table-arena .south-inline-info { flex-wrap: nowrap; }
@@ -225,7 +223,8 @@
 /* Phone landscape uses width for the hand instead of adding another tall row. */
 @media (max-height: 500px) and (min-width: 600px) {
   .table-arena {
-    min-height: 350px; padding: 5px; gap: 5px;
+    --arena-inset: 5px;
+    min-height: 350px; padding: var(--arena-inset); gap: 5px;
     grid-template-columns: minmax(0, 1fr) clamp(190px, 30vw, 280px);
     grid-template-rows: auto minmax(0, 1fr);
       }
@@ -309,11 +308,11 @@
   transform-origin: center;
 }
 .table-arena .seat-marker-active,
-.table-arena .seat-marker-winner { color: var(--ui-gold-light); }
+.table-arena .seat-marker-winner { color: var(--team-color, var(--ui-gold-light)); }
 .seat-marker-active .seat-marker-pointer,
 .seat-marker-winner .seat-marker-pointer { opacity: 1; stroke-width: 2; }
 .seat-marker-active .seat-marker-table,
-.seat-marker-winner .seat-marker-table { stroke: var(--ui-gold); stroke-opacity: .8; }
+.seat-marker-winner .seat-marker-table { stroke: currentColor; stroke-opacity: .8; }
 .seat-marker-active .seat-marker-trail { animation: seat-cue-inward 1600ms ease-out 2; }
 .seat-marker-active .seat-marker-halo { opacity: .55; animation: seat-cue-ring 1600ms ease-out 2; }
 .seat-marker-winner .seat-marker-halo { opacity: .8; animation: seat-cue-ring 800ms ease-out 1; }

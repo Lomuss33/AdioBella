@@ -14,6 +14,8 @@ import "./styles/team-settings.css";
 import "./styles/table-panels.css";
 import "./styles/setup-typography.css";
 import "./styles/match-result.css";
+import "./styles/meld-details.css";
+import "./styles/trump-choice.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

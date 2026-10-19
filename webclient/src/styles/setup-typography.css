@@ -58,3 +58,34 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.belot-dialog.belot-dialog-setup .team-settings-grid { flex: 0 0 auto; align-items: start; }
+.belot-dialog.belot-dialog-setup .setup-options-row > [data-setting="mode"] {
+  align-self: stretch;
+  align-content: stretch;
+  grid-template-rows: max-content minmax(38px, 1fr);
+  padding-block: 0;
+  gap: 4px;
+}
+.belot-dialog.belot-dialog-setup [data-setting="mode"] .setup-segment-control {
+  height: 100%;
+  min-height: 38px;
+  align-self: stretch;
+}
+.belot-dialog.belot-dialog-setup .popup-footer .action-button-primary {
+  min-height: clamp(54px, 8svh, 64px);
+  padding-block: 13px;
+}
+/* Spend extra screen height on editable fields, keeping the header and gaps compact. */
+@media (min-height: 650px), (min-width: 900px) and (min-height: 540px) {
+  .belot-dialog.belot-dialog-setup .team-settings-row {
+    gap: 6px;
+    padding-block: 8px;
+  }
+  .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input {
+    height: clamp(44px, 6.5svh, 76px);
+    min-height: 44px;
+    max-height: 76px;
+    padding: 8px 12px;
+    font-size: clamp(16px, calc(13px + .4vw + .25vh), 26px);
+  }
+}

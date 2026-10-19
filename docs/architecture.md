@@ -42,6 +42,7 @@ The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/
 | App layout and themes | [app.css](../webclient/src/app.css) |
 | Active table and terminal layout | [table.css](../webclient/src/styles/table.css); one responsive seat layout, theme-colored felt, and team-colored scores |
 | Responsive popups and confirmations | [popups.css](../webclient/src/styles/popups.css), [usePopupDialog.ts](../webclient/src/lib/usePopupDialog.ts), [ConfirmPopup.tsx](../webclient/src/components/ConfirmPopup.tsx) |
+| Completed-match results | `MatchCompleteSummaryPanel` in [ActionPanel.tsx](../webclient/src/components/ActionPanel.tsx) and [match-result.css](../webclient/src/styles/match-result.css); paired team scores, localized final-game details, and persistent Settings/Rematch actions |
 | Full-screen match setup and header layout | [setup-page.css](../webclient/src/styles/setup-page.css), loaded after the dialog styles; header controls occupy separate grid columns and the setup content scrolls above the start button |
 | Runtime selection and Pages path | [.env.pages](../webclient/.env.pages), [vite.config.ts](../webclient/vite.config.ts) |
 | Frontend packaging into Spring Boot | [server/build.gradle.kts](../server/build.gradle.kts) |

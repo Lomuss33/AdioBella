@@ -1594,41 +1594,6 @@ button {
   border: 1px solid rgba(246, 237, 216, 0.1);
 }
 
-.match-complete-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
-  justify-items: center;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(1, 8, 5, 0.34);
-  border: 1px solid rgba(246, 237, 216, 0.1);
-}
-
-.match-complete-team {
-  color: var(--ui-muted);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-.match-complete-team-winner {
-  color: var(--ui-gold-light);
-}
-
-.match-complete-score {
-  color: var(--ui-text);
-  font-size: 1.18rem;
-  font-family: Georgia, "Times New Roman", serif;
-  line-height: 1;
-}
-
-.match-complete-score-winner {
-  color: var(--ui-text);
-}
-
 .between-games-team-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

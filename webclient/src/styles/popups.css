@@ -193,11 +193,6 @@
 .belot-dialog :is(.game-complete-box-row, .game-complete-score-row) strong { font-size: 18px; line-height: 1.4; }
 .belot-dialog :is(.between-games-outcome-line, .between-games-matchline) { font-size: 14px; line-height: 1.5; }
 .belot-dialog .between-games-outcome strong { font-size: 20px; }
-.belot-dialog .match-complete-grid { padding: 6px 0; border: 0; border-radius: 0; background: none; gap: 6px 12px; }
-.belot-dialog .match-complete-team { font-size: 13px; min-width: 0; }
-.belot-dialog .match-complete-score { font-size: 44px; }
-.belot-dialog .match-complete-team, .belot-dialog .match-complete-score { color: var(--ui-muted); }
-.belot-dialog .match-complete-team-winner, .belot-dialog .match-complete-score-winner { color: var(--ui-gold-light); }
 .belot-dialog .popup-card-loading { width: auto; border: 0; background: none; box-shadow: none; padding: 40px;  backdrop-filter: none;  -webkit-backdrop-filter: none; }
 
 /* Start screen lobby: clear teams, one rules row, one appearance row. */

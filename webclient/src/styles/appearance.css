@@ -8,13 +8,13 @@
 }
 .belot-dialog .action-button-primary {
   border-color: var(--ui-accent);
-  background: var(--ui-accent);
-  color: var(--ui-ink);
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
 }
 .belot-dialog .action-button-primary:hover:not(:disabled) {
   border-color: var(--ui-focus);
-  background: color-mix(in srgb, var(--ui-accent) 86%, white);
-  color: var(--ui-ink);
+  background: color-mix(in srgb, var(--ui-accent-fill) 92%, black);
+  color: var(--ui-accent-fill-text);
 }
 .belot-dialog.belot-dialog-setup .setup-options-row > :is(.appearance-accent-setting, .appearance-table-colors) {
   grid-template-rows: 10px minmax(44px, 1fr);
@@ -98,11 +98,15 @@
   isolation: isolate;
   transform: none;
   filter: none;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+  border-color: color-mix(in srgb, var(--choice-swatch) 75%, #aeb8c8);
+  background: var(--choice-swatch);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%), inset 0 -1px 0 rgb(0 0 0 / 12%);
 }
+.belot-dialog.belot-dialog-setup .accent-color-choice { --choice-swatch: var(--accent-swatch); }
+.belot-dialog.belot-dialog-setup .setup-theme-choice { --choice-swatch: var(--swatch); }
 .belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice):hover {
   filter: none;
-  border-color: #edf1f5;
+  border-color: var(--ui-accent);
 }
 .belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice)[aria-pressed="true"] {
   transform: none;
@@ -234,9 +238,9 @@
 }
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) button[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--ui-accent) 82%, white 10%);
-  background: linear-gradient(145deg, var(--ui-accent), var(--ui-accent-strong));
-  color: var(--ui-ink);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 22%), 0 2px 6px color-mix(in srgb, var(--ui-accent-strong) 24%, transparent);
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 2px 5px rgb(0 0 0 / 20%);
   font-weight: 800;
 }
 /* Each setting gets its own gentle color scale so the choices carry meaning. */
@@ -251,7 +255,7 @@
 .belot-dialog.belot-dialog-setup .setup-options-row button[data-choice] {
   border-color: color-mix(in srgb, var(--choice-tint) 36%, var(--ui-line));
   background: linear-gradient(180deg, color-mix(in srgb, var(--choice-tint) 18%, var(--ui-solid)), color-mix(in srgb, var(--choice-tint) 10%, var(--ui-solid)));
-  color: color-mix(in srgb, var(--choice-tint) 54%, var(--ui-text));
+  color: color-mix(in srgb, var(--choice-tint) 25%, var(--ui-text));
 }
 .belot-dialog.belot-dialog-setup .setup-options-row button[data-choice]:hover:not([aria-pressed="true"]) {
   border-color: color-mix(in srgb, var(--choice-tint) 72%, white 8%);
@@ -260,9 +264,9 @@
 }
 .belot-dialog.belot-dialog-setup .setup-options-row button[data-choice][aria-pressed="true"] {
   border-color: var(--ui-accent);
-  background: var(--ui-accent);
-  color: var(--ui-ink);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 2px 7px color-mix(in srgb, var(--ui-accent-strong) 30%, transparent);
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 2px 5px rgb(0 0 0 / 20%);
 }
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) button:focus-visible {
   outline: 2px solid var(--ui-focus);
@@ -278,3 +282,11 @@
 }
 .belot-dialog.belot-dialog-setup .card-style-name { color: #edf2f8; }
 .belot-dialog.belot-dialog-setup .language-code { color: #f5f7fb; }
+
+/* Disabled actions keep their wording legible; edges communicate availability. */
+.belot-dialog .action-button:disabled {
+  background: var(--ui-solid);
+  color: var(--ui-muted);
+  border: 1px dashed var(--ui-line);
+  box-shadow: none;
+}

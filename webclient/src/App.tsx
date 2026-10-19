@@ -774,6 +774,7 @@ function App() {
           errorMessage={errorMessage}
           playerNames={playerNameDrafts}
           teamNames={teamNameDrafts}
+          yourTeamName={playersBySeat.SOUTH?.team}
           gameSettings={gameSettings}
           gameCompleteSummary={gameCompleteSummary}
           matchCompleteSummary={matchCompleteSummary}
@@ -796,7 +797,7 @@ function App() {
         />
       </div>
       <section className="after-table">
-        <TerminalLog events={events} matchComplete={snapshot?.matchComplete} />
+        <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team} />
       </section>
       {showBook && <GuideBook initialChapter={showBook} onClose={() => setShowBook(null)} />}
       {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {

@@ -17,6 +17,8 @@ import "./styles/match-result.css";
 import "./styles/meld-details.css";
 import "./styles/trump-choice.css";
 import "./styles/meld-review.css";
+import "./styles/materials.css";
+import "./styles/text-roles.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

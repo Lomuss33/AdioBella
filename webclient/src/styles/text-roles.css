@@ -1,0 +1,140 @@
+/* Text roles are shared by setup, play, results, history, and every guide page.
+   Identity, match information, actions, and outcomes have separate meanings.
+   Surface textures and layout remain owned by their existing stylesheets. */
+.game-layout .table-stage,
+.game-layout .after-table,
+.belot-dialog {
+  --text-body: #ffffff;
+  --text-context: #ffffff;
+  --text-match: var(--ui-accent-text);
+  --text-highlight: var(--ui-accent);
+  --text-award: var(--ui-accent-text);
+  color: var(--text-body);
+}
+:is(.game-layout, .belot-dialog) [data-team="your"],
+.belot-dialog[data-team="your"] { --text-team: var(--ui-team-your); }
+:is(.game-layout, .belot-dialog) [data-team="opponent"],
+.belot-dialog[data-team="opponent"] { --text-team: var(--ui-team-opponent); }
+:is(.game-layout, .belot-dialog) [data-team] {
+  --text-team-context: var(--text-team);
+}
+
+/* Team identity remains stable when an opponent wins, or names change. */
+.belot-dialog.belot-dialog-setup [data-team] .team-settings-label strong,
+.belot-dialog.belot-dialog-setup [data-team] .name-setting-field > .panel-caption,
+.table-arena [data-team] .game-data-team-heading > :is(strong, .panel-caption),
+.table-arena [data-team] .seat-main-copy strong,
+.table-arena [data-team] :is(.south-player-name, .south-player-team) {
+  color: var(--text-team);
+}
+.table-arena [data-team] .seat-main-copy small { color: var(--text-team-context); }
+.belot-dialog.belot-dialog-setup [data-team] .team-settings-label strong {
+  font-weight: 700;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team] { border-top: 2px solid var(--text-team); }
+.table-arena .game-data-section[data-team="your"] { border-left-color: var(--text-team); }
+.table-arena .game-data-section[data-team="opponent"] { border-right-color: var(--text-team); }
+.table-arena .seat-panel::before,
+.table-arena .player-hand-area::before { background: color-mix(in srgb, var(--team-color) 80%, transparent); }
+.belot-dialog :is(.match-result-team, .meld-details-player)[data-team] { border-top: 2px solid var(--text-team); }
+.game-layout :is(.terminal-play-row, .terminal-round-winner, .terminal-line)[data-team] { border-left-color: var(--text-team); }
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input { color: #fff; }
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input::placeholder { color: var(--text-team-context); }
+.table-arena .game-data-section [data-stat="points"] .data-value { color: var(--text-team); }
+.table-arena .game-data-section [data-stat="wins"] .data-value { color: var(--text-team); }
+.table-arena .game-data-section [data-stat="melds"] .data-value { color: var(--text-award); }
+.table-arena .game-data-section .data-label { color: var(--text-context); }
+
+/* Labels describe a setting; values and titles carry the match accent. */
+.table-arena .match-summary-title,
+.table-arena .match-summary-goal strong,
+.belot-dialog.belot-dialog-setup .action-popup-title,
+.belot-dialog.belot-dialog-setup .setup-options-row > :is(.setting-group, .appearance-setting) > :is(.panel-caption, span),
+.belot-dialog.belot-dialog-setup .card-style-name,
+.belot-dialog :is(.game-complete-box-title, .game-complete-box-row strong, .match-result-details dd),
+.belot-dialog.guide-dialog :is(.guide-heading h2, .guide-page h3) {
+  color: var(--text-match);
+}
+.table-arena :is(.match-summary-target-caption, .match-summary-goal small, .trump-line),
+.belot-dialog :is(.action-popup-subtitle, .meld-details-note, .meld-details-field-label,
+  .meld-player-identity > span, .meld-team-identity > span, .meld-combination-list-label,
+  .meld-player-total > span, .match-result-unit, .match-result-details dt),
+.game-layout :is(.terminal-empty, .terminal-play-order, .terminal-hand-context) {
+  color: var(--text-context);
+}
+.belot-dialog :is(.action-popup-title, .meld-details-total strong, .meld-combination-points),
+.game-layout :is(.terminal-count, .terminal-match-game-title, .terminal-round-title),
+.table-arena .trick-points-chip { color: var(--text-match); }
+.belot-dialog.guide-dialog .guide-page p,
+.belot-dialog .meld-combination-name strong { color: var(--text-body); }
+
+/* Status badges describe a role or an event rather than a team. */
+.table-arena :is(.seat-badge, .south-inline-badge) { color: var(--ui-info); }
+.table-arena :is(.seat-badge-trump, .south-inline-badge-trump) { color: var(--text-highlight); }
+.table-arena .trump-suit-symbol:is(.hearts, .diams),
+.game-layout .terminal-play-card.is-red-suit { color: #ff92a0; }
+.table-arena .score-prompt > strong[data-status="waiting"] { color: var(--text-context); }
+.table-arena .score-prompt > strong[data-status="action"] { color: var(--text-highlight); }
+.table-arena .score-prompt > strong[data-team] { color: var(--text-team); }
+
+/* Melds and final standings preserve the same team identity as the table. */
+.belot-dialog [data-team] :is(.meld-team-identity strong, .meld-player-identity strong,
+  .meld-details-player-heading h3, .meld-details-identity > small, .match-result-name,
+  .match-result-score),
+.belot-dialog .game-complete-score-row[data-team] :is(span, strong) {
+  color: var(--text-team);
+}
+.belot-dialog :is(.meld-player-total strong, .meld-combination-points,
+  .meld-details-total strong, .meld-details-breakdown dd) { color: var(--text-award); }
+.belot-dialog .match-result-team-winner .match-result-place { color: var(--text-highlight); }
+.belot-dialog .match-result-team:not(.match-result-team-winner) .match-result-place { color: var(--text-context); }
+.belot-dialog .match-result-forfeit { color: var(--ui-warning); }
+
+/* History uses the same seat/team identity, while success means a fulfilled
+   contract and failure means a missed contract, for either side. */
+.game-layout [data-team] :is(.terminal-play-player, .terminal-round-winner-identity strong,
+  .terminal-round-winner-team),
+.game-layout .terminal-line[data-team] > span { color: var(--text-team); }
+.game-layout :is(.terminal-round-winner-label, .terminal-round-points, .terminal-result-points,
+  .terminal-hand-points, .terminal-last-trick-bonus) { color: var(--text-award); }
+.game-layout .terminal-hand-contract.is-passed { color: var(--ui-success); }
+.game-layout .terminal-hand-contract.is-failed { color: var(--ui-danger); }
+.game-layout .terminal-trick-state.is-live { color: var(--ui-info); }
+.game-layout .terminal-trick-state.is-complete { color: var(--ui-success); }
+.game-layout .terminal-status.is-live { color: var(--ui-info); }
+.game-layout .terminal-status.is-complete { color: var(--ui-success); }
+.game-layout .terminal-forfeit { color: var(--ui-warning); }
+
+/* Buttons: accent for the primary action, neutral for secondary actions,
+   green for keep-playing, amber for concession, and red for leaving/errors. */
+.belot-dialog .popup-footer .action-button-primary,
+.belot-dialog.belot-dialog-setup .setup-options-row button[data-choice][aria-pressed="true"],
+.belot-dialog.guide-dialog .guide-chapters button[aria-current="page"],
+.game-layout .terminal-feed-order { color: #fff; }
+.belot-dialog .popup-footer .action-button:not(.action-button-primary) { color: var(--text-body); }
+.belot-dialog .popup-footer .action-button-safe {
+  color: #fff;
+  border-color: var(--ui-success);
+}
+.belot-dialog .popup-footer .action-button-safe:hover:not(:disabled) { color: #fff; }
+.belot-dialog .popup-footer .action-button.action-button-danger,
+.table-arena .arena-controls .match-corner-button-danger { color: var(--ui-danger); }
+.table-arena .arena-controls .match-corner-button-warning { color: var(--ui-warning); }
+.table-arena .arena-controls .match-corner-button-warning:hover:not(:disabled) { color: var(--ui-warning); }
+.table-arena .arena-controls .match-corner-button-danger:hover:not(:disabled) { color: var(--ui-danger); }
+.table-arena .arena-controls .match-corner-button svg { color: currentColor; }
+.table-arena .arena-controls .table-square-button,
+.belot-dialog .table-square-button,
+.belot-dialog.guide-dialog .guide-heading .table-square-button,
+.belot-dialog :is(.card-style-next, .language-option-check),
+.game-layout .terminal-latest { color: var(--text-highlight); }
+.belot-dialog.guide-dialog .guide-chapters button:not([aria-current="page"]) { color: var(--text-context); }
+.belot-dialog .popup-footer .action-button:disabled,
+.table-arena .arena-controls .match-corner-button:disabled { color: var(--text-context); }
+.belot-dialog .error-line,
+.table-arena .error-line,
+.belot-dialog.belot-dialog-confirm .action-popup-title { color: var(--ui-danger); }
+
+/* Remaining utility copy uses white rather than older off-white literals. */
+.belot-dialog.belot-dialog-setup .language-code,
+.table-arena .table-utilities .language-trigger small { color: #fff; }

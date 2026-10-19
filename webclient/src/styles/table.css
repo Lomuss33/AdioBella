@@ -376,7 +376,13 @@
 .table-arena .match-corner-button-warning svg,
 .table-arena .match-corner-button-danger svg { color: var(--ui-accent); }
 .table-arena :is(.match-corner-button, .table-square-button) { color: var(--ui-accent); }
-.table-arena .match-corner-button:disabled { opacity: .4; cursor: default; }
+.table-arena .arena-controls .match-corner-button:disabled {
+  opacity: 1;
+  color: var(--ui-muted);
+  border-color: var(--ui-line);
+  border-style: dashed;
+  cursor: default;
+}
 .table-arena .match-corner-button:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 @media (hover: hover) {
   .table-arena .match-corner-button:not(:disabled):hover { background: var(--ui-control); color: var(--ui-text); border-color: var(--ui-muted); }
@@ -519,12 +525,12 @@
 .game-layout .terminal-feed-order:hover { color: var(--ui-text); border-color: var(--ui-accent); }
 .game-layout .terminal-feed-order:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 .game-layout .terminal-feed-order {
-  background: var(--ui-accent);
+  background: var(--ui-accent-fill);
   border-color: var(--ui-accent);
-  color: var(--ui-ink);
+  color: var(--ui-accent-fill-text);
   font-weight: 700;
 }
-.game-layout .terminal-feed-order:hover { background: var(--ui-focus); color: var(--ui-ink); }
+.game-layout .terminal-feed-order:hover { background: color-mix(in srgb, var(--ui-accent-fill) 92%, black); color: var(--ui-accent-fill-text); }
 .game-layout .terminal-lines:focus-visible, .game-layout .terminal-latest:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 @container terminal-panel (min-width: 680px) {
   .game-layout .terminal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; }
@@ -545,22 +551,22 @@
 .game-layout .terminal-round-group, .game-layout .terminal-match-game { align-content: start; gap: 5px; padding: 7px; background: color-mix(in srgb, var(--ui-glass) 42%, transparent); }
 .game-layout .terminal-round-title { display: flex; min-width: 0; justify-content: space-between; align-items: center; gap: 7px; padding: 0 1px 5px; font-size: 10px; letter-spacing: .025em; }
 .game-layout .terminal-round-title > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.game-layout .terminal-trick-state { padding: 2px 6px; font-size: 9px; white-space: nowrap; }
+.game-layout .terminal-trick-state { padding: 2px 6px; font-size: 10px; white-space: nowrap; }
 .game-layout .terminal-play-list { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 3px; }
 .game-layout .terminal-play-row { min-height: 28px; grid-template-columns: 18px minmax(0, 1fr) max-content; gap: 6px; padding: 3px 6px; border: 1px solid color-mix(in srgb, var(--game-line) 40%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--ui-control) 48%, transparent); }
-.game-layout .terminal-play-order { width: 16px; height: 16px; font-size: 9px; }
+.game-layout .terminal-play-order { width: 16px; height: 16px; font-size: 10px; }
 .game-layout .terminal-play-player { font-size: 11px; font-weight: 550; }
 .game-layout .terminal-play-card { display: inline-flex; min-width: 34px; min-height: 23px; justify-content: center; align-items: center; gap: 2px; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--ui-line) 60%, transparent); border-radius: 5px; color: var(--ui-text); background: color-mix(in srgb, var(--ui-solid) 82%, transparent); font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1; }
 .game-layout .terminal-play-card.is-red-suit { color: #ff9a9e; }
 .game-layout .terminal-card-suit { font-size: 13px; line-height: 1; }
 .game-layout .terminal-round-winner { display: grid; min-height: 30px; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; align-items: center; gap: 3px 7px; padding: 3px 7px; }
-.game-layout .terminal-round-winner-label { grid-column: 1; color: var(--ui-gold-light); font-size: 8px; white-space: nowrap; }
+.game-layout .terminal-round-winner-label { grid-column: 1; color: var(--ui-gold-light); font-size: 10px; white-space: normal; }
 .game-layout .terminal-round-winner-identity { display: flex; min-width: 0; align-items: baseline; gap: 4px; overflow: hidden; white-space: nowrap; }
 .game-layout .terminal-round-winner-identity strong { min-width: 0; overflow: hidden; color: var(--ui-text); font-size: 11px; text-overflow: ellipsis; }
-.game-layout .terminal-round-winner-team { min-width: 0; overflow: hidden; color: var(--ui-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.game-layout .terminal-round-winner-team { min-width: 0; overflow: hidden; color: var(--ui-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .game-layout .terminal-round-points { grid-column: 3; margin: 0; color: var(--ui-gold-light); font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.game-layout .terminal-last-trick-bonus { grid-column: 4; width: auto; padding: 2px 5px; border-radius: 999px; color: var(--ui-muted); background: color-mix(in srgb, var(--ui-solid) 58%, transparent); font-size: 8px; line-height: 1.2; white-space: nowrap; }
-.game-layout .terminal-match-game-title { padding: 1px 1px 5px; font-size: 9px; }
+.game-layout .terminal-last-trick-bonus { grid-column: 4; width: auto; padding: 2px 5px; border-radius: 999px; color: var(--ui-muted); background: color-mix(in srgb, var(--ui-solid) 58%, transparent); font-size: 10px; line-height: 1.2; white-space: nowrap; }
+.game-layout .terminal-match-game-title { padding: 1px 1px 5px; font-size: 10px; }
 .game-layout .terminal-line { padding: 6px 7px; }
 .game-layout .terminal-hand-context-row { align-items: center; }
 .game-layout .terminal-hand-context { line-height: 1.35; }
@@ -569,8 +575,11 @@
   .game-layout .terminal-play-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @container terminal-feed (max-width: 380px) {
-  .game-layout .terminal-round-winner { grid-template-columns: max-content minmax(0, 1fr) max-content; }
-  .game-layout .terminal-last-trick-bonus { grid-column: 2 / -1; justify-self: start; }
+  .game-layout .terminal-round-winner { grid-template-columns: minmax(0, 1fr) max-content; }
+  .game-layout .terminal-round-winner-label { grid-column: 1 / -1; grid-row: 1; }
+  .game-layout .terminal-round-winner-identity { grid-column: 1; grid-row: 2; }
+  .game-layout .terminal-round-points { grid-column: 2; grid-row: 2; }
+  .game-layout .terminal-last-trick-bonus { grid-column: 1 / -1; justify-self: start; }
 }
 @media (max-width: 700px) {
   .game-layout .terminal-lines { max-height: min(34svh, 260px); }
@@ -598,9 +607,9 @@
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
+  border-radius: 6px;
+  background: var(--ui-dialog);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 28%);
   text-shadow: 0 2px 5px rgb(0 0 0 / 40%);
   color: var(--ui-gold-light);
   font-size: 15px;

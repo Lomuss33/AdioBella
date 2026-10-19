@@ -9,7 +9,7 @@ export default function ConfirmPopup({ kind, onCancel, onConfirm }: {
   const dialogRef = usePopupDialog(true);
   const title = kind === "game" ? t("Forfeit this game?") : t("Leave this match?");
   return (
-    <dialog ref={dialogRef} className="belot-dialog" aria-label={title} onCancel={(event) => {
+    <dialog ref={dialogRef} className="belot-dialog belot-dialog-confirm" aria-label={title} onCancel={(event) => {
       event.preventDefault();
       onCancel();
     }}>

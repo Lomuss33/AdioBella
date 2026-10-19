@@ -161,7 +161,10 @@
 .belot-dialog .action-button-danger { color: var(--ui-danger); background: var(--ui-danger-surface); border-color: color-mix(in srgb, var(--ui-danger) 45%, transparent); }
 .belot-dialog .action-button-primary > span { margin-left: 14px; }
 .belot-dialog :is(button, input):focus-visible { outline: 3px solid var(--ui-focus); outline-offset: 3px; }
-.belot-dialog button:disabled { opacity: .55; cursor: default; }
+.belot-dialog button:disabled {
+  opacity: 1;
+  cursor: default;
+}
 .belot-dialog button { touch-action: manipulation; }
 .belot-dialog .error-line { font-size: 14px; padding: 10px; border: 1px solid color-mix(in srgb, var(--ui-muted) 31.37%, transparent); border-radius: 8px; background: var(--ui-danger-surface);  color: var(--ui-danger);  border-color: color-mix(in srgb, var(--ui-danger) 35%, transparent); }
 

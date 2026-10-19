@@ -2,6 +2,7 @@ import { cardDescription, eventDescription, handSettlementDescription } from "..
 import { t, countText, useLanguage } from "../i18n";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GameEvent } from "../types";
+import { seatSide, teamSide } from "../lib/teamSide";
 
 const compactRanks: Record<string, string> = {
   SEVEN: "7", EIGHT: "8", NINE: "9", TEN: "10", JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"
@@ -26,7 +27,7 @@ function CompactCardMark({ rank, suit }: { rank?: string; suit?: string }) {
   );
 }
 
-function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComplete?: boolean }) {
+function TerminalLog({ events, matchComplete, yourTeamName }: { events: GameEvent[]; matchComplete?: boolean; yourTeamName?: string }) {
   const orderedEvents = useMemo(
     () => [...new Map(events.map((event) => [event.sequence, event])).values()].sort((left, right) => left.sequence - right.sequence),
     [events]
@@ -80,7 +81,7 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
                   </span>
                 </div>
                 {group.winner ? (
-                  <div className="terminal-round-winner" data-history-key={`event-${group.winner.sequence}`}>
+                  <div className="terminal-round-winner" data-team={eventSide(group.winner, yourTeamName)} data-history-key={`event-${group.winner.sequence}`}>
                     <span className="terminal-round-winner-label">{t("round winner")}</span>
                     <span className="terminal-round-winner-identity">
                       <strong>{group.winner.payload.winnerPlayerName ?? t("team")}</strong>
@@ -94,7 +95,7 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
                 ) : null}
                 <div className="terminal-play-list">
                   {group.plays.map((event, index) => (
-                    <div key={event.sequence} data-history-key={`event-${event.sequence}`} className="terminal-play-row">
+                    <div key={event.sequence} data-history-key={`event-${event.sequence}`} data-team={eventSide(event, yourTeamName)} className="terminal-play-row">
                       <span className="terminal-play-order" aria-hidden="true">{index + 1}</span>
                       <strong className="terminal-play-player">{event.payload.playerName ?? t("player")}</strong>
                       <CompactCardMark rank={event.payload.rank} suit={event.payload.suit} />
@@ -116,7 +117,7 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
             {matchGroups.map((group) => (
               <section key={group.key} className="terminal-match-game">
                 <div className="terminal-match-game-title" data-history-key={group.key}>{t("matchGameHeading", { game: group.gameNumber })}</div>
-                {group.events.map((event) => <MatchFeedRow key={event.sequence} event={event} />)}
+                {group.events.map((event) => <MatchFeedRow key={event.sequence} event={event} yourTeamName={yourTeamName} />)}
               </section>
             ))}
           </div>
@@ -238,11 +239,16 @@ interface MatchGroup {
   events: GameEvent[];
 }
 
-function MatchFeedRow({ event }: { event: GameEvent }) {
+function eventSide(event: GameEvent, yourTeamName?: string) {
+  return seatSide(event.payload.winnerSeat ?? event.payload.playerSeat)
+    ?? teamSide(event.payload.team ?? event.payload.winner, yourTeamName);
+}
+
+function MatchFeedRow({ event, yourTeamName }: { event: GameEvent; yourTeamName?: string }) {
   const isHandResult = event.payload.eventKind === "HAND_PASSED" || event.payload.eventKind === "HAND_FAILED";
   const handSummary = isHandResult ? handSettlementDescription(event) : null;
   return (
-    <div data-history-key={`event-${event.sequence}`} className={matchRowClassName(event)}>
+    <div data-history-key={`event-${event.sequence}`} data-team={eventSide(event, yourTeamName)} className={matchRowClassName(event)}>
       {handSummary ? (
         <span className="terminal-hand-summary">
           <span className="terminal-hand-context-row">

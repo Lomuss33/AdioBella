@@ -1,27 +1,32 @@
 /* Shared materials also reach dialogs portaled directly into document.body. */
 :root {
-  --ui-text: #f5f7fb;
-  --ui-muted: #c5ced8;
-  --ui-accent-strong: #58b48c;
-  --ui-accent: #9eddbc;
+  --ui-text: #ffffff;
+  --ui-muted: #ffffff;
+  --ui-accent-strong: #2c7958;
+  --ui-accent: #71d2a7;
+  --ui-accent-fill: #2c7958;
+  --ui-accent-fill-text: #ffffff;
+  /* Text keeps the full accent hue; the pale focus ring has a separate role. */
+  --ui-accent-text: #71d2a7;
   /* Compatibility aliases for existing controls; these are accent roles. */
   --ui-gold: var(--ui-accent-strong);
   --ui-gold-light: var(--ui-accent);
-  --ui-focus: #d0f5e1;
+  --ui-focus: #d7ece2;
   --ui-ink: #0b141d;
-  --ui-team-your: #9ddcf2;
-  --ui-team-opponent: #f2b6a0;
-  --ui-danger: #d29c94;
-  --ui-warning: #d0b078;
-  --ui-success: #a4bca8;
-  --ui-line: color-mix(in srgb, var(--ui-accent) 45%, transparent);
-  --ui-highlight: color-mix(in srgb, var(--ui-accent) 16%, transparent);
+  --ui-team-your: #77bdfb;
+  --ui-team-opponent: #f59b8a;
+  --ui-danger: #ff96a3;
+  --ui-warning: #e6bc6f;
+  --ui-success: #7dd8a0;
+  --ui-info: #85c5f4;
+  --ui-line: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+  --ui-highlight: rgb(255 255 255 / 5%);
   /* Neutral interface materials are independent of both color settings. */
   --ui-glass: rgb(19 27 36 / 94%);
   --ui-dialog: #10171f;
   --ui-solid: #17212b;
   --ui-control: rgb(240 232 213 / 5%);
-  --ui-selected: color-mix(in srgb, var(--ui-accent) 28%, transparent);
+  --ui-selected: color-mix(in srgb, var(--ui-accent-strong) 18%, transparent);
   --ui-danger-surface: rgb(120 55 49 / 16%);
   --ui-shadow: 0 12px 32px rgb(0 0 0 / 24%), inset 0 1px 0 var(--ui-highlight);
   --ui-blur: 12px;
@@ -36,19 +41,19 @@
   --felt-edge: #0c1823;
 }
 /* Palette values are applied before paint by appearanceTheme.ts. */
-/* The table, history, and portaled in-game dialogs share the same materials.
+/* Setup, the table, history, and every portaled dialog share the same materials.
    Felt owns surface hues; accent owns text tints, controls, focus and edges. */
-.game-layout .table-stage:not(.table-stage-setup),
+.game-layout .table-stage,
 .game-layout .after-table,
-.belot-dialog:not(.belot-dialog-setup) {
+.belot-dialog {
   --ui-dialog: color-mix(in srgb, var(--felt-edge) 70%, #10171f);
   --ui-solid: color-mix(in srgb, var(--felt-center) 60%, #10171f);
   --ui-glass: var(--ui-solid);
   --ui-control: color-mix(in srgb, var(--felt-center) 40%, var(--ui-dialog));
-  --ui-line: color-mix(in srgb, var(--ui-accent) 56%, transparent);
-  --ui-highlight: color-mix(in srgb, var(--ui-accent) 20%, transparent);
-  --ui-text: color-mix(in srgb, white 50%, var(--ui-accent));
-  --ui-muted: color-mix(in srgb, #c5ced8 55%, var(--ui-accent));
+  --ui-line: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+  --ui-highlight: rgb(255 255 255 / 5%);
+  --ui-text: #ffffff;
+  --ui-muted: #ffffff;
   --ui-gold: var(--ui-accent-strong);
   --ui-gold-light: var(--ui-accent);
   --game-text: var(--ui-text);

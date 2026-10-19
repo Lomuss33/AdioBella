@@ -83,7 +83,7 @@
 .guide-heading h2 { margin: 3px 0 0; font: 500 clamp(23px, 3vw, 30px)/1.2 Georgia, serif; color: var(--ui-text); }
 .guide-chapters { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 12px 8px; border-bottom: 1px solid var(--ui-line); }
 .guide-chapters button { flex: 1 1 auto; min-height: 36px; padding: 5px 9px; border: 0; border-radius: 7px; color: var(--ui-muted); background: transparent; font: 500 13px/1.3 "Segoe UI", system-ui, sans-serif; cursor: pointer; }
-.guide-chapters button[aria-current="page"] { color: var(--ui-ink); background: var(--ui-accent); box-shadow: inset 0 -2px 0 var(--ui-accent-strong); }
+.guide-chapters button[aria-current="page"] { color: var(--ui-accent-fill-text); background: var(--ui-accent-fill); box-shadow: inset 0 -2px 0 var(--ui-accent-strong); }
 .guide-dialog .guide-heading h2 { color: var(--ui-accent); }
 .guide-dialog .guide-page { flex: 1 1 0; min-height: 0; padding: clamp(12px, 3vw, 24px); border-left: 3px solid var(--ui-line); background: linear-gradient(90deg, rgb(0 0 0 / 10%), transparent 5%); }
 .guide-dialog .popup-footer { flex: 0 0 auto; align-self: stretch; }
@@ -91,6 +91,37 @@
 .guide-page p { max-width: 68ch; margin: 0 0 16px; color: var(--ui-text); font-size: 14px; line-height: 1.65; }
 .guide-page p:last-child { margin-bottom: 0; }
 .guide-page:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; }
+/* Every guide chapter uses the same table-colored reading surfaces. */
+.belot-dialog.guide-dialog .guide-heading,
+.belot-dialog.guide-dialog .popup-footer {
+  background: var(--ui-solid);
+  border-color: var(--ui-line);
+}
+.belot-dialog.guide-dialog .guide-heading { border-bottom: 1px solid var(--ui-line); }
+.belot-dialog.guide-dialog .guide-chapters { background: var(--ui-dialog); }
+.belot-dialog.guide-dialog .guide-chapters button {
+  background: var(--ui-control);
+  color: var(--ui-text);
+  font-weight: 650;
+}
+.belot-dialog.guide-dialog .guide-chapters button:hover:not([aria-current="page"]) {
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-dialog));
+  color: var(--ui-accent-text);
+}
+.belot-dialog.guide-dialog .guide-chapters button[aria-current="page"] {
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+}
+.belot-dialog.guide-dialog .guide-page {
+  background: var(--ui-dialog);
+  border-left-color: var(--ui-accent);
+}
+.belot-dialog.guide-dialog .guide-page p { font-size: clamp(14px, 1.1vw, 16px); line-height: 1.65; }
+.belot-dialog.guide-dialog .guide-heading .table-square-button {
+  background: var(--ui-control);
+  border-color: var(--ui-line);
+  color: var(--ui-accent);
+}
 @media (max-width: 700px) {
   .table-arena .arena-bottom { grid-template-columns: minmax(0, 1fr) 134px; }
   .table-arena .arena-bottom > .player-hand-area { grid-column: 1 / -1; grid-row: 2; }

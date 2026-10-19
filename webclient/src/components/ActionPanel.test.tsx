@@ -104,6 +104,14 @@ test("settings and rematch invoke their separate actions", async () => {
   expect(props.onStartRematch).toHaveBeenCalledOnce();
 });
 
+test("keeps the human team's identity when opponents win the match", () => {
+  const props = resultProps();
+  props.yourTeamName = "Trump Royals";
+  render(<ActionPanel {...props} />);
+  expect(screen.getByRole("group", { name: "Midnight Aces" })).toHaveAttribute("data-team", "opponent");
+  expect(screen.getByRole("group", { name: "Trump Royals" })).toHaveAttribute("data-team", "your");
+});
+
 test("groups winning melds by player and keeps the team total distinct", async () => {
   const props = resultProps();
   props.matchCompleteSummary = null;

@@ -22,12 +22,14 @@ import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 import { usePopupDialog } from "../lib/usePopupDialog";
 import { capitalizeInsertedNameWords } from "../lib/nameCapitalization";
+import { teamSide } from "../lib/teamSide";
 
 interface ActionPanelProps {
   pendingAction?: PendingAction;
   errorMessage: string | null;
   playerNames: PlayerNameDrafts;
   teamNames: TeamNameDrafts;
+  yourTeamName?: string;
   gameSettings: GameSettingsDrafts;
   gameCompleteSummary: GameCompleteSummary | null;
   matchCompleteSummary: MatchCompleteSummary | null;
@@ -62,6 +64,7 @@ function ActionPanel({
   errorMessage,
   playerNames,
   teamNames,
+  yourTeamName,
   gameSettings,
   gameCompleteSummary,
   matchCompleteSummary,
@@ -88,6 +91,7 @@ function ActionPanel({
   const isAcknowledgeMelds = pendingAction?.type === "ACKNOWLEDGE_MELDS";
   const isBelaChoice = pendingBelaChoiceCard !== null;
   const isMatchComplete = matchCompleteSummary !== null;
+  const humanTeam = yourTeamName ?? (teamNames.yourTeam.trim() || defaultNames[getLocale()].teams.yourTeam);
   const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
   const dialogRef = usePopupDialog(isPopupVisible);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -217,12 +221,12 @@ function ActionPanel({
               ) : null}
               {isReportMelds ? (
                 <div className="action-popup-body meld-popup-body">
-                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} showTeam />
+                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} yourTeam={humanTeam} showTeam />
                 </div>
               ) : null}
               {isAcknowledgeMelds ? (
                 <div className="action-popup-body meld-popup-body">
-                  <MeldWinnerSection meldWinner={pendingAction?.meldWinner ?? null} />
+                  <MeldWinnerSection meldWinner={pendingAction?.meldWinner ?? null} yourTeam={humanTeam} />
                 </div>
               ) : null}
               {isBelaChoice ? (
@@ -234,11 +238,11 @@ function ActionPanel({
               ) : null}
               {isNextGame ? (
                 <div className="between-games-summary">
-                  {gameCompleteSummary ? <GameCompleteSummaryPanel summary={gameCompleteSummary} /> : null}
+                  {gameCompleteSummary ? <GameCompleteSummaryPanel summary={gameCompleteSummary} yourTeam={humanTeam} /> : null}
                 </div>
               ) : null}
               {isMatchComplete ? (
-                <MatchCompleteSummaryPanel summary={matchCompleteSummary} />
+                <MatchCompleteSummaryPanel summary={matchCompleteSummary} yourTeam={humanTeam} />
               ) : null}
             </div>
             <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
@@ -319,7 +323,7 @@ function matchCompleteSubtitle(summary: MatchCompleteSummary | null) {
   return t("wonMatch", { name: summary.winnerName, wins: summary.winnerMatchWins, losses: summary.loserMatchWins });
 }
 
-function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary }) {
+function GameCompleteSummaryPanel({ summary, yourTeam }: { summary: GameCompleteSummary; yourTeam: string }) {
   return (
     <div className="game-complete-grid">
       <section className="game-complete-box" aria-label={t("Match and game settings")}>
@@ -338,13 +342,13 @@ function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary })
       <section className="game-complete-box" aria-label={t("Current standings")}>
         <div className="game-complete-box-title">{t("Standings")}</div>
         <div className="game-complete-score-rows">
-          <div className="game-complete-score-row game-complete-score-row-winner">
+          <div className="game-complete-score-row game-complete-score-row-winner" data-team={teamSide(summary.winnerName, yourTeam)}>
             <span>{summary.winnerName}</span>
             <strong>
               {t("scoreSummary", { wins: summary.winnerMatchWins, points: summary.winnerGamePoints })}
             </strong>
           </div>
-          <div className="game-complete-score-row">
+          <div className="game-complete-score-row" data-team={teamSide(summary.loserName, yourTeam)}>
             <span>{summary.loserName}</span>
             <strong>
               {t("scoreSummary", { wins: summary.loserMatchWins, points: summary.loserGamePoints })}
@@ -356,17 +360,17 @@ function GameCompleteSummaryPanel({ summary }: { summary: GameCompleteSummary })
   );
 }
 
-function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary }) {
+function MatchCompleteSummaryPanel({ summary, yourTeam }: { summary: MatchCompleteSummary; yourTeam: string }) {
   return (
     <div className="match-result-summary">
       <div className="match-result-scoreboard" role="group" aria-label={t("Final match score")}>
-        <div className="match-result-team match-result-team-winner" role="group" aria-label={summary.winnerName}>
+        <div className="match-result-team match-result-team-winner" data-team={teamSide(summary.winnerName, yourTeam)} role="group" aria-label={summary.winnerName}>
           <span className="match-result-place">{t("Match winner")}</span>
           <h3 className="match-result-name">{summary.winnerName}</h3>
           <strong className="match-result-score">{number(summary.winnerMatchWins)}</strong>
           <span className="match-result-unit">{t("Games won")}</span>
         </div>
-        <div className="match-result-team" role="group" aria-label={summary.loserName}>
+        <div className="match-result-team" data-team={teamSide(summary.loserName, yourTeam)} role="group" aria-label={summary.loserName}>
           <span className="match-result-place">{t("Runner-up")}</span>
           <h3 className="match-result-name">{summary.loserName}</h3>
           <strong className="match-result-score">{number(summary.loserMatchWins)}</strong>
@@ -390,13 +394,13 @@ function MatchCompleteSummaryPanel({ summary }: { summary: MatchCompleteSummary 
   );
 }
 
-function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | null; showTeam?: boolean }) {
+function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: MeldSetView | null; yourTeam: string; showTeam?: boolean }) {
   if (!meldSet) {
     return <p className="panel-caption">{t("No melds available.")}</p>;
   }
 
   return (
-    <section className="meld-popup-stack meld-popup-player-block" aria-label={meldSet.playerName}>
+    <section className="meld-popup-stack meld-popup-player-block" data-team={teamSide(meldSet.teamName, yourTeam)} aria-label={meldSet.playerName}>
       {showTeam ? (
         <div className="meld-team-summary">
           <div className="meld-team-identity">
@@ -439,7 +443,7 @@ function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | 
   );
 }
 
-function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }) {
+function MeldWinnerSection({ meldWinner, yourTeam }: { meldWinner: MeldWinnerView | null; yourTeam: string }) {
   if (!meldWinner) {
     return <p className="panel-caption">{t("No melds this game.")}</p>;
   }
@@ -447,7 +451,7 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
 
   return (
     <div className="meld-popup-stack meld-winner-stack">
-      <div className="meld-winner-team-summary">
+      <div className="meld-winner-team-summary" data-team={teamSide(meldWinner.teamName, yourTeam)}>
         <div className="meld-team-identity">
           <span>{t("Winning team")}</span>
           <strong>{meldWinner.teamName}</strong>
@@ -458,7 +462,7 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
         </div>
       </div>
       {meldWinner.players.map((meldSet) => (
-        <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} />
+        <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} yourTeam={yourTeam} />
       ))}
     </div>
   );

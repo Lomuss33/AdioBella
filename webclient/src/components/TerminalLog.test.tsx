@@ -48,3 +48,20 @@ test("latest follows the bottom in oldest-first mode and the top in newest-first
   await user.click(screen.getByRole("button", { name: "Show newest first" }));
   expect(pane.scrollTop).toBe(0);
 });
+
+test("colors historical players and winners by ownership, and keeps contract outcomes separate", () => {
+  const { container } = render(<TerminalLog yourTeamName="The Crown" events={[
+    event(1, "PLAY_CARD", { playerName: "Alfred", playerSeat: "NORTH", rank: "ACE", suit: "HEARTS" }),
+    event(2, "PLAY_CARD", { playerName: "Nelson", playerSeat: "EAST", rank: "KING", suit: "HEARTS" }),
+    event(3, "TRICK_WIN", { winnerPlayerName: "Nelson", winnerSeat: "EAST", team: "High Command", trickPoints: "15" }),
+    event(4, "HAND_FAILED", { team: "The Crown", handNumber: "1", handPoints: "20", opponentPoints: "142" }),
+    event(5, "GAME_WIN", { winner: "High Command", winningScore: "1001" })
+  ]} />);
+  expect(screen.getByText("Alfred").closest("[data-team]")).toHaveAttribute("data-team", "your");
+  expect([...container.querySelectorAll(".terminal-play-player")].find(e => e.textContent === "Nelson")?.closest("[data-team]"))
+    .toHaveAttribute("data-team", "opponent");
+  expect(container.querySelector(".terminal-round-winner")).toHaveAttribute("data-team", "opponent");
+  expect(container.querySelector(".terminal-hand-result")).toHaveAttribute("data-team", "your");
+  expect(container.querySelector(".terminal-hand-contract")).toHaveClass("is-failed");
+  expect(container.querySelector(".terminal-game-winner")).toHaveAttribute("data-team", "opponent");
+});

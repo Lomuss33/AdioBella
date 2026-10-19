@@ -36,14 +36,14 @@
 .belot-dialog-trump .trump-controls .suit-choice-label {
   min-width: 0;
   max-width: 100%;
-  font-size: clamp(9px, 2.6cqw, 11px);
+  font-size: 11px;
   line-height: 1.2;
   letter-spacing: .025em;
   white-space: normal;
   overflow-wrap: anywhere;
   text-align: center;
 }
-.belot-dialog-trump .trump-controls .suit-choice-skip .suit-choice-label { font-size: clamp(9px, 2.6cqw, 11px); text-transform: none; }
+.belot-dialog-trump .trump-controls .suit-choice-skip .suit-choice-label { font-size: 11px; text-transform: none; }
 .belot-dialog-trump .trump-controls > .suit-choice-button:focus-visible {
   outline: 2px solid var(--ui-focus);
   outline-offset: 2px;

@@ -93,7 +93,7 @@
   white-space: normal;
   overflow-wrap: anywhere;
   color: var(--team-color);
-  font: 750 9px/1.3 "Segoe UI", system-ui, sans-serif;
+  font: 750 10px/1.3 "Segoe UI", system-ui, sans-serif;
   letter-spacing: .1em;
   text-align: left;
 }
@@ -147,9 +147,9 @@
 }
 .table-arena .game-data-section .data-label {
   color: var(--ui-muted);
-  font: 600 clamp(6px, 4.8cqw, 9px)/1.2 "Segoe UI", system-ui, sans-serif;
+  font: 650 clamp(10px, 4.8cqw, 11px)/1.25 "Segoe UI", system-ui, sans-serif;
   letter-spacing: 0;
-  white-space: nowrap;
+  white-space: normal;
   overflow-wrap: anywhere;
   max-width: 100%;
   text-align: center;
@@ -164,7 +164,7 @@
   text-align: center;
   gap: 0 1px;
 }
-.table-arena .game-data-section .data-target { font-size: clamp(7px, 5cqw, 10px); font-weight: 500; }
+.table-arena .game-data-section .data-target { font-size: 10px; font-weight: 600; }
 .table-arena .match-data-card {
   display: grid;
   height: auto;
@@ -274,7 +274,7 @@
   .table-arena .match-summary-targets { display: grid; justify-items: center; gap: 2px; }
   .table-arena .match-summary-goals { gap: 3px 6px; }
   .table-arena .match-summary-target-caption,
-  .table-arena .match-summary-goal small { font-size: 9px; }
+  .table-arena .match-summary-goal small { font-size: 10px; }
   .table-arena .match-summary-goal strong { font-size: 13px; }
 }
 /* Moderate-width tables keep more room for the two team names. */
@@ -290,7 +290,7 @@
   .table-arena .game-data-section { padding: 6px; }
   .table-arena .game-data-section .data-list { gap: 4px 3px; }
 }
-.table-arena { --player-panel-surface: color-mix(in srgb, var(--ui-dialog) 45%, transparent); }
+.table-arena { --player-panel-surface: color-mix(in srgb, var(--ui-dialog) 85%, transparent); }
 .table-arena .seat-panel {
   width: min(100%, clamp(96px, 18cqw, 168px));
   max-width: none;
@@ -399,7 +399,7 @@
   font: 750 13px/1.25 "Segoe UI", system-ui, sans-serif;
   letter-spacing: -.015em;
 }
-.table-arena .seat-main-copy small { margin-top: 2px; color: var(--ui-muted); font: 500 10px/1.2 "Segoe UI", system-ui, sans-serif; }
+.table-arena .seat-main-copy small { margin-top: 2px; color: var(--ui-muted); font: 600 11px/1.2 "Segoe UI", system-ui, sans-serif; }
 .table-arena .seat-badges { justify-content: center; align-items: center; gap: 6px; min-height: 13px; }
 .table-arena .seat-badge {
   padding: 0 3px;
@@ -407,7 +407,7 @@
   border-radius: 0;
   background: transparent;
   color: var(--ui-muted);
-  font: 650 8px/1.2 "Segoe UI", system-ui, sans-serif;
+  font: 700 10px/1.2 "Segoe UI", system-ui, sans-serif;
   letter-spacing: .06em;
 }
 .table-arena .seat-badge-trump { color: var(--team-color); }
@@ -477,18 +477,23 @@
 .table-arena .south-inline-info-winner .south-player-name { color: var(--team-color); }
 /* Accent is the primary reading and interaction color; team-colored captions
    and directional markers continue to distinguish the two sides. */
-.table-arena :is(.game-data-team-heading > strong, .match-summary-title, .match-summary-goal strong,
-  .seat-main-copy strong, .south-player-name, .score-prompt > strong) { color: var(--ui-accent); }
+.table-arena :is(.game-data-team-heading > strong, .match-summary-title, .match-summary-goal strong) { color: var(--ui-accent); }
+.table-arena :is(.seat-main-copy strong, .south-player-name) {
+  color: var(--ui-accent-text);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+}
+/* Status text sits directly on the felt, including the lighter brown palette. */
+.table-arena .score-prompt > strong { color: var(--ui-accent-text); }
 .table-arena .game-data-section .data-value,
 .table-arena .game-data-section .data-value strong { color: var(--ui-accent); }
 .table-arena .match-summary-open { stroke: var(--ui-accent); }
 .table-arena .south-inline-badge { color: var(--ui-accent); border-color: var(--ui-line); }
 .table-arena .table-utilities .table-square-button {
-  background: var(--ui-accent);
+  background: var(--ui-accent-fill);
   border-color: var(--ui-accent);
-  color: var(--ui-ink);
+  color: var(--ui-accent-fill-text);
 }
-.table-arena .table-utilities .language-trigger small { color: var(--ui-ink); }
+.table-arena .table-utilities .language-trigger small { color: var(--ui-accent-fill-text); }
 .table-arena .arena-controls .match-corner-button {
   color: var(--ui-accent);
   border-color: color-mix(in srgb, var(--ui-accent) 80%, transparent);

@@ -1,31 +1,34 @@
 import type { TableTheme } from "../types";
 import type { AccentColor } from "./preferences";
 
-// Table palettes pair the felt and room with two coordinated team colors.
+// Team identity stays fixed across table themes, accents, and game modes.
+// Blue and coral have deliberately different hues, rather than pale variations.
+export const TEAM_COLORS = { teamYour: "#77bdfb", teamOpponent: "#f59b8a" } as const;
+
+// Deep colored felt and leather, with the same two clear team markers.
 export const TABLE_THEMES = ["GREEN", "TEAL", "DARK_BLUE", "PLUM", "CHERRY_RED", "WOODY_BROWN", "LIGHT_BROWN", "FINE_BLACK"] as const;
 export const tablePalettes: Record<TableTheme, { swatch: string; center: string; edge: string; room: string; backdrop: string; teamYour: string; teamOpponent: string }> = {
-  // Each felt has its own light, contrasting pair of team colors.
-  GREEN: { swatch: "#34745c", center: "#183e32", edge: "#0b211b", room: "#101a15", backdrop: "#080c0b", teamYour: "#e9cf91", teamOpponent: "#b8c8f2" },
-  DARK_BLUE: { swatch: "#355b7a", center: "#1b2e40", edge: "#0c1823", room: "#10161d", backdrop: "#080b10", teamYour: "#9ddcf2", teamOpponent: "#f2b6a0" },
-  CHERRY_RED: { swatch: "#813b4a", center: "#40232b", edge: "#210f16", room: "#1b1216", backdrop: "#100a0d", teamYour: "#efd09a", teamOpponent: "#b6dfcf" },
-  WOODY_BROWN: { swatch: "#3d241a", center: "#302017", edge: "#1b110c", room: "#17100c", backdrop: "#0e0907", teamYour: "#e9c18f", teamOpponent: "#b5cfee" },
-  LIGHT_BROWN: { swatch: "#c38b50", center: "#714d2c", edge: "#49301d", room: "#281b10", backdrop: "#191008", teamYour: "#f5e5b9", teamOpponent: "#c5e3f5" },
-  FINE_BLACK: { swatch: "#303a36", center: "#252927", edge: "#111513", room: "#151816", backdrop: "#090b0a", teamYour: "#9cdcc5", teamOpponent: "#d4bff0" },
-  TEAL: { swatch: "#2e777b", center: "#163b3e", edge: "#0b2125", room: "#101b1e", backdrop: "#070d10", teamYour: "#f0c8a0", teamOpponent: "#bdd2ff" },
-  PLUM: { swatch: "#645079", center: "#32273f", edge: "#1b1427", room: "#19131e", backdrop: "#0c0910", teamYour: "#d6e7ae", teamOpponent: "#f0c1d0" }
+  GREEN: { ...TEAM_COLORS, swatch: "#15513c", center: "#12392c", edge: "#071e17", room: "#0c1713", backdrop: "#070d0a" },
+  DARK_BLUE: { ...TEAM_COLORS, swatch: "#243f68", center: "#182a46", edge: "#0b172a", room: "#0d1522", backdrop: "#070c14" },
+  CHERRY_RED: { ...TEAM_COLORS, swatch: "#66263b", center: "#3e1b2a", edge: "#220d17", room: "#1c1016", backdrop: "#11080d" },
+  WOODY_BROWN: { ...TEAM_COLORS, swatch: "#492b25", center: "#2d1e1b", edge: "#190e0d", room: "#18110f", backdrop: "#0e0908" },
+  LIGHT_BROWN: { ...TEAM_COLORS, swatch: "#79503c", center: "#52392c", edge: "#302018", room: "#221812", backdrop: "#140e0b" },
+  FINE_BLACK: { ...TEAM_COLORS, swatch: "#292e38", center: "#20252d", edge: "#10141c", room: "#10131a", backdrop: "#080a10" },
+  TEAL: { ...TEAM_COLORS, swatch: "#194c55", center: "#15343c", edge: "#091d23", room: "#0d181d", backdrop: "#070e12" },
+  PLUM: { ...TEAM_COLORS, swatch: "#51345f", center: "#30213d", edge: "#1a1025", room: "#17101e", backdrop: "#0d0912" }
 };
 
-// Accents own actions, selected controls and focus. Light tones remain readable
-// on the fixed neutral interface; filled actions use dark ink for contrast.
+// Deep dyes belong to surfaces. Text uses a stronger, readable accent hue;
+// pale tones are reserved for keyboard focus, rather than washing out copy.
 export const accentPalettes: Record<AccentColor, { swatch: string; text: string; focus: string }> = {
-  purple: { swatch: "#9a7bd2", text: "#cbb6f2", focus: "#e3d4ff" },
-  azure: { swatch: "#63a6d8", text: "#a8d2f0", focus: "#d3edff" },
-  jade: { swatch: "#58b48c", text: "#9eddbc", focus: "#d0f5e1" },
-  gold: { swatch: "#c2a368", text: "#e0c68e", focus: "#f4e2bc" },
-  silver: { swatch: "#a9b6bc", text: "#d1dce0", focus: "#edf4f7" },
-  copper: { swatch: "#c4987a", text: "#e2bfa5", focus: "#f5ddc9" },
-  teal: { swatch: "#50aeb4", text: "#9fdde0", focus: "#d3f5f5" },
-  rose: { swatch: "#ca8296", text: "#edb4c4", focus: "#ffdae5" }
+  purple: { swatch: "#765298", text: "#c7a0f2", focus: "#e6daf5" },
+  azure: { swatch: "#386e9c", text: "#83c4f5", focus: "#d5e5f5" },
+  jade: { swatch: "#2c7958", text: "#71d2a7", focus: "#d7ece2" },
+  gold: { swatch: "#92703a", text: "#e3bc69", focus: "#e8ddc5" },
+  silver: { swatch: "#68778a", text: "#ffffff", focus: "#e4e8ef" },
+  copper: { swatch: "#a05f42", text: "#e6ac85", focus: "#ecd8cd" },
+  teal: { swatch: "#287a7d", text: "#6dd2d5", focus: "#d2e9e9" },
+  rose: { swatch: "#9e4968", text: "#f29bbb", focus: "#f0d5e0" }
 };
 
 export function tableVariables(theme: TableTheme): Record<string, string> {
@@ -38,5 +41,12 @@ export function tableVariables(theme: TableTheme): Record<string, string> {
 }
 export function accentVariables(accent: AccentColor): Record<string, string> {
   const palette = accentPalettes[accent];
-  return { "--ui-accent-strong": palette.swatch, "--ui-accent": palette.text, "--ui-focus": palette.focus };
+  return {
+    "--ui-accent-strong": palette.swatch,
+    "--ui-accent": palette.text,
+    "--ui-accent-fill": palette.swatch,
+    "--ui-accent-fill-text": "#ffffff",
+    "--ui-accent-text": palette.text,
+    "--ui-focus": palette.focus
+  };
 }

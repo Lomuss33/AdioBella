@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GameSnapshot, MeldDeclarationView } from "../types";
 import { usePopupDialog } from "../lib/usePopupDialog";
+import { teamSide } from "../lib/teamSide";
 
 export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
   const [showMelds, setShowMelds] = useState(false);
@@ -80,7 +81,7 @@ function MeldDetails({ melds, yourTeam, onClose }: { melds: MeldDeclarationView[
               <p>{t("Melds and Bela points will appear here as they are recorded.")}</p>
             </div>
           ) : melds.map((meld) => (
-            <article className="meld-details-player" data-team={meld.teamName === yourTeam ? "your" : "opponent"} key={meld.playerId}>
+            <article className="meld-details-player" data-team={teamSide(meld.teamName, yourTeam)} key={meld.playerId}>
               <header className="meld-details-player-heading">
                 <div className="meld-details-identity">
                   <span className="meld-details-field-label">{t("player")}:</span><h3>{meld.playerName}</h3>

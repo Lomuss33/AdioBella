@@ -1,6 +1,7 @@
 import { errorDescription } from "../i18n/presentation";
 import { t, tr } from "../i18n";
 import type { AnimatedTrickState, GameSnapshot } from "../types";
+import { teamSide } from "../lib/teamSide";
 
 interface ScoreBarProps {
   snapshot: GameSnapshot | null;
@@ -11,6 +12,13 @@ interface ScoreBarProps {
 function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
   const trump = toTrumpMeta(snapshot?.trumpSuit ?? null);
   const statusMessage = toStatusMessage(snapshot, animatedTrick);
+  const human = snapshot?.players.find(player => player.seat === "SOUTH");
+  const winner = animatedTrick?.phase !== "placing"
+    ? snapshot?.players.find(player => player.id === animatedTrick?.winnerPlayerId) : undefined;
+  const winnerSide = teamSide(winner?.team, human?.team);
+  const humanTurn = human && snapshot?.pendingAction.type === "PLAY_CARD" && snapshot.pendingAction.actingPlayerId === human.id;
+  const statusTone = animatedTrick ? (winnerSide ? "result" : "waiting")
+    : humanTurn ? "action" : snapshot?.pendingAction.type && !["PLAY_CARD", "NONE"].includes(snapshot.pendingAction.type) ? "action" : "waiting";
 
   return (
     <section className="score-bar">
@@ -29,7 +37,7 @@ function ScoreBar({ snapshot, animatedTrick, errorMessage }: ScoreBarProps) {
           </small>
         </div>
         {errorMessage ? <small className="error-line" role="alert">{errorDescription(errorMessage)}</small> : null}
-        <strong role="status" aria-live="polite" title={statusMessage}>{statusMessage}</strong>
+        <strong role="status" data-status={statusTone} data-team={winnerSide} aria-live="polite" title={statusMessage}>{statusMessage}</strong>
       </div>
     </section>
   );

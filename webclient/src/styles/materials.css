@@ -1,0 +1,209 @@
+/* Materials finish. Color settings dye the surfaces; they are not light sources.
+   This layer changes paint and typography without changing the table geometry. */
+:root {
+  --felt-grain: url("../assets/materials/felt-grain.svg");
+  --leather-grain: url("../assets/materials/leather-grain.svg");
+}
+.game-layout .table-arena,
+.belot-dialog.belot-dialog-setup {
+  --table-felt-background: var(--felt-grain), radial-gradient(ellipse at 50% 38%, var(--felt-center), var(--felt-edge));
+}
+.game-layout .table-stage,
+.game-layout .after-table,
+.belot-dialog {
+  --material-leather: color-mix(in srgb, var(--felt-edge) 38%, #141518);
+  --material-action: color-mix(in srgb, var(--ui-accent-fill) 48%, var(--ui-dialog));
+  --material-trim: color-mix(in srgb, var(--ui-accent) 24%, #707378);
+  --material-seam: color-mix(in srgb, var(--material-trim) 40%, transparent);
+  --material-relief: inset 0 1px 0 rgb(255 255 255 / 5%), 0 3px 8px rgb(0 0 0 / 24%);
+}
+
+/* Felt receives broad, soft overhead light. The dark rail sits inside the
+   existing inset so cards, seats, and controls keep their available space. */
+.game-layout .table-arena {
+  background-image: var(--table-felt-background);
+  border-color: var(--material-seam);
+  box-shadow: inset 0 0 0 5px var(--material-leather),
+    inset 0 0 0 6px var(--material-seam), inset 0 8px 28px rgb(0 0 0 / 30%),
+    0 12px 32px rgb(0 0 0 / 32%);
+}
+.belot-dialog.belot-dialog-setup {
+  background: var(--felt-edge);
+}
+.belot-dialog.belot-dialog-setup .popup-content {
+  background-color: var(--felt-edge);
+  background-image: var(--table-felt-background);
+}
+.belot-dialog.guide-dialog .guide-page {
+  background-color: var(--ui-dialog);
+  background-image: var(--felt-grain), radial-gradient(ellipse at 50% 0%, rgb(255 255 255 / 2%), transparent 70%);
+}
+.belot-dialog.belot-dialog-setup .popup-footer,
+.belot-dialog.guide-dialog :is(.guide-heading, .guide-chapters, .popup-footer) {
+  background-color: var(--material-leather);
+  background-image: var(--leather-grain);
+  border-color: var(--material-seam);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+}
+.belot-dialog:not(.belot-dialog-setup) .popup-card {
+  border-color: var(--material-seam);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 50%), inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+.belot-dialog:not(.belot-dialog-setup):not(.guide-dialog) .popup-content {
+  background-image: var(--felt-grain);
+}
+
+/* Team panels shade the same felt, without a second cloudy grain layer. */
+.belot-dialog.belot-dialog-setup .team-settings-row {
+  background-color: color-mix(in srgb, var(--felt-edge) 45%, transparent);
+  background-image: none;
+  border-color: var(--material-seam);
+  border-radius: 8px;
+  box-shadow: var(--material-relief);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input {
+  background-color: color-mix(in srgb, var(--ui-dialog) 25%, transparent);
+  background-image: none;
+  border-color: rgb(255 255 255 / 12%);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 12%);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input:focus {
+  background-color: color-mix(in srgb, var(--ui-dialog) 35%, transparent);
+  border-color: var(--material-trim);
+  outline: none;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+.belot-dialog.belot-dialog-setup .team-seat-pair { opacity: .26; }
+.belot-dialog.belot-dialog-setup [data-team] .team-settings-label strong {
+  color: var(--ui-text);
+  background: transparent;
+  box-shadow: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+.belot-dialog.belot-dialog-setup :is(.name-setting-field > .panel-caption,
+  .setup-options-row > .setting-group > .panel-caption,
+  .setup-options-row > .appearance-setting > span, .card-style-name) {
+  color: var(--ui-muted);
+  font-weight: 600;
+  letter-spacing: .065em;
+}
+.belot-dialog.belot-dialog-setup .action-popup-title,
+.belot-dialog.guide-dialog :is(.guide-heading h2, .guide-page h3) {
+  color: var(--ui-text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: .015em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 45%);
+}
+
+/* Quiet controls: accent is an inlay and a dye, with no colored glow. */
+.belot-dialog.belot-dialog-setup .setup-options-row button[data-choice] {
+  background-color: var(--material-leather);
+  background-image: var(--leather-grain), linear-gradient(rgb(255 255 255 / 3%), rgb(0 0 0 / 9%));
+  border-color: var(--ui-line);
+  border-radius: 5px;
+  color: var(--ui-muted);
+  box-shadow: var(--material-relief);
+}
+.belot-dialog.belot-dialog-setup .setup-options-row button[data-choice]:hover:not([aria-pressed="true"]) {
+  background-color: var(--ui-control);
+  background-image: var(--leather-grain);
+  border-color: var(--material-trim);
+  color: var(--ui-text);
+  transform: none;
+}
+.belot-dialog.belot-dialog-setup .setup-options-row button[data-choice][aria-pressed="true"],
+.belot-dialog .popup-footer .action-button-primary,
+.belot-dialog.guide-dialog .guide-chapters button[aria-current="page"],
+.game-layout .terminal-feed-order {
+  background-color: var(--material-action);
+  background-image: var(--leather-grain), linear-gradient(rgb(255 255 255 / 5%), rgb(0 0 0 / 12%));
+  border-color: var(--material-trim);
+  color: #f3f3f5;
+  box-shadow: var(--material-relief), inset 0 -2px 0 color-mix(in srgb, var(--ui-accent-strong) 60%, transparent);
+}
+.belot-dialog .popup-footer .action-button-primary:hover:not(:disabled),
+.game-layout .terminal-feed-order:hover {
+  background-color: color-mix(in srgb, var(--material-action) 94%, white);
+  background-image: var(--leather-grain);
+  border-color: var(--ui-accent);
+  color: #fff;
+  filter: none;
+  transform: none;
+}
+.belot-dialog .popup-footer .action-button:not(.action-button-primary),
+.table-arena .arena-controls :is(.match-corner-button, .table-square-button) {
+  background-color: var(--material-leather);
+  background-image: var(--leather-grain);
+  border-color: var(--ui-line);
+  color: var(--ui-text);
+  box-shadow: var(--material-relief);
+}
+.table-arena .table-utilities .language-trigger small { color: var(--ui-muted); }
+.belot-dialog button:not(.playing-card-shell):not(:disabled):hover { filter: none; transform: none; }
+.belot-dialog .popup-footer .action-button:disabled {
+  background-color: var(--material-leather);
+  background-image: var(--leather-grain);
+  border-color: var(--ui-line);
+  color: var(--ui-muted);
+  box-shadow: none;
+}
+
+/* Palette samples are pieces of dyed material, rather than luminous tiles. */
+.belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice) {
+  background-color: var(--choice-swatch);
+  background-image: var(--leather-grain), linear-gradient(rgb(255 255 255 / 3%), rgb(0 0 0 / 15%));
+  border-color: rgb(255 255 255 / 16%);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 32%), 0 1px 0 rgb(255 255 255 / 4%);
+}
+.belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice)[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 2px var(--ui-dialog), 0 0 0 3px var(--material-trim);
+}
+.belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice)[aria-pressed="true"]::after {
+  color: #fff;
+  background: rgb(0 0 0 / 58%);
+}
+
+/* The play surface keeps the same finish as setup, without bright frame lines. */
+.table-arena :is(.game-data-section, .match-data-card, .seat-panel, .player-hand-area) {
+  background-image: var(--leather-grain);
+  border-color: var(--ui-line);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), 0 2px 7px rgb(0 0 0 / 18%);
+}
+.table-arena .game-data-section .data-row:nth-child(2) { border-color: var(--material-seam); }
+.table-arena :is(.game-data-team-heading > strong, .match-summary-title, .seat-main-copy strong, .south-player-name) { color: var(--ui-text); }
+.table-arena .seat-panel::before,
+.table-arena .player-hand-area::before { background: color-mix(in srgb, var(--team-color) 48%, transparent); }
+.table-arena .player-hand-decoration,
+.table-arena .seat-panel > .seat-marker,
+.table-arena .seat-north::after { opacity: .08; }
+.table-arena .player-hand-area.seat-active .player-hand-decoration,
+.table-arena .seat-panel > .seat-marker-active,
+.table-arena .seat-north.seat-active::after { opacity: .12; }
+.table-arena .seat-panel.seat-active,
+.table-arena .seat-panel.seat-winner-glow {
+  border-color: color-mix(in srgb, var(--team-color) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--team-color) 12%, transparent);
+}
+.game-layout .terminal-panel {
+  background-color: var(--ui-dialog);
+  background-image: var(--leather-grain);
+  box-shadow: var(--ui-shadow);
+}
+.game-layout .terminal-panel :is(.terminal-header h2, .terminal-subheader h3, .terminal-count) { color: var(--ui-text); }
+.belot-dialog.guide-dialog .guide-page { border-left-color: var(--material-seam); }
+.belot-dialog.guide-dialog .guide-chapters button { border-radius: 5px; }
+.belot-dialog.guide-dialog .guide-heading .table-square-button { color: var(--ui-text); }
+
+@media (prefers-contrast: more) {
+  .game-layout .table-stage, .game-layout .after-table, .belot-dialog { --ui-line: rgb(255 255 255 / 50%); }
+}

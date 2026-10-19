@@ -18,6 +18,7 @@
   box-shadow: none;
 }
 .belot-dialog.belot-dialog-setup .popup-content {
+  background: var(--ui-dialog);
   width: 100%;
   min-height: 0;
   flex: 1 1 auto;
@@ -156,7 +157,8 @@
   width: 100%;
   padding: 8px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   border: 0;
-  background: var(--ui-dialog);
+  border-top: 1px solid var(--ui-line);
+  background: var(--ui-solid);
 }
 .belot-dialog.belot-dialog-setup .popup-footer .action-button-primary {
   width: 100%;

@@ -25,6 +25,17 @@ test("recovers from malformed or invalid stored settings", () => {
   expect(preferences.visual.accent).toBe("jade");
 });
 
+test("persists and restores the added accent and felt choices", () => {
+  const preferences = loadPreferences();
+  for (const [accent, tableTheme] of [["teal", "TEAL"], ["rose", "PLUM"]] as const) {
+    preferences.visual.accent = accent;
+    preferences.game.tableTheme = tableTheme;
+    expect(savePreferences(preferences)).toBe(true);
+    expect(loadPreferences().visual.accent).toBe(accent);
+    expect(loadPreferences().game.tableTheme).toBe(tableTheme);
+  }
+});
+
 test("keeps settings usable and reports when browser storage is unavailable", () => {
   vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });

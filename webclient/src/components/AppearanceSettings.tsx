@@ -1,6 +1,6 @@
-import { accentPalettes, tablePalettes } from "../lib/appearanceTheme";
+import { accentPalettes, tablePalettes, TABLE_THEMES } from "../lib/appearanceTheme";
 import type { CSSProperties } from "react";
-import { t, tr } from "../i18n";
+import { t } from "../i18n";
 import type { MessageKey } from "../i18n/catalog";
 import { ACCENT_COLORS, CARD_STYLES, type VisualSettings } from "../lib/preferences";
 import type { TableTheme } from "../types";
@@ -21,7 +21,13 @@ const accentLabels: Record<VisualSettings["accent"], MessageKey> = {
   jade: "book.jade",
   gold: "book.gold",
   silver: "book.silver",
-  copper: "book.copper"
+  copper: "book.copper",
+  teal: "book.teal",
+  rose: "book.rose"
+};
+const tableLabels: Record<TableTheme, MessageKey> = {
+  GREEN: "green", TEAL: "teal felt", DARK_BLUE: "dark blue", PLUM: "plum felt",
+  CHERRY_RED: "cherry red", WOODY_BROWN: "dark brown", LIGHT_BROWN: "light brown", FINE_BLACK: "fine black"
 };
 
 const deckPreviewCards = [
@@ -69,9 +75,7 @@ export function AccentColorPicker({ value, onChange }: { value: VisualSettings["
 export function TableColorPicker({ value, onChange }: { value: TableTheme; onChange: (theme: TableTheme) => void }) {
   return <div className="appearance-setting appearance-table-colors"><span>{t("table color")}</span>
     <div className="setup-theme-buttons" role="group" aria-label={t("table color")}>
-      {([
-        { value: "GREEN", label: "green" }, { value: "DARK_BLUE", label: "dark blue" }, { value: "CHERRY_RED", label: "cherry red" }, { value: "WOODY_BROWN", label: "dark brown" }, { value: "LIGHT_BROWN", label: "light brown" }, { value: "FINE_BLACK", label: "fine black" }
-      ] as const).map(theme => <button key={theme.value} type="button" className={`setup-theme-choice setup-theme-${theme.value.toLowerCase()}`} style={{ "--swatch": tablePalettes[theme.value].swatch } as CSSProperties} title={tr(theme.label)} aria-label={tr(theme.label)} aria-pressed={value === theme.value} onClick={() => onChange(theme.value)} />)}
+      {TABLE_THEMES.map(theme => <button key={theme} type="button" className={`setup-theme-choice setup-theme-${theme.toLowerCase()}`} style={{ "--swatch": tablePalettes[theme].swatch } as CSSProperties} title={t(tableLabels[theme])} aria-label={t(tableLabels[theme])} aria-pressed={value === theme} onClick={() => onChange(theme)} />)}
     </div>
   </div>;
 }

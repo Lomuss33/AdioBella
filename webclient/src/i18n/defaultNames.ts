@@ -3,16 +3,16 @@ import type { PlayerNameDrafts, TeamNameDrafts } from "../types";
 
 export const defaultNames: Record<Locale, { players: PlayerNameDrafts; teams: TeamNameDrafts }> = {
   en: {
-    players: { SOUTH: "Ace", NORTH: "Maverick", WEST: "Raven", EAST: "Fox" },
-    teams: { yourTeam: "Trump Royals", enemyTeam: "Midnight Aces" }
+    players: { SOUTH: "Lionheart", NORTH: "Alfred", WEST: "Wellington", EAST: "Nelson" },
+    teams: { yourTeam: "The Crown", enemyTeam: "High Command" }
   },
   de: {
-    players: { SOUTH: "Ass", NORTH: "Fuchs", WEST: "Falke", EAST: "Wolf" },
-    teams: { yourTeam: "Trumpfkönige", enemyTeam: "Nachtasse" }
+    players: { SOUTH: "Barbarossa", NORTH: "Friedrich II.", WEST: "Bismarck", EAST: "Moltke" },
+    teams: { yourTeam: "Kaisergarde", enemyTeam: "Generalstab" }
   },
   hr: {
-    players: { SOUTH: "As", NORTH: "Majstor", WEST: "Sokol", EAST: "Vuk" },
-    teams: { yourTeam: "Kraljevi aduta", enemyTeam: "Noćni asovi" }
+    players: { SOUTH: "Tomislav", NORTH: "Zvonimir", WEST: "Zrinski", EAST: "Jelačić" },
+    teams: { yourTeam: "Kraljevska garda", enemyTeam: "Banski stožer" }
   }
 };
 

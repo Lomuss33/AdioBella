@@ -3,7 +3,7 @@ import type { GameSettingsDrafts, PlayerNameDrafts, TeamNameDrafts } from "../ty
 
 export type CardStyle = "original" | "modern" | "heritage" | "italian" | "german" | "french" | "four-color";
 export const CARD_STYLES: readonly CardStyle[] = ["original", "french", "italian", "german", "modern", "heritage", "four-color"];
-export const ACCENT_COLORS = ["purple", "azure", "jade", "gold", "silver", "copper"] as const;
+export const ACCENT_COLORS = ["purple", "azure", "teal", "jade", "gold", "copper", "rose", "silver"] as const;
 export type AccentColor = typeof ACCENT_COLORS[number];
 export interface VisualSettings { cardStyle: CardStyle; accent: AccentColor; }
 export interface Preferences { version: 1; namesVersion?: 2; game: GameSettingsDrafts; players: PlayerNameDrafts; teams: TeamNameDrafts; visual: VisualSettings; }

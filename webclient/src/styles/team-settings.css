@@ -1,6 +1,7 @@
 /* One layout for both team panels. Fields stay in the foreground; the seating
    diagram is independent of layout, focus and pointer interaction. */
 .belot-dialog.belot-dialog-setup .team-settings-row {
+  --team-field-gap: 5px;
   position: relative;
   isolation: isolate;
   container-type: inline-size;
@@ -9,7 +10,7 @@
   grid-template-rows: max-content repeat(3, auto);
   align-content: start;
   align-self: start;
-  gap: 5px;
+  gap: var(--team-field-gap);
   min-width: 0;
   padding: clamp(8px, 1.8vw, 14px);
   padding-block: 6px;
@@ -25,7 +26,7 @@
   grid-column: 1;
   min-height: 0;
   line-height: 1.2;
-  margin: 0;
+  margin: 0 0 calc(-1 * var(--team-field-gap));
   text-align: center;
   color: var(--team-tone);
 }
@@ -72,7 +73,7 @@
   border: 1px solid color-mix(in srgb, var(--team-tone) 30%, transparent);
   border-radius: 8px;
   background: rgb(7 15 22 / 34%);
-  color: #f1f5f3;
+  color: #ffffff;
   font: 600 clamp(14px, 6.5cqw, 16px)/1.2 "Segoe UI", system-ui, sans-serif;
   text-align: left;
   caret-color: var(--team-tone);
@@ -92,14 +93,14 @@
   transform: translate(-50%, -50%);
   z-index: 0;
   display: block;
-  width: clamp(150px, 36vw, 260px);
+  width: clamp(160px, 38vw, 280px);
   max-width: 110%;
   height: auto;
   aspect-ratio: 1;
-  opacity: .4;
+  opacity: .58;
   pointer-events: none;
 }
-.team-seat-table { fill: color-mix(in srgb, currentColor 10%, transparent); stroke: currentColor; stroke-opacity: .5; stroke-width: 1; }
-.team-seat-link { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: .45; }
+.team-seat-table { fill: rgb(158 180 200 / 10%); stroke: #9eb4c8; stroke-opacity: .4; stroke-width: 1; }
+.team-seat-link { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: .6; }
 .team-seat-active { fill: currentColor; }
-.team-seat-other { fill: var(--ui-muted); opacity: .3; }
+.team-seat-other { fill: var(--ui-muted); opacity: .18; }

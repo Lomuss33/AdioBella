@@ -14,14 +14,14 @@
   --ui-danger: #d29c94;
   --ui-warning: #d0b078;
   --ui-success: #a4bca8;
-  --ui-line: rgb(240 232 213 / 12%);
-  --ui-highlight: rgb(240 232 213 / 7%);
+  --ui-line: color-mix(in srgb, var(--ui-accent) 45%, transparent);
+  --ui-highlight: color-mix(in srgb, var(--ui-accent) 16%, transparent);
   /* Neutral interface materials are independent of both color settings. */
   --ui-glass: rgb(19 27 36 / 94%);
   --ui-dialog: #10171f;
   --ui-solid: #17212b;
   --ui-control: rgb(240 232 213 / 5%);
-  --ui-selected: color-mix(in srgb, var(--ui-accent-strong) 18%, transparent);
+  --ui-selected: color-mix(in srgb, var(--ui-accent) 28%, transparent);
   --ui-danger-surface: rgb(120 55 49 / 16%);
   --ui-shadow: 0 12px 32px rgb(0 0 0 / 24%), inset 0 1px 0 var(--ui-highlight);
   --ui-blur: 12px;
@@ -36,6 +36,25 @@
   --felt-edge: #0c1823;
 }
 /* Palette values are applied before paint by appearanceTheme.ts. */
+/* The table, history, and portaled in-game dialogs share the same materials.
+   Felt owns surface hues; accent owns text tints, controls, focus and edges. */
+.game-layout .table-stage:not(.table-stage-setup),
+.game-layout .after-table,
+.belot-dialog:not(.belot-dialog-setup) {
+  --ui-dialog: color-mix(in srgb, var(--felt-edge) 70%, #10171f);
+  --ui-solid: color-mix(in srgb, var(--felt-center) 60%, #10171f);
+  --ui-glass: var(--ui-solid);
+  --ui-control: color-mix(in srgb, var(--felt-center) 40%, var(--ui-dialog));
+  --ui-line: color-mix(in srgb, var(--ui-accent) 56%, transparent);
+  --ui-highlight: color-mix(in srgb, var(--ui-accent) 20%, transparent);
+  --ui-text: color-mix(in srgb, white 50%, var(--ui-accent));
+  --ui-muted: color-mix(in srgb, #c5ced8 55%, var(--ui-accent));
+  --ui-gold: var(--ui-accent-strong);
+  --ui-gold-light: var(--ui-accent);
+  --game-text: var(--ui-text);
+  --game-muted: var(--ui-muted);
+  --game-line: var(--ui-line);
+}
 @media (max-width: 700px) {
   :root { --ui-glass: rgb(19 27 36 / 97%); --ui-blur: 6px; }
 }

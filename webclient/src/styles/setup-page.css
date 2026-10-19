@@ -7,8 +7,9 @@
 }
 .belot-dialog.belot-dialog-setup[open] { display: block; }
 .belot-dialog.belot-dialog-setup .popup-card {
-  width: 100% !important;
-  max-width: none !important;
+  width: min(100%, 880px) !important;
+  max-width: 880px !important;
+  margin-inline: auto;
   height: 100%;
   max-height: none;
   border: 0;
@@ -240,4 +241,24 @@
 }
 .belot-dialog.belot-dialog-setup .setup-options-row .setup-theme-choice {
   flex: 0 0 calc((100% - 10px) / 3);
+}
+.belot-dialog.belot-dialog-setup .popup-footer:has(.setup-guide-button) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 12px;
+  padding-bottom: max(15px, env(safe-area-inset-bottom));
+}
+.belot-dialog.belot-dialog-setup .popup-footer:has(.setup-guide-button) .action-button {
+  width: 100%;
+  max-width: none;
+  min-height: 72px;
+  gap: 8px;
+  padding: 10px 8px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.setup-guide-button > svg { flex-shrink: 0; }
+@media (max-width: 360px), (max-height: 520px) {
+  .belot-dialog.belot-dialog-setup .popup-footer:has(.setup-guide-button) .action-button { min-height: 60px; font-size: 11px; gap: 5px; }
 }

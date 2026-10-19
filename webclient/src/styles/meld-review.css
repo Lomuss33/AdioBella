@@ -1,0 +1,94 @@
+/* One hierarchy for melds: team award, player totals, then contributing sets. */
+.belot-dialog-meld-action .action-popup-header {
+  margin-bottom: 14px;
+  padding: 0;
+  border: 0;
+  justify-items: stretch;
+  text-align: left;
+}
+.belot-dialog-meld-action .start-heading-copy { justify-items: start; text-align: left; }
+.belot-dialog-meld-action .action-popup-title { font-size: clamp(20px, 3vw, 24px); letter-spacing: -.025em; }
+.belot-dialog-meld-action .meld-winner-stack { gap: 14px; }
+.belot-dialog-meld-action .meld-winner-team-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 22%, var(--ui-line));
+  border-top: 2px solid var(--ui-accent);
+  border-radius: 10px;
+  background: var(--ui-control);
+}
+.belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity {
+  display: grid;
+  justify-content: start;
+  gap: 5px;
+}
+.belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity > span {
+  font-size: 9px;
+  letter-spacing: .08em;
+  color: var(--ui-accent);
+}
+.belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity strong { font-size: 18px; }
+.belot-dialog-meld-action .meld-player-total {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+.belot-dialog-meld-action .meld-player-total strong {
+  font: 700 22px/1.1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+.belot-dialog-meld-action .meld-player-total span { font-size: 10px; font-weight: 400; }
+.belot-dialog-meld-action .meld-winner-team-summary .meld-player-total strong { font-size: 30px; }
+.belot-dialog-meld-action .meld-popup-player-block,
+.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block {
+  --meld-inset: clamp(12px, 3vw, 16px);
+  width: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-control);
+}
+.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block:last-child { border-bottom: 1px solid var(--ui-line); }
+.belot-dialog-meld-action .meld-player-summary {
+  padding: 12px var(--meld-inset);
+  gap: 12px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.belot-dialog-meld-action .meld-player-identity { display: grid; gap: 4px; }
+.belot-dialog-meld-action .meld-player-identity > span { font-size: 9px; letter-spacing: .08em; }
+.belot-dialog-meld-action .meld-player-identity strong { font-size: 16px; }
+.belot-dialog-meld-action .meld-team-summary {
+  justify-content: stretch;
+  padding: 9px var(--meld-inset);
+  background: var(--ui-control);
+  border-bottom: 1px solid var(--ui-line);
+}
+.belot-dialog-meld-action .meld-team-summary .meld-team-identity {
+  width: 100%;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+.belot-dialog-meld-action .meld-team-summary .meld-team-identity > span { font-size: 9px; letter-spacing: .08em; }
+.belot-dialog-meld-action .meld-team-summary .meld-team-identity strong { font-size: 13px; text-align: right; }
+.belot-dialog-meld-action .meld-combination-list { padding: 12px var(--meld-inset) 14px; gap: 10px; }
+.belot-dialog-meld-action .meld-combination-list-label { color: var(--ui-muted); font: 600 9px/1.2 "Segoe UI", system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.belot-dialog-meld-action .meld-combination-block {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  gap: 10px;
+}
+.belot-dialog-meld-action .meld-combination-block + .meld-combination-block { padding-top: 12px; border-top: 1px solid var(--ui-line); }
+.belot-dialog-meld-action .meld-combination-heading { justify-content: space-between; flex-wrap: wrap; gap: 5px 10px; }
+.belot-dialog-meld-action .meld-combination-name { flex: 1 1 auto; }
+.belot-dialog-meld-action .meld-combination-name strong { font-size: 13px; line-height: 1.4; }
+.belot-dialog-meld-action .meld-combination-points { padding: 3px 6px; border-radius: 5px; background: var(--ui-control); font-size: 11px; }
+.belot-dialog-meld-action .meld-card-row { width: 100%; margin: 0; padding: 0; gap: 6px; }
+@media (max-width: 380px) {
+  .belot-dialog-meld-action .meld-winner-team-summary { padding: 12px; }
+}

@@ -44,7 +44,7 @@ const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 function App() {
   const { locale } = useLanguage();
   const [initialPreferences] = useState(loadPreferences);
-  const [showBook, setShowBook] = useState(false);
+  const [showBook, setShowBook] = useState<"welcome" | "rules" | null>(null);
   const [visual, setVisual] = useState<VisualSettings>(initialPreferences.visual);
   const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
   const gateway = getGameGateway();
@@ -212,7 +212,7 @@ function App() {
     animationTimeoutsRef.current.push(timeoutId);
   }
 
-  async function handleStartMatch() {
+  async function handleStartMatch(openGuide = false) {
     if (!sessionId) {
       return;
     }
@@ -223,6 +223,7 @@ function App() {
       }
       const response = await gateway.startMatch(sessionId);
       applySession(response);
+      if (openGuide) setShowBook("rules");
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
       if (await recoverMissingSession(error)) {
@@ -766,7 +767,7 @@ function App() {
           canQuitMatch={canQuitMatch}
           onForfeitGame={() => setConfirmExit("game")}
           onQuitMatch={() => setConfirmExit("match")}
-          onOpenBook={() => setShowBook(true)}
+          onOpenBook={() => setShowBook("welcome")}
         />
         <ActionPanel
           pendingAction={snapshot?.pendingAction}
@@ -779,7 +780,8 @@ function App() {
           onPlayerNameChange={handlePlayerNameChange}
           onTeamNameChange={handleTeamNameChange}
           onGameSettingsChange={handleGameSettingsChange}
-          onStart={handleStartMatch}
+          onStart={() => void handleStartMatch()}
+          onStartWithGuide={() => void handleStartMatch(true)}
           onStartRematch={handleStartRematch}
           onOpenSettingsMenu={handleOpenSettingsMenu}
           onChooseTrump={handleChooseTrump}
@@ -788,7 +790,7 @@ function App() {
           pendingBelaChoiceCard={belaChoiceCard}
           onPlayWithBela={handlePlayWithBela}
           onPlayWithoutBela={handlePlayWithoutBela}
-          onOpenBook={() => setShowBook(true)}
+          onOpenBook={() => setShowBook("welcome")}
           visual={visual}
           onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
         />
@@ -796,7 +798,7 @@ function App() {
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} />
       </section>
-      {showBook && <GuideBook onClose={() => setShowBook(false)} />}
+      {showBook && <GuideBook initialChapter={showBook} onClose={() => setShowBook(null)} />}
       {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {
         setConfirmExit(null);
         if (confirmExit === "game") void handleForfeitGame();

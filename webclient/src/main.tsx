@@ -16,6 +16,7 @@ import "./styles/setup-typography.css";
 import "./styles/match-result.css";
 import "./styles/meld-details.css";
 import "./styles/trump-choice.css";
+import "./styles/meld-review.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

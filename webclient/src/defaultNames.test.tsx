@@ -26,21 +26,21 @@ test("locale defaults reach gameplay while custom fields survive language change
   const start = vi.spyOn(browserGateway, "startMatch");
   const view = render(<App />);
   await screen.findByRole("button", { name: "Start the match" });
-  expect(screen.getByPlaceholderText("Maverick")).toHaveValue("");
+  expect(screen.getByPlaceholderText("Alfred")).toHaveValue("");
   // Even a name that matches a default must remain a custom entry.
-  await userEvent.type(screen.getByPlaceholderText("Ace"), "Ace");
-  await userEvent.type(screen.getByPlaceholderText("Trump Royals"), "My Team");
+  await userEvent.type(screen.getByPlaceholderText("Lionheart"), "Lionheart");
+  await userEvent.type(screen.getByPlaceholderText("The Crown"), "My Team");
 
   act(() => setLanguage("de"));
   await waitFor(() => expect(update).toHaveBeenLastCalledWith(expect.any(String), "NORMAL",
-    { ...defaultNames.de.players, SOUTH: "Ace" },
+    { ...defaultNames.de.players, SOUTH: "Lionheart" },
     { ...defaultNames.de.teams, yourTeam: "My Team" }, 3, "LONG"));
-  expect(screen.getByPlaceholderText("Fuchs")).toHaveValue("");
-  expect(screen.getByDisplayValue("Ace")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Friedrich II.")).toHaveValue("");
+  expect(screen.getByDisplayValue("Lionheart")).toBeInTheDocument();
 
   act(() => setLanguage("hr"));
   await waitFor(() => expect(update).toHaveBeenLastCalledWith(expect.any(String), "NORMAL",
-    { ...defaultNames.hr.players, SOUTH: "Ace" },
+    { ...defaultNames.hr.players, SOUTH: "Lionheart" },
     { ...defaultNames.hr.teams, yourTeam: "My Team" }, 3, "LONG"));
   expect(loadPreferences().players.NORTH).toBe("");
   expect(loadPreferences().teams.yourTeam).toBe("My Team");
@@ -48,14 +48,14 @@ test("locale defaults reach gameplay while custom fields survive language change
   view.unmount();
   render(<App />);
   const startButton = await screen.findByRole("button", { name: "Započni meč" });
-  expect(screen.getByDisplayValue("Ace")).toBeInTheDocument();
-  expect(screen.getByPlaceholderText("Majstor")).toHaveValue("");
+  expect(screen.getByDisplayValue("Lionheart")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Zvonimir")).toHaveValue("");
   await userEvent.click(startButton);
   await waitFor(() => expect(start).toHaveBeenCalled());
   const response: SessionResponse = await start.mock.results[0].value;
-  expect(response.snapshot.players.map(player => player.name)).toEqual(["Ace", "Sokol", "Majstor", "Vuk"]);
+  expect(response.snapshot.players.map(player => player.name)).toEqual(["Lionheart", "Zrinski", "Zvonimir", "Jelačić"]);
   expect(response.snapshot.score.teamOneName).toBe("My Team");
-  expect(response.snapshot.score.teamTwoName).toBe("Noćni asovi");
+  expect(response.snapshot.score.teamTwoName).toBe("Banski stožer");
 });
 
 test("keeps all previously saved names, including names that resemble old defaults", async () => {
@@ -80,7 +80,7 @@ test("upgrades names incorrectly saved as custom by the first migration", async 
   render(<App />);
   await screen.findByRole("button", { name: "Match starten" });
   expect(screen.queryByDisplayValue("Zapad")).not.toBeInTheDocument();
-  expect(screen.getByPlaceholderText("Falke")).toHaveValue("");
-  expect(screen.getByPlaceholderText("Trumpfkönige")).toHaveValue("");
+  expect(screen.getByPlaceholderText("Bismarck")).toHaveValue("");
+  expect(screen.getByPlaceholderText("Kaisergarde")).toHaveValue("");
   expect(loadPreferences().players.WEST).toBe("");
 });

@@ -3,8 +3,6 @@ import type { GameSnapshot } from "../types";
 
 function GameDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
   const score = snapshot?.score;
-  const matchTargetWins = score?.matchTargetWins ?? 3;
-  const gameTargetPoints = score?.gameTargetPoints ?? 1001;
 
   return (
     <section className="game-data-card">
@@ -21,27 +19,27 @@ function GameDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
             </div>
             <div className="data-row">
               <span className="data-label">{t("Points")}</span>
-              <span className="data-value"><span>{number(score?.teamTwoGamePoints ?? 0)}</span><small className="data-target">/{number(gameTargetPoints)}</small></span>
+              <span className="data-value">{number(score?.teamTwoGamePoints ?? 0)}</span>
             </div>
             <div className="data-row">
               <span className="data-label">{t("Wins")}</span>
-              <span className="data-value"><span>{number(score?.teamTwoMatchScore ?? 0)}</span><small className="data-target">/{matchTargetWins}</small></span>
+              <span className="data-value">{number(score?.teamTwoMatchScore ?? 0)}</span>
             </div>
           </div>
         </section>
         <section className="game-data-section" data-team="your">
           <div className="game-data-team-heading">
-            <span className="panel-caption">{t("your team")}</span>
             <strong title={score?.teamOneName ?? t("Us")}>{score?.teamOneName ?? t("Us")}</strong>
+            <span className="panel-caption">{t("your team")}</span>
           </div>
           <div className="data-list">
             <div className="data-row">
               <span className="data-label">{t("Wins")}</span>
-              <span className="data-value"><span>{number(score?.teamOneMatchScore ?? 0)}</span><small className="data-target">/{matchTargetWins}</small></span>
+              <span className="data-value">{number(score?.teamOneMatchScore ?? 0)}</span>
             </div>
             <div className="data-row">
               <span className="data-label">{t("Points")}</span>
-              <span className="data-value"><span>{number(score?.teamOneGamePoints ?? 0)}</span><small className="data-target">/{number(gameTargetPoints)}</small></span>
+              <span className="data-value">{number(score?.teamOneGamePoints ?? 0)}</span>
             </div>
             <div className="data-row">
               <span className="data-label">{t("Melds")}</span>

@@ -1,4 +1,4 @@
-import { t, countText } from "../i18n";
+import { t } from "../i18n";
 import type { PlayerView, Seat } from "../types";
 import SeatMarker from "./SeatMarker";
 
@@ -30,7 +30,7 @@ function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: Se
       <SeatMarker seat={player.seat} active={player.currentTurn} winner={winnerGlow} playerName={player.name} backdrop />
       <div className="seat-main-copy">
         <strong title={player.name}>{player.name}</strong>
-        <small title={player.team}>{player.team} · {countText("cards", player.handSize)}</small>
+        <small title={player.team}>{player.team}</small>
       </div>
       <div className="seat-badges">
         <span className={`seat-badge ${showDealer ? "" : "seat-badge-placeholder"}`.trim()} aria-hidden={showDealer ? undefined : true}>

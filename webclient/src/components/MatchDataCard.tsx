@@ -8,8 +8,7 @@ import { usePopupDialog } from "../lib/usePopupDialog";
 export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
   const [showMelds, setShowMelds] = useState(false);
   const score = snapshot?.score;
-  const gameTitle = t("gameNumber", { count: score?.gameNumber || "—" });
-  const difficulty = tr((score?.difficulty ?? "NORMAL").toLowerCase());
+  const gameTitle = t(score?.difficulty === "HARD" ? "gameHeading.hard" : score?.difficulty === "EASY" ? "gameHeading.easy" : "gameHeading.normal", { count: score?.gameNumber || "—" });
   const wins = score?.matchTargetWins ?? 3;
   const points = score?.gameTargetPoints ?? 1001;
   const summaryKey = wins === 1 ? "matchSummary.one" : wins < 5 ? "matchSummary.few" : "matchSummary.other";
@@ -21,14 +20,13 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
         className="match-data-card"
         aria-haspopup="dialog"
         aria-expanded={showMelds}
-        aria-label={`${t("Meld details")}: ${gameTitle}, ${difficulty}, ${summary}`}
+        aria-label={`${t("Meld details")}: ${gameTitle}, ${summary}`}
         title={t("Meld details")}
         onClick={() => setShowMelds(true)}
       >
         <span className="match-summary">
           <span className="match-summary-heading">
             <strong className="match-summary-title">{gameTitle}</strong>
-            <span className="match-summary-mode">{difficulty}</span>
           </span>
           <span className="match-summary-targets" title={summary}>
             <small className="match-summary-target-caption">{t("First to")}</small>
@@ -38,8 +36,9 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
                 <small>{countText("wins", wins).slice(number(wins).length).trim()}</small>
               </span>
               <span className="match-summary-goal">
+                <small>{t("with")}</small>
                 <strong>{number(points)}</strong>
-                <small>{countText("points", points).slice(number(points).length).trim()}</small>
+                <small>{t("matchSummary.pointsUnit")}</small>
               </span>
             </span>
           </span>

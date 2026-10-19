@@ -1,7 +1,6 @@
 import { t } from "../i18n";
 import type { PlayerView } from "../types";
 import PlayingCard from "./PlayingCard";
-import SeatMarker from "./SeatMarker";
 
 interface PlayerHandProps {
   player?: PlayerView;
@@ -51,9 +50,7 @@ function PlayerHand({
       className={["player-hand-area", player.currentTurn ? "seat-active" : "", winnerGlow ? "seat-winner-glow" : ""].filter(Boolean).join(" ")}
       data-team="your" role="group" aria-label={t("Your hand")}
     >
-      <div className="player-hand-decoration" aria-hidden="true">
-        <SeatMarker seat="SOUTH" active={player.currentTurn} winner={winnerGlow} backdrop />
-      </div>
+      <div className="player-hand-decoration" aria-hidden="true" />
       <div className="card-fan-row" data-card-count={visibleCards.length}>
         {slots.map((slot, slotIndex) =>
           slot && slot.card ? (

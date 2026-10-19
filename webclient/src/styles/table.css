@@ -26,7 +26,7 @@
   --arena-inset: clamp(8px, 1vw, 14px);
   caret-color: transparent;
   cursor: default;
-  --trick-card-max: 80px;
+  --trick-card-max: 120px;
   --trick-card-width: clamp(62px, 6vw, var(--trick-card-max));
   --trick-card-height: calc(var(--trick-card-width) * var(--playing-card-height-factor, 1.42));
   --trick-offset-y: calc(var(--trick-card-height) * .6);
@@ -129,7 +129,7 @@
 .game-layout :is(summary, button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
 
 @media (max-width: 700px) {
-  .table-arena { --arena-inset: 6px; --trick-card-max: clamp(44px, 14vw, 58px); border-radius: 12px; padding: var(--arena-inset); gap: 6px;     }
+  .table-arena { --arena-inset: 6px; --trick-card-max: clamp(44px, 14vw, 96px); border-radius: 12px; padding: var(--arena-inset); gap: 6px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .table-arena .arena-play { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; gap: 6px; }
   .table-arena .seat-panel { padding: 5px; align-self: start;     }
@@ -184,7 +184,7 @@
 .table-arena .trick-pool {
   /* Share the responsive cap with card faces and animation offsets.
      Reserve vertical space for padding and the ownership marker. */
-  --trick-card-width: max(32px, min(var(--trick-card-max), var(--trick-hand-limit, 80px), calc((100cqh - 66px) / (var(--playing-card-height-factor, 1.42) * 2)), calc((100cqw - 24px) / 3.8)));
+  --trick-card-width: max(32px, min(var(--trick-card-max), var(--trick-hand-limit, 80px), calc((100cqh - var(--trick-vertical-reserve, 66px)) / (var(--playing-card-height-factor, 1.42) * 2.24)), calc((100cqw - 24px) / 3.8)));
   --trick-card-height: calc(var(--trick-card-width) * var(--playing-card-height-factor, 1.42));
   --trick-offset-y: calc(var(--trick-card-height) * .5);
   --trick-offset-x: calc(var(--trick-card-width) * 1.4);
@@ -373,8 +373,9 @@
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 .table-arena .match-corner-button svg { width: 14px; height: 14px; flex: 0 0 14px; }
-.table-arena .match-corner-button-warning svg { color: var(--ui-warning); }
-.table-arena .match-corner-button-danger svg { color: var(--ui-danger); }
+.table-arena .match-corner-button-warning svg,
+.table-arena .match-corner-button-danger svg { color: var(--ui-accent); }
+.table-arena :is(.match-corner-button, .table-square-button) { color: var(--ui-accent); }
 .table-arena .match-corner-button:disabled { opacity: .4; cursor: default; }
 .table-arena .match-corner-button:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 @media (hover: hover) {
@@ -417,7 +418,7 @@
   padding: clamp(10px, 1.2vw, 15px);
   border: 1px solid var(--game-line);
   border-radius: 14px;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--ui-highlight) 5%, var(--ui-glass)), var(--ui-glass) 58%);
+  background: linear-gradient(155deg, var(--ui-solid), var(--ui-dialog) 58%);
   box-shadow: var(--ui-shadow);
   backdrop-filter: blur(var(--ui-blur));
   -webkit-backdrop-filter: blur(var(--ui-blur));
@@ -439,6 +440,9 @@
 .game-layout .terminal-status { display: inline-flex; align-items: center; gap: 6px; color: var(--ui-muted); font-size: 11px; line-height: 1.3; }
 .game-layout .terminal-status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--ui-gold-light); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-gold-light) 14%, transparent); }
 .game-layout .terminal-status.is-live .terminal-status-dot { background: #79c99a; box-shadow: 0 0 0 3px rgb(121 201 154 / 14%); }
+.game-layout .terminal-status.is-live .terminal-status-dot { background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-selected); }
+.game-layout .terminal-panel { box-shadow: inset 0 2px 0 var(--ui-accent), var(--ui-shadow); }
+.game-layout .terminal-panel :is(.terminal-header h2, .terminal-subheader h3, .terminal-count) { color: var(--ui-accent); }
 .game-layout .terminal-disclosure { width: 9px; height: 9px; flex: 0 0 9px; margin: 0 3px 4px 0; transform: rotate(45deg); border: solid var(--ui-muted); border-width: 0 1.5px 1.5px 0; transition: transform 140ms ease; }
 .game-layout .terminal-panel:not([open]) .terminal-disclosure { margin-bottom: 0; transform: rotate(-45deg); }
 .game-layout .terminal-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 10px; }
@@ -495,6 +499,32 @@
 .game-layout .terminal-latest { display: inline-flex; min-height: 28px; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid color-mix(in srgb, var(--ui-gold-light) 32%, var(--game-line)); border-radius: 7px; color: var(--ui-text); background: color-mix(in srgb, var(--ui-gold-light) 10%, var(--ui-control)); cursor: pointer; font: 600 10px/1.2 "Segoe UI", system-ui, sans-serif; transition: border-color 140ms ease, background-color 140ms ease; }
 .game-layout .terminal-latest::before { content: ""; width: 7px; height: 7px; border: solid var(--ui-gold-light); border-width: 1.5px 1.5px 0 0; transform: translateY(2px) rotate(-45deg); }
 .game-layout .terminal-latest:hover { border-color: var(--ui-gold-light); background: color-mix(in srgb, var(--ui-gold-light) 17%, var(--ui-control)); }
+.game-layout .terminal-feed-order {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 4px 7px;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-control);
+  color: var(--ui-muted);
+  font: 600 10px/1.2 "Segoe UI", system-ui, sans-serif;
+  cursor: pointer;
+}
+.game-layout .terminal-feed-order svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.game-layout .terminal-feed-order svg.is-reversed { transform: scaleY(-1); }
+.game-layout .terminal-feed-order:hover { color: var(--ui-text); border-color: var(--ui-accent); }
+.game-layout .terminal-feed-order:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.game-layout .terminal-feed-order {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-ink);
+  font-weight: 700;
+}
+.game-layout .terminal-feed-order:hover { background: var(--ui-focus); color: var(--ui-ink); }
 .game-layout .terminal-lines:focus-visible, .game-layout .terminal-latest:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 @container terminal-panel (min-width: 680px) {
   .game-layout .terminal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; }
@@ -604,11 +634,20 @@
 @media (min-width: 701px) {
   /* Give the points their own clear lane below the played cards. */
   .table-arena .arena-play > .trick-pool-shell > .trick-pool {
+    --trick-vertical-reserve: 90px;
     bottom: 38px;
     height: auto;
   }
   .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
     bottom: 0;
+  }
+}
+@media (min-width: 701px) and (min-height: 501px) {
+  .table-arena .arena-play > .trick-pool-shell > .trick-pool {
+    /* Account for the .62-card vertical offset, padding, and score lane.
+       Leave a small gap above the trick instead of letting north touch its seat. */
+    --trick-vertical-reserve: 104px;
+    top: 12px;
   }
 }
 @media (max-width: 700px) {

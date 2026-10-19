@@ -41,6 +41,8 @@ export const guideMessages = {
   "book.purple": ["Purple", "Violett", "Ljubičasta"],
   "book.azure": ["Azure", "Azurblau", "Azurna"],
   "book.jade": ["Jade", "Jade", "Žad"],
+  "book.teal": ["Teal", "Petrol", "Petrolej"],
+  "book.rose": ["Rose", "Rosé", "Ružičasta"],
   "book.saved": ["Saved on this device", "Auf diesem Gerät gespeichert", "Spremljeno na ovom uređaju"],
   "book.unsaved": ["Browser storage is unavailable; changes last for this tab only.", "Browserspeicher nicht verfügbar; Änderungen gelten nur in diesem Tab.", "Pohrana preglednika nije dostupna; promjene vrijede samo u ovoj kartici."],
   "book.preview": ["Card preview", "Kartenvorschau", "Pregled karata"]

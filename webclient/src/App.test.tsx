@@ -85,21 +85,21 @@ test("renders the table and terminal", async () => {
 
   render(<App />);
 
-  await waitFor(() => expect(screen.getByText("Game Terminal")).toBeInTheDocument());
-  expect(await screen.findByRole("status", { name: "Loading table" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Game history" })).toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "Belot table" })).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
-  expect(screen.getByPlaceholderText("Ace")).toBeInTheDocument();
-  expect(screen.getByPlaceholderText("Maverick")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Lionheart")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Alfred")).toBeInTheDocument();
   expect(screen.getAllByText("Zapad").length).toBeGreaterThan(0);
   expect(screen.getByRole("button", { name: "easy" })).toBeEnabled();
   expect(screen.getAllByText(/us/i).length).toBeGreaterThan(0);
 });
 
 test("starts the match from the start button", async () => {
-  const fetchMock = vi.fn()
-    .mockResolvedValueOnce({ ok: true, json: async () => baseSession })
-    .mockResolvedValueOnce({ ok: true, json: async () => [] })
-    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...baseSession, snapshot: { ...baseSession.snapshot, phase: "TRUMP_SELECTION" } }) });
+  const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => ({
+    ok: true,
+    json: async () => String(input).includes("/events") ? [] : baseSession
+  }));
   vi.stubGlobal("fetch", fetchMock);
 
   render(<App />);
@@ -111,6 +111,31 @@ test("starts the match from the start button", async () => {
     "/api/sessions/session-1/start",
     expect.objectContaining({ method: "POST" })
   ));
+});
+
+test("How to play starts the match and opens directly to the game guide", async () => {
+  const startedSession: SessionResponse = {
+    ...baseSession,
+    snapshot: { ...baseSession.snapshot, phase: "TRUMP_SELECTION",
+      pendingAction: { ...baseSession.snapshot.pendingAction, type: "CHOOSE_TRUMP", legalTrumpChoices: ["HEARTS", "SPADES"] } }
+  };
+  const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => ({
+    ok: true,
+    json: async () => String(input).includes("/events") ? [] : String(input).endsWith("/start") ? startedSession : baseSession
+  }));
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  await userEvent.click(await screen.findByRole("button", { name: "How to play" }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+    "/api/sessions/session-1/start", expect.objectContaining({ method: "POST" })
+  ));
+  const guide = await screen.findByRole("dialog", { name: "Brisnik Bela" });
+  expect(within(guide).getByRole("button", { name: "Game guide" })).toHaveAttribute("aria-current", "page");
+  expect(within(guide).getByRole("region", { name: "Game guide" })).toBeInTheDocument();
+  await userEvent.click(within(guide).getByRole("button", { name: "Back to table" }));
+  expect(screen.queryByRole("dialog", { name: "Brisnik Bela" })).not.toBeInTheDocument();
+  expect(screen.getByRole("dialog", { name: "Choose the trump suit" })).toBeInTheDocument();
+  expect(fetchMock.mock.calls.filter(([input]) => String(input).endsWith("/start"))).toHaveLength(1);
 });
 
 test("quit match ends the current match and shows the match-complete popup", async () => {
@@ -264,8 +289,8 @@ test("renders playable cards and disables unplayable cards", async () => {
 
   render(<App />);
 
-  const blockedCard = await screen.findByRole("button", { name: "as" });
-  const playableCard = await screen.findByRole("button", { name: "kh" });
+  const blockedCard = await screen.findByRole("button", { name: /ace of spades/i });
+  const playableCard = await screen.findByRole("button", { name: /king of hearts/i });
   expect(blockedCard).toBeDisabled();
   expect(playableCard).toBeEnabled();
 });
@@ -317,7 +342,7 @@ test("browser mode bootstraps without backend requests", async () => {
   expect(window.localStorage.getItem("belot-session-id")).toBeNull();
 });
 
-test("renders meld winner popup with centered colon-separated details", async () => {
+test("renders the winning team and its player melds", async () => {
   const meldWinnerSession: SessionResponse = {
     ...baseSession,
     snapshot: {
@@ -371,11 +396,12 @@ test("renders meld winner popup with centered colon-separated details", async ()
 
   render(<App />);
 
-  const dialog = await screen.findByRole("dialog", { name: "Melds" });
-  expect(dialog).toHaveTextContent("team : Them");
-  expect(dialog).toHaveTextContent("player : Istok : 50");
-  expect(dialog).toHaveTextContent("meld : sequence of 4");
-  expect(screen.getAllByRole("button", { name: /^(9h|10h|jh|qh)$/i })).toHaveLength(4);
+  const dialog = await screen.findByRole("dialog", { name: "Winning melds" });
+  expect(dialog).toHaveTextContent("Winning teamThem");
+  const player = within(dialog).getByRole("region", { name: "Istok" });
+  expect(within(player).getByLabelText("50 points")).toBeInTheDocument();
+  expect(player).toHaveTextContent("Sequence of 4");
+  expect(within(player).getAllByRole("img", { name: /of hearts$/i })).toHaveLength(4);
 });
 
 test("renders a game-complete popup with the final score and match standing", async () => {
@@ -436,11 +462,11 @@ test("renders a game-complete popup with the final score and match standing", as
   const dialog = await screen.findByRole("dialog", { name: "Game complete" });
   expect(dialog).toHaveTextContent("Them won the game.");
   expect(dialog).toHaveTextContent("Settings");
-  expect(dialog).toHaveTextContent("First to 3 games");
-  expect(dialog).toHaveTextContent("1001 points");
+  expect(dialog).toHaveTextContent("Target wins: 3");
+  expect(dialog).toHaveTextContent("1,001 points");
   expect(dialog).toHaveTextContent("Standings");
-  expect(dialog).toHaveTextContent("1 MP · 1001 GP");
-  expect(dialog).toHaveTextContent("0 MP · 812 GP");
+  expect(dialog).toHaveTextContent("1 wins · 1,001 points");
+  expect(dialog).toHaveTextContent("0 wins · 812 points");
   expect(screen.getByRole("button", { name: "Deal the next game" })).toBeEnabled();
 });
 

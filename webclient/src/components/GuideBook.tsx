@@ -4,9 +4,9 @@ import { usePopupDialog } from "../lib/usePopupDialog";
 
 const chapters = ['welcome', 'rules', 'play', 'ai'] as const;
 type Chapter = typeof chapters[number];
-interface GuideProps { onClose: () => void }
+interface GuideProps { onClose: () => void; initialChapter?: Chapter }
 export default function GuideBook(props: GuideProps) {
-  const [chapter, setChapter] = useState<Chapter>('welcome');
+  const [chapter, setChapter] = useState<Chapter>(props.initialChapter ?? 'welcome');
   const dialogRef = usePopupDialog(true);
   const pageRef = useRef<HTMLDivElement>(null);
   const id = useId();

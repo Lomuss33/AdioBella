@@ -27,6 +27,9 @@
     var(--ui-dialog);
   box-shadow: 0 28px 90px rgb(0 0 0 / 55%), inset 0 1px 0 var(--ui-highlight);
 }
+.belot-dialog:not(.belot-dialog-setup) :is(.popup-card, .popup-content) { background: var(--ui-dialog); }
+.belot-dialog:not(.belot-dialog-setup) .popup-footer { background: var(--ui-solid); }
+.belot-dialog:not(.belot-dialog-setup) .action-button:not(.action-button-primary) { color: var(--ui-accent); }
 
 .belot-dialog:not(.belot-dialog-setup):not(.guide-dialog):not(.belot-dialog-melds):not(.belot-dialog-match-result) .popup-card {
   width: min(100%, 560px);
@@ -51,7 +54,7 @@
 
 .belot-dialog .action-popup-title {
   margin: 0;
-  color: var(--ui-text);
+  color: var(--ui-accent);
   font: 650 clamp(22px, 3vw, 28px)/1.14 "Segoe UI", system-ui, sans-serif;
   letter-spacing: -.035em;
   text-wrap: balance;

@@ -21,6 +21,7 @@ import type {
 import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 import { usePopupDialog } from "../lib/usePopupDialog";
+import { capitalizeInsertedNameWords } from "../lib/nameCapitalization";
 
 interface ActionPanelProps {
   pendingAction?: PendingAction;
@@ -34,6 +35,7 @@ interface ActionPanelProps {
   onTeamNameChange: (team: keyof TeamNameDrafts, value: string) => void;
   onGameSettingsChange: (patch: Partial<GameSettingsDrafts>) => void;
   onStart: () => void;
+  onStartWithGuide?: () => void;
   onStartRematch: () => void;
   onOpenSettingsMenu: () => void;
   onChooseTrump: (choice: TrumpChoice) => void;
@@ -67,6 +69,7 @@ function ActionPanel({
   onTeamNameChange,
   onGameSettingsChange,
   onStart,
+  onStartWithGuide,
   onStartRematch,
   onOpenSettingsMenu,
   onChooseTrump,
@@ -108,7 +111,7 @@ function ActionPanel({
       : isTrumpChoice
         ? t("Choose the trump suit")
         : isReportMelds || isAcknowledgeMelds
-          ? isReportMelds ? t("Your melds") : t("Meld review")
+          ? isReportMelds ? t("Your melds") : t("Winning melds")
           : t("Bela");
   const subtitle = isStart
     ? null
@@ -119,9 +122,9 @@ function ActionPanel({
       : isTrumpChoice
         ? (pendingAction?.legalTrumpChoices.includes("SKIP") ? t("Choose the trump suit or skip.") : t("Choose the trump suit."))
         : isReportMelds
-          ? t("Review your combinations and points, then declare them or pass.")
+          ? null
           : isAcknowledgeMelds
-            ? t("Review the winning team, its players, and the points before play begins.")
+            ? null
             : t("Call Bela with this card or play it quietly.");
 
   return (
@@ -240,8 +243,14 @@ function ActionPanel({
             </div>
             <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
               {isStart ? (
+                <>
+                {onStartWithGuide ? <button type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Z" /></svg>
+                  {t("How to play")}
+                </button> : null}
                 <button type="button" className="action-button action-button-primary" onClick={onStart}>{t("Start the match")}<span aria-hidden="true">→</span>
                 </button>
+                </>
               ) : null}
               {isMatchComplete ? (
                 <>
@@ -387,7 +396,7 @@ function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | 
   }
 
   return (
-    <div className="meld-popup-stack meld-popup-player-block">
+    <section className="meld-popup-stack meld-popup-player-block" aria-label={meldSet.playerName}>
       {showTeam ? (
         <div className="meld-team-summary">
           <div className="meld-team-identity">
@@ -402,16 +411,16 @@ function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | 
           <strong>{meldSet.playerName}</strong>
         </div>
         <div className="meld-player-total" aria-label={countText("points", meldSet.totalPoints)}>
-          <strong>{meldSet.totalPoints}</strong>
-          <span>{t("Combined points")}</span>
+          <strong>{number(meldSet.totalPoints)}</strong>
+          <span>{t("points")}</span>
         </div>
       </div>
       <div className="meld-combination-list">
+        <span className="meld-combination-list-label">{t("Combinations")}</span>
         {meldSet.melds.length > 0 ? meldSet.melds.map((meld) => (
           <section key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
             <div className="meld-combination-heading">
               <div className="meld-combination-name">
-                <span>{t("Combination")}</span>
                 <strong>{meldDescription(meld)}</strong>
               </div>
               <span className="meld-combination-points">+{countText("points", meld.points)}</span>
@@ -426,7 +435,7 @@ function MeldSetSection({ meldSet, showTeam = false }: { meldSet: MeldSetView | 
           <p className="meld-details-note">{t("No melds available.")}</p>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -440,12 +449,12 @@ function MeldWinnerSection({ meldWinner }: { meldWinner: MeldWinnerView | null }
     <div className="meld-popup-stack meld-winner-stack">
       <div className="meld-winner-team-summary">
         <div className="meld-team-identity">
-          <span>{t("team")}</span>
+          <span>{t("Winning team")}</span>
           <strong>{meldWinner.teamName}</strong>
         </div>
         <div className="meld-player-total" aria-label={countText("points", combinedPoints)}>
-          <strong>{combinedPoints}</strong>
-          <span>{t("Combined points")}</span>
+          <strong>{number(combinedPoints)}</strong>
+          <span>{t("points")}</span>
         </div>
       </div>
       {meldWinner.players.map((meldSet) => (
@@ -506,18 +515,41 @@ function TeamSettingsRow({
       </div>
       <label className="name-setting-field team-name-field">
         <span className="panel-caption">{teamLabel}</span>
-        <input type="text" value={teamValue} placeholder={teamPlaceholder} maxLength={30} onChange={(event) => onTeamChange(event.target.value)} />
+        <input type="text" value={teamValue} placeholder={teamPlaceholder} maxLength={30} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue)} />
       </label>
       <label className="name-setting-field player-name-field">
         <span className="panel-caption">{firstPlayerLabel}</span>
-        <input type="text" value={firstPlayerValue} placeholder={firstPlayerPlaceholder} maxLength={24} onChange={(event) => onFirstPlayerChange(event.target.value)} />
+        <input type="text" value={firstPlayerValue} placeholder={firstPlayerPlaceholder} maxLength={24} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onFirstPlayerChange, firstPlayerValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onFirstPlayerChange, firstPlayerValue)} />
       </label>
       <label className="name-setting-field player-name-field">
         <span className="panel-caption">{secondPlayerLabel}</span>
-        <input type="text" value={secondPlayerValue} placeholder={secondPlayerPlaceholder} maxLength={24} onChange={(event) => onSecondPlayerChange(event.target.value)} />
+        <input type="text" value={secondPlayerValue} placeholder={secondPlayerPlaceholder} maxLength={24} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onSecondPlayerChange, secondPlayerValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onSecondPlayerChange, secondPlayerValue)} />
       </label>
     </section>
   );
+}
+
+const composingNames = new WeakMap<HTMLInputElement, string>();
+function updateNameInput(input: HTMLInputElement, onChange: (value: string) => void, previous: string, composing = false) {
+  const raw = input.value;
+  if (composing) {
+    if (!composingNames.has(input)) composingNames.set(input, previous);
+    onChange(raw);
+    return;
+  }
+  const before = composingNames.get(input) ?? previous;
+  composingNames.delete(input);
+  const normalize = (value: string) => capitalizeInsertedNameWords(before, value, getLocale());
+  const value = normalize(raw).slice(0, input.maxLength);
+  if (value !== raw) {
+    // Preserve the caret during edits and pastes, including Unicode expansions.
+    const start = normalize(raw.slice(0, input.selectionStart ?? raw.length)).length;
+    const end = normalize(raw.slice(0, input.selectionEnd ?? raw.length)).length;
+    const direction = input.selectionDirection;
+    input.value = value;
+    input.setSelectionRange(Math.min(start, value.length), Math.min(end, value.length), direction ?? undefined);
+  }
+  onChange(value);
 }
 
 function SettingGroup({

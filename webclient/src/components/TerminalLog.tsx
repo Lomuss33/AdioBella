@@ -32,10 +32,12 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
     [events]
   );
   const roundGroups = useMemo(() => buildRoundGroups(orderedEvents), [orderedEvents]);
+  const [newestRoundFirst, setNewestRoundFirst] = useState(true);
+  const visibleRounds = useMemo(() => newestRoundFirst ? roundGroups : [...roundGroups].reverse(), [roundGroups, newestRoundFirst]);
   const matchGroups = useMemo(() => buildMatchFeed(orderedEvents), [orderedEvents]);
   const matchResultCount = matchGroups.reduce((count, group) => count + group.events.length, 0);
 
-  const rounds = useFeedScroll(roundGroups);
+  const rounds = useFeedScroll(visibleRounds, newestRoundFirst);
   const matches = useFeedScroll(matchGroups);
 
   return (
@@ -56,10 +58,20 @@ function TerminalLog({ events, matchComplete }: { events: GameEvent[]; matchComp
             <h3 id="round-feed-heading">{t("Round Feed")}</h3>
             <span className="terminal-count">{countText("rounds", roundGroups.length)}</span>
             {rounds.readingOlder ? <button type="button" className="terminal-latest" aria-controls="round-feed-history" onClick={rounds.latest}>{t("Latest")}</button> : null}
+            <button type="button" className="terminal-feed-order" aria-controls="round-feed-history"
+              aria-pressed={!newestRoundFirst}
+              aria-label={t(newestRoundFirst ? "Show oldest first" : "Show newest first")}
+              title={t(newestRoundFirst ? "Show oldest first" : "Show newest first")}
+              onClick={() => setNewestRoundFirst(value => !value)}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={newestRoundFirst ? "" : "is-reversed"}>
+                <path d="M8 20V4m-4 4 4-4 4 4M15 8h5m-5 4h4m-4 4h3" />
+              </svg>
+              <span>{t(newestRoundFirst ? "Newest" : "Oldest")}</span>
+            </button>
           </div>
           <div id="round-feed-history" ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" role="region" tabIndex={0} aria-label={t("Round history")}>
             {roundGroups.length === 0 ? <div className="terminal-empty">{t("No round events yet.")}</div> : null}
-            {roundGroups.map((group) => (
+            {visibleRounds.map((group) => (
               <section key={group.key} className="terminal-round-group">
                 <div className="terminal-round-title" data-history-key={group.key}>
                   <span>{t("historyHeading", { game: group.gameNumber, round: group.roundNumber })}</span>
@@ -122,17 +134,18 @@ interface RoundGroup {
   winner: GameEvent | null;
 }
 
-// Keep the newest event visible at the top unless the player has scrolled back.
-function useFeedScroll(items: readonly unknown[]) {
+// Follow the newest event at either edge, preserving the reading position otherwise.
+function useFeedScroll(items: readonly unknown[], newestFirst = true) {
   const { locale } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const anchor = useRef<{ key: string; offset: number } | null>(null);
   const pinnedToLatest = useRef(true);
+  const previousDirection = useRef(newestFirst);
   const [readingOlder, setReadingOlder] = useState(false);
   const capture = useCallback(() => {
     const pane = ref.current;
     if (!pane || pane.clientHeight === 0) return;
-    const older = pane.scrollTop > 8;
+    const older = newestFirst ? pane.scrollTop > 8 : pane.scrollHeight - pane.clientHeight - pane.scrollTop > 8;
     setReadingOlder(older);
     pinnedToLatest.current = !older;
     if (!older) { anchor.current = null; return; }
@@ -140,7 +153,7 @@ function useFeedScroll(items: readonly unknown[]) {
     const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
       .find((element) => element.getBoundingClientRect().bottom > top);
     anchor.current = row ? { key: row.dataset.historyKey!, offset: row.getBoundingClientRect().top - top } : null;
-  }, [setReadingOlder]);
+  }, [newestFirst]);
   useEffect(() => {
     window.addEventListener("belot:before-language-change", capture);
     return () => window.removeEventListener("belot:before-language-change", capture);
@@ -148,8 +161,13 @@ function useFeedScroll(items: readonly unknown[]) {
   useLayoutEffect(() => {
     const pane = ref.current;
     if (!pane || pane.clientHeight === 0) return;
+    if (previousDirection.current !== newestFirst) {
+      previousDirection.current = newestFirst;
+      pinnedToLatest.current = true;
+      anchor.current = null;
+    }
     if (pinnedToLatest.current) {
-      pane.scrollTop = 0;
+      pane.scrollTop = newestFirst ? 0 : pane.scrollHeight;
       anchor.current = null;
       capture();
       return;
@@ -161,9 +179,9 @@ function useFeedScroll(items: readonly unknown[]) {
       if (row) pane.scrollTop += row.getBoundingClientRect().top - pane.getBoundingClientRect().top - saved.offset;
     }
     capture();
-  }, [items, locale, capture]);
+  }, [items, locale, capture, newestFirst]);
   const latest = () => {
-    if (ref.current) ref.current.scrollTop = 0;
+    if (ref.current) ref.current.scrollTop = newestFirst ? 0 : ref.current.scrollHeight;
     pinnedToLatest.current = true;
     anchor.current = null;
     setReadingOlder(false);

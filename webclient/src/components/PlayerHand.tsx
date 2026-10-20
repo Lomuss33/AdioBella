@@ -1,5 +1,7 @@
 import { t } from "../i18n";
 import type { PlayerView } from "../types";
+import { HAND_CAPACITY } from "../lib/handLayout";
+import { useHandReflow } from "../lib/useHandReflow";
 import PlayingCard from "./PlayingCard";
 
 interface PlayerHandProps {
@@ -14,7 +16,7 @@ interface PlayerHandProps {
   onPlayCard: (handIndex: number) => void;
 }
 
-const TOTAL_HAND_SLOTS = 8;
+const HAND_SPACES = Array.from({ length: HAND_CAPACITY }, (_, index) => index);
 
 function PlayerHand({
   player,
@@ -27,23 +29,14 @@ function PlayerHand({
   showTrumpCaller,
   onPlayCard
 }: PlayerHandProps) {
-  if (!player) {
-    return null;
-  }
-
   const choosingCard = pendingType === "PLAY_CARD" && !locked;
-  const visibleCards = player.hand
+  const visibleCards = (player?.hand ?? [])
     .map((card, handIndex) => (hiddenIndex !== null && handIndex === hiddenIndex ? null : { handIndex, card }))
-    .filter((slot): slot is { handIndex: number; card: PlayerView["hand"][number] } => slot !== null);
-  const leadingEmptySlots = Math.floor((TOTAL_HAND_SLOTS - visibleCards.length) / 2);
-  const slots = Array.from({ length: TOTAL_HAND_SLOTS }, (_, slotIndex) => {
-    const visibleIndex = slotIndex - leadingEmptySlots;
-    if (visibleIndex < 0 || visibleIndex >= visibleCards.length) {
-      return null;
-    }
+    .filter((slot): slot is { handIndex: number; card: PlayerView["hand"][number] } => slot !== null)
+    .map(slot => ({ ...slot, key: `card-${slot.card.suit}-${slot.card.rank}-${slot.card.label}` }));
+  const rowRef = useHandReflow(player?.id, visibleCards.map(slot => slot.key));
 
-    return visibleCards[visibleIndex];
-  });
+  if (!player) return null;
 
   return (
     <div
@@ -51,23 +44,20 @@ function PlayerHand({
       data-team="your" role="group" aria-label={t("Your hand")}
     >
       <div className="player-hand-decoration" aria-hidden="true" />
-      <div className="card-fan-row" data-card-count={visibleCards.length}>
-        {slots.map((slot, slotIndex) =>
-          slot && slot.card ? (
-            <div key={`card-${slot.card.suit}-${slot.card.rank}-${slot.card.label}`} className="hand-slot">
-              <PlayingCard
-                card={slot.card}
-                disabled={!slot.card.playable || pendingType !== "PLAY_CARD" || locked}
-                selected={selectedIndex === slot.handIndex}
-                legalChoice={choosingCard && slot.card.playable}
-                blockedChoice={choosingCard && !slot.card.playable}
-                onClick={() => onPlayCard(slot.handIndex)}
-              />
-            </div>
-          ) : (
-            <div key={`slot-${slotIndex}`} className="hand-slot hand-slot-empty" aria-hidden="true" />
-          )
-        )}
+      <div ref={rowRef} className="card-fan-row" data-card-count={visibleCards.length}>
+        {HAND_SPACES.map(index => <div key={`space-${index}`} className="hand-slot hand-slot-empty" aria-hidden="true" />)}
+        {visibleCards.map(slot => (
+          <div key={slot.key} className="hand-card-slot" data-card-key={slot.key}>
+            <PlayingCard
+              card={slot.card}
+              disabled={!slot.card.playable || pendingType !== "PLAY_CARD" || locked}
+              selected={selectedIndex === slot.handIndex}
+              legalChoice={choosingCard && slot.card.playable}
+              blockedChoice={choosingCard && !slot.card.playable}
+              onClick={() => onPlayCard(slot.handIndex)}
+            />
+          </div>
+        ))}
       </div>
       <div className={`south-inline-info ${winnerGlow ? "south-inline-info-winner" : ""}`.trim()}>
         <span className="south-player-team" title={player.team}>{player.team}</span>

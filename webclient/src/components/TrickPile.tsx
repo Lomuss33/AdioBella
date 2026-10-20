@@ -71,7 +71,9 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
             .filter(Boolean)
             .join(" ")}
         >
-          +{pointsValue}
+          <span className="trick-points-value">
+            <span className="trick-points-plus">+</span>{pointsValue}
+          </span>
         </div>
       ) : null}
     </div>

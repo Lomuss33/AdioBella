@@ -134,7 +134,7 @@ function ActionPanel({
   return (
     <dialog
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${isReportMelds || isAcknowledgeMelds || isTrumpChoice ? "belot-dialog-floating-actions" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
@@ -163,23 +163,23 @@ function ActionPanel({
                   <div className="team-settings-grid">
                     <TeamSettingsRow
                       side="your"
-                      heading={t("Us")}
+                      heading={t("Alliance")}
                       teamLabel={t("your team")}
                       teamValue={teamNames.yourTeam}
                       teamPlaceholder={defaultNames[getLocale()].teams.yourTeam}
                       onTeamChange={(value) => onTeamNameChange("yourTeam", value)}
-                      firstPlayerLabel={t("you")}
-                      firstPlayerValue={playerNames.SOUTH}
-                      firstPlayerPlaceholder={defaultNames[getLocale()].players.SOUTH}
-                      onFirstPlayerChange={(value) => onPlayerNameChange("SOUTH", value)}
-                      secondPlayerLabel={t("teammate")}
-                      secondPlayerValue={playerNames.NORTH}
-                      secondPlayerPlaceholder={defaultNames[getLocale()].players.NORTH}
-                      onSecondPlayerChange={(value) => onPlayerNameChange("NORTH", value)}
+                      firstPlayerLabel={t("teammate")}
+                      firstPlayerValue={playerNames.NORTH}
+                      firstPlayerPlaceholder={defaultNames[getLocale()].players.NORTH}
+                      onFirstPlayerChange={(value) => onPlayerNameChange("NORTH", value)}
+                      secondPlayerLabel={t("you")}
+                      secondPlayerValue={playerNames.SOUTH}
+                      secondPlayerPlaceholder={defaultNames[getLocale()].players.SOUTH}
+                      onSecondPlayerChange={(value) => onPlayerNameChange("SOUTH", value)}
                     />
                     <TeamSettingsRow
                       side="opponent"
-                      heading={t("Them")}
+                      heading={t("Enemies")}
                       teamLabel={t("enemy team")}
                       teamValue={teamNames.enemyTeam}
                       teamPlaceholder={defaultNames[getLocale()].teams.enemyTeam}
@@ -193,6 +193,7 @@ function ActionPanel({
                       secondPlayerPlaceholder={defaultNames[getLocale()].players.EAST}
                       onSecondPlayerChange={(value) => onPlayerNameChange("EAST", value)}
                     />
+                    <span className="team-settings-versus" aria-hidden="true">VS</span>
                   </div>
 
                   <div className="setup-options-grid">
@@ -518,19 +519,29 @@ function TeamSettingsRow({
         <strong>{heading}</strong>
       </div>
       <label className="name-setting-field team-name-field">
-        <span className="panel-caption">{teamLabel}</span>
+        <PlayerSeatCaption label={teamLabel} arrow={side === "your" ? "↑" : "←"} endArrow={side === "your" ? "↓" : "→"} />
         <input type="text" value={teamValue} placeholder={teamPlaceholder} maxLength={30} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue)} />
       </label>
       <label className="name-setting-field player-name-field">
-        <span className="panel-caption">{firstPlayerLabel}</span>
+        <PlayerSeatCaption label={firstPlayerLabel} arrow={side === "your" ? "↑" : "←"} />
         <input type="text" value={firstPlayerValue} placeholder={firstPlayerPlaceholder} maxLength={24} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onFirstPlayerChange, firstPlayerValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onFirstPlayerChange, firstPlayerValue)} />
       </label>
-      <label className="name-setting-field player-name-field">
-        <span className="panel-caption">{secondPlayerLabel}</span>
+      <label className={`name-setting-field player-name-field ${side === "your" ? "self-name-field" : "east-name-field"}`}>
         <input type="text" value={secondPlayerValue} placeholder={secondPlayerPlaceholder} maxLength={24} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onSecondPlayerChange, secondPlayerValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onSecondPlayerChange, secondPlayerValue)} />
+        <PlayerSeatCaption label={secondPlayerLabel} arrow={side === "your" ? "↓" : "→"} />
       </label>
     </section>
   );
+}
+
+type SeatArrow = "↑" | "↓" | "←" | "→";
+
+function PlayerSeatCaption({ label, arrow, endArrow = arrow }: { label: string; arrow: SeatArrow; endArrow?: SeatArrow }) {
+  return <span className="panel-caption player-seat-caption">
+    <span className="player-seat-arrow" aria-hidden="true">{arrow}</span>
+    <span className="player-seat-caption-text">{label}</span>
+    <span className="player-seat-arrow" aria-hidden="true">{endArrow}</span>
+  </span>;
 }
 
 const composingNames = new WeakMap<HTMLInputElement, string>();

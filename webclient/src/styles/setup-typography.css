@@ -34,14 +34,22 @@
   max-height: calc(2 * var(--setup-swatch-max-height) + 1.3 * var(--setup-label-size) + 20px);
 }
 .belot-dialog.belot-dialog-setup .team-settings-label strong {
-  font-size: clamp(20px, calc(17px + .5vw), 28px);
+  font-size: clamp(10px, 11cqw, clamp(20px, calc(17px + .5vw), 28px));
   line-height: 1.15;
   letter-spacing: .1em;
+  white-space: nowrap;
 }
 .belot-dialog.belot-dialog-setup [data-team="opponent"] .name-setting-field > .panel-caption { text-align: right; }
-.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input,
 .belot-dialog.belot-dialog-setup .popup-footer .action-button-primary {
   font-size: var(--setup-control-size);
+}
+/* Name fields follow their team panel width, including the narrow landscape split. */
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input {
+  font-size: clamp(10px, calc(6px + 4cqw), var(--setup-name-max-size, var(--setup-control-size)));
+  padding-inline: clamp(4px, 3cqw, 12px);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field > .panel-caption {
+  font-size: clamp(9px, calc(6px + 3cqw), var(--setup-label-size));
 }
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) {
   height: clamp(38px, 5vh, 56px);
@@ -90,8 +98,8 @@
     height: clamp(44px, 6.5svh, 76px);
     min-height: 44px;
     max-height: 76px;
-    padding: 8px 12px;
-    font-size: clamp(16px, calc(13px + .4vw + .25vh), 26px);
+    padding-block: 8px;
+    --setup-name-max-size: clamp(16px, calc(13px + .4vw + .25vh), 26px);
   }
 }
 /* In the landscape split, both team panels fill the same vertical span as

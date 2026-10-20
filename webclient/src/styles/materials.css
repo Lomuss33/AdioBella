@@ -5,7 +5,8 @@
   --leather-grain: url("../assets/materials/leather-grain.svg");
 }
 .game-layout .table-arena,
-.belot-dialog.belot-dialog-setup {
+.belot-dialog.belot-dialog-setup,
+.belot-dialog.guide-dialog {
   --table-felt-background: var(--felt-grain), radial-gradient(ellipse at 50% 38%, var(--felt-center), var(--felt-edge));
 }
 .game-layout .table-stage,
@@ -18,17 +19,20 @@
   --material-relief: inset 0 1px 0 rgb(255 255 255 / 5%), 0 3px 8px rgb(0 0 0 / 24%);
 }
 
-/* Felt receives broad, soft overhead light. The dark rail sits inside the
-   existing inset so cards, seats, and controls keep their available space. */
+/* Soft overhead light keeps the felt depth without an inset frame or side gutters. */
 .game-layout .table-arena {
   background-image: var(--table-felt-background);
   border-color: var(--material-seam);
-  box-shadow: inset 0 0 0 5px var(--material-leather),
-    inset 0 0 0 6px var(--material-seam), inset 0 8px 28px rgb(0 0 0 / 30%),
+  box-shadow: inset 0 8px 28px rgb(0 0 0 / 30%),
     0 12px 32px rgb(0 0 0 / 32%);
 }
 .belot-dialog.belot-dialog-setup {
   background: var(--felt-edge);
+}
+.belot-dialog.belot-dialog-setup .popup-card {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .belot-dialog.belot-dialog-setup .popup-content {
   background-color: var(--felt-edge);
@@ -38,12 +42,10 @@
   background-color: var(--ui-dialog);
   background-image: var(--felt-grain), radial-gradient(ellipse at 50% 0%, rgb(255 255 255 / 2%), transparent 70%);
 }
-.belot-dialog.belot-dialog-setup .popup-footer,
-.belot-dialog.guide-dialog :is(.guide-heading, .guide-chapters, .popup-footer) {
-  background-color: var(--material-leather);
-  background-image: var(--leather-grain);
-  border-color: var(--material-seam);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+.belot-dialog.belot-dialog-setup .popup-footer {
+  background: none;
+  border: 0;
+  box-shadow: none;
 }
 .belot-dialog:not(.belot-dialog-setup) .popup-card {
   border-color: var(--material-seam);
@@ -52,6 +54,24 @@
 .belot-dialog:not(.belot-dialog-setup):not(.guide-dialog) .popup-content {
   background-image: var(--felt-grain);
 }
+/* Guide sections share one full-screen felt background. */
+.belot-dialog.guide-dialog,
+.belot-dialog.guide-dialog .popup-card,
+.belot-dialog.guide-dialog :is(.guide-heading, .guide-chapters, .popup-footer) {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+}
+.belot-dialog.guide-dialog {
+  background-color: var(--felt-edge);
+  background-image: var(--table-felt-background);
+  pointer-events: auto;
+}
+.belot-dialog.guide-dialog .guide-page,
+.belot-dialog.guide-dialog button { pointer-events: auto; }
 
 /* Team panels shade the same felt, without a second cloudy grain layer. */
 .belot-dialog.belot-dialog-setup .team-settings-row {
@@ -66,7 +86,11 @@
   background-image: none;
   border-color: rgb(255 255 255 / 12%);
   border-radius: 5px;
-  box-shadow: inset 0 1px 3px rgb(0 0 0 / 12%);
+  box-shadow: inset 0 var(--team-input-edge-y, 1.5px) 0 color-mix(in srgb, var(--team-tone) 55%, transparent),
+    inset 0 1px 3px rgb(0 0 0 / 12%);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row :is(.self-name-field, .east-name-field) input {
+  --team-input-edge-y: -1.5px;
 }
 .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input:focus {
   background-color: color-mix(in srgb, var(--ui-dialog) 35%, transparent);
@@ -86,6 +110,16 @@
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 500;
   letter-spacing: .08em;
+}
+.belot-dialog.belot-dialog-setup .team-settings-label strong::after {
+  content: "";
+  position: absolute;
+  inset-inline: 5%;
+  bottom: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--team-tone) 65%, transparent), transparent);
+  pointer-events: none;
 }
 .belot-dialog.belot-dialog-setup :is(.name-setting-field > .panel-caption,
   .setup-options-row > .setting-group > .panel-caption,
@@ -154,6 +188,107 @@
   border-color: var(--ui-line);
   color: var(--ui-muted);
   box-shadow: none;
+}
+/* Action pickers share the setup's floating, click-through surfaces. */
+.belot-dialog.belot-dialog-floating-actions {
+  --floating-action-height: 72px;
+  pointer-events: none;
+}
+.belot-dialog.belot-dialog-floating-actions .popup-card {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+}
+.belot-dialog.belot-dialog-floating-actions .popup-card > .popup-content {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.belot-dialog.belot-dialog-floating-actions .popup-footer {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+.belot-dialog.belot-dialog-floating-actions .popup-footer > button { pointer-events: auto; }
+.belot-dialog.belot-dialog-floating-actions .popup-footer .action-button {
+  min-height: var(--floating-action-height);
+  padding: 10px 8px;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.25;
+  pointer-events: auto;
+}
+@media (max-width: 360px), (max-height: 520px) {
+  .belot-dialog.belot-dialog-floating-actions { --floating-action-height: 60px; }
+}
+/* Finished leather buttons float on the continuous felt; only the buttons carry trim. */
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button,
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button:hover:not(:disabled) {
+  --setup-button-base: var(--material-leather);
+  --setup-button-edge: color-mix(in srgb, var(--material-trim) 65%, var(--ui-line));
+  position: relative;
+  background-color: var(--setup-button-fill, var(--setup-button-base));
+  background-image: var(--leather-grain),
+    linear-gradient(150deg, rgb(255 255 255 / 9%), transparent 48%, rgb(0 0 0 / 16%));
+  border-color: var(--setup-button-edge);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%),
+    inset 0 -2px 0 rgb(0 0 0 / 24%), 0 3px 8px rgb(0 0 0 / 24%);
+  color: var(--ui-text);
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 50%);
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary,
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary:hover:not(:disabled) {
+  --setup-button-base: color-mix(in srgb, var(--ui-accent-fill) 64%, var(--ui-dialog));
+  --setup-button-edge: color-mix(in srgb, var(--ui-accent) 58%, var(--material-trim));
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary::before {
+  border-color: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button:hover:not(:disabled) {
+  --setup-button-fill: color-mix(in srgb, var(--setup-button-base) 90%, white);
+  border-color: color-mix(in srgb, var(--setup-button-edge) 80%, white);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%),
+    inset 0 -2px 0 rgb(0 0 0 / 22%), 0 4px 10px rgb(0 0 0 / 28%);
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button:active:not(:disabled) {
+  --setup-button-fill: color-mix(in srgb, var(--setup-button-base) 90%, black);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 30%), inset 0 -1px 0 rgb(255 255 255 / 8%);
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary > span {
+  display: inline-block;
+  font-size: 1.2em;
+  transition: transform 160ms ease;
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary:hover:not(:disabled) > span {
+  transform: translateX(2px);
+}
+.belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button:disabled {
+  background-color: var(--material-leather);
+  background-image: var(--leather-grain);
+  border-color: var(--ui-line);
+  color: var(--ui-muted);
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .belot-dialog:is(.belot-dialog-setup, .belot-dialog-floating-actions) .popup-footer .action-button-primary:hover:not(:disabled) > span {
+    transform: none;
+  }
 }
 
 /* Palette samples are pieces of dyed material, rather than luminous tiles. */

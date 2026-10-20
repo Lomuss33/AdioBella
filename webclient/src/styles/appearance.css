@@ -128,8 +128,8 @@
   outline: 2px solid var(--ui-focus);
   outline-offset: 4px;
 }
-/* Give each palette the full phone width so eight choices remain easy to tap. */
-@media (max-width: 440px) and (min-height: 521px) {
+/* Keep the palettes side by side until the screen is especially narrow. */
+@media (max-width: 280px) and (min-height: 521px) {
   .belot-dialog.belot-dialog-setup .setup-options-row.setup-colors-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

@@ -666,11 +666,11 @@ button {
 }
 
 .trick-seat-north {
-  transform: translate(-50%, calc(-50% - var(--trick-offset-y)));
+  transform: translate(calc(-50% + var(--trick-north-offset-x, 0px)), calc(-50% - var(--trick-offset-y)));
 }
 
 .trick-seat-south {
-  transform: translate(-50%, calc(-50% + var(--trick-offset-y)));
+  transform: translate(calc(-50% + var(--trick-south-offset-x, 0px)), calc(-50% + var(--trick-offset-y)));
 }
 
 .trick-seat-west {
@@ -699,11 +699,11 @@ button {
 }
 
 .trick-cards-animated.phase-collecting.winner-north .trick-card-stack:not(.winning-stack) {
-  transform: translate(-50%, calc(-50% - var(--trick-offset-y)));
+  transform: translate(calc(-50% + var(--trick-north-offset-x, 0px)), calc(-50% - var(--trick-offset-y)));
 }
 
 .trick-cards-animated.phase-collecting.winner-south .trick-card-stack:not(.winning-stack) {
-  transform: translate(-50%, calc(-50% + var(--trick-offset-y)));
+  transform: translate(calc(-50% + var(--trick-south-offset-x, 0px)), calc(-50% + var(--trick-offset-y)));
 }
 
 .trick-cards-animated.phase-collecting.winner-west .trick-card-stack:not(.winning-stack) {
@@ -922,7 +922,7 @@ button {
 }
 
 .trick-card-stack.animated-play.trick-seat-south.play-enter {
-  transform: translate(-50%, calc(-50% + var(--trick-entry-offset-y))) scale(1.05);
+  transform: translate(calc(-50% + var(--trick-south-offset-x, 0px)), calc(-50% + var(--trick-entry-offset-y))) scale(1.05);
 }
 
 .trick-card-stack.animated-play.trick-seat-west.play-enter {
@@ -930,7 +930,7 @@ button {
 }
 
 .trick-card-stack.animated-play.trick-seat-north.play-enter {
-  transform: translate(-50%, calc(-50% - var(--trick-entry-offset-y))) scale(1.02);
+  transform: translate(calc(-50% + var(--trick-north-offset-x, 0px)), calc(-50% - var(--trick-entry-offset-y))) scale(1.02);
 }
 
 .trick-card-stack.animated-play.trick-seat-east.play-enter {

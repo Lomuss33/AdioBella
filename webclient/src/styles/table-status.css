@@ -3,7 +3,7 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-content: end;
-  gap: 3px;
+  gap: 0;
 }
 .table-arena .arena-bottom > .player-hand-area { grid-column: 1; grid-row: 1; }
 .table-arena .arena-bottom > .arena-status {
@@ -26,20 +26,19 @@
   gap: 3px 8px;
   width: 100%;
   min-width: 0;
-  padding: 3px 8px;
+  padding: 3px 8px max(3px, env(safe-area-inset-bottom));
   margin: 0;
   border: 0;
   border-top: 1px solid var(--console-seam);
-  border-radius: 0 0 11px 11px;
+  border-radius: 0;
   background-color: var(--material-leather);
   background-image: var(--leather-grain), linear-gradient(180deg, var(--ui-highlight), transparent);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
   color: var(--ui-text);
 }
-.table-arena .table-console .table-console-information { display: grid; min-width: 0; gap: 3px; }
 .table-arena .table-console .table-console-current { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 10px; min-width: 0; }
 
-/* Game identity and stakes read like an inscription; only the text is a trigger. */
+/* The two information rows share one native button and one focus target. */
 .table-arena .table-console .match-data-card {
   grid-column: auto;
   grid-row: auto;
@@ -60,7 +59,35 @@
 }
 .table-arena .table-console .match-data-card:hover { background: none; border: 0; box-shadow: none; }
 .table-arena .table-console .match-data-card:focus-visible { outline-offset: 4px; }
-.table-arena .table-console .match-summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; min-height: 0; gap: 2px 10px; width: auto; text-align: start; }
+.table-arena .table-console .match-data-card.table-console-information {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  align-content: center;
+  justify-items: stretch;
+  justify-self: stretch;
+  width: 100%;
+  min-height: 0;
+  gap: 3px;
+  padding: 0 16px 0 0;
+  color: var(--ui-text);
+  font: inherit;
+  cursor: pointer;
+}
+.table-arena .table-console .table-console-information:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+.table-arena .table-console .table-console-open {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: .75;
+}
+.table-arena .table-console .match-summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; min-height: 0; gap: 2px 8px; width: auto; text-align: start; }
 .table-arena .table-console .match-summary-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .table-arena .table-console .match-summary-title {
   font: 500 14px/1.15 Georgia, "Times New Roman", serif;
@@ -173,10 +200,17 @@
 .table-arena .table-console .table-console-error { grid-column: 1 / -1; grid-row: auto; min-width: 0; margin: 0; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 
 @container table-arena (width < 420px) {
-  /* Use the full second row for match details instead of a narrow text lane. */
-  .table-arena .table-console .table-console-information { display: contents; }
-  .table-arena .table-console .table-console-current { grid-column: 1; grid-row: 1; }
-  .table-arena .table-console .match-data-card { grid-column: 1 / -1; grid-row: 2; }
+  /* Reserve the upper-right dock while keeping both rows in the same button. */
+  .table-arena .table-console .match-data-card.table-console-information {
+    grid-column: 1 / -1;
+    grid-row: 1 / 3;
+    grid-template-rows: minmax(26px, auto) auto;
+    padding: 0;
+  }
+  .table-arena .table-console .table-console-current { padding-inline-end: 129px; }
+  .table-arena .table-console .match-summary { padding-inline-end: 16px; }
+  .table-arena .table-console .table-console-open { top: auto; bottom: 2px; transform: none; }
+  .table-arena .table-console > .arena-controls { z-index: 1; }
   .table-arena .table-console .table-utilities,
   .table-arena .table-console .match-corner-controls {
     grid-template-columns: repeat(2, 26px);
@@ -187,17 +221,21 @@
 }
 @container table-arena (width < 360px) {
   .table-arena .table-console .match-summary { column-gap: 8px; }
-  .table-arena .table-console .match-summary-open { display: none; }
 }
 /* A wide footer leaves the short landscape side lane entirely to the hand. */
 @media (max-height: 500px) and (min-width: 600px) {
-  .table-arena { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .table-arena { grid-template-rows: auto minmax(0, 1fr) auto; row-gap: 0; }
+  .table-arena .arena-header { margin-block-end: 3px; }
   .table-arena .arena-bottom { display: contents; }
   .table-arena .arena-bottom > .player-hand-area { grid-column: 2; grid-row: 2; align-self: end; }
   .table-arena .arena-bottom > .arena-status { grid-column: 1 / -1; grid-row: 3; }
 }
-/* Keep the south play and its points clear of the compact landscape footer. */
-@media (max-height: 500px) and (min-width: 600px) and (max-width: 700px) {
-  .table-arena .arena-play > .trick-pool-shell > .trick-pool { padding-block: 12px 42px; }
+/* Give short screens a compact play area and a separate points lane. */
+@media (max-height: 500px) and (min-width: 600px) {
+  .table-arena .arena-play > .trick-pool-shell > .trick-pool {
+    bottom: 38px;
+    height: auto;
+    padding: 6px 6px 4px;
+  }
   .table-arena .arena-play > .trick-pool-shell > .trick-points-chip { bottom: 0; }
 }

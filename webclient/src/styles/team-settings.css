@@ -3,6 +3,31 @@
 .belot-dialog.belot-dialog-setup .team-settings-grid {
   --team-edge-start: var(--setup-content-inset-start, 12px);
   --team-edge-end: var(--setup-content-inset-end, 12px);
+  position: relative;
+  anchor-scope: --setup-team-title;
+}
+.belot-dialog.belot-dialog-setup .team-settings-versus {
+  position: absolute;
+  top: 18px;
+  top: anchor(--setup-team-title center, 18px);
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--felt-center);
+  box-shadow: none;
+  color: #ffffff;
+  font: 700 10px/1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .04em;
+  text-shadow: none;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
 .belot-dialog.belot-dialog-setup .team-settings-row {
   --team-field-gap: 5px;
@@ -32,14 +57,16 @@
   --team-surface: var(--ui-solid);
   --team-edge-extension: var(--team-edge-start);
   margin-inline-start: calc(-1 * var(--team-edge-extension));
-  padding-inline-start: calc(var(--team-panel-inset) + var(--team-edge-extension));
+  padding-inline-start: var(--team-edge-extension);
+  border-inline-start-width: 0;
 }
 .belot-dialog.belot-dialog-setup .team-settings-row[data-team="opponent"] {
   --team-tone: var(--ui-team-opponent);
   --team-surface: var(--ui-solid);
   --team-edge-extension: var(--team-edge-end);
   margin-inline-end: calc(-1 * var(--team-edge-extension));
-  padding-inline-end: calc(var(--team-panel-inset) + var(--team-edge-extension));
+  padding-inline-end: var(--team-edge-extension);
+  border-inline-end-width: 0;
 }
 /* The landscape split reserves the next column for game settings. */
 @media (min-width: 600px) and (max-height: 520px) {
@@ -55,6 +82,9 @@
   margin: 0 0 calc(-1 * var(--team-field-gap));
   text-align: center;
   color: var(--team-tone);
+}
+.belot-dialog.belot-dialog-setup [data-team="your"] .team-settings-label {
+  anchor-name: --setup-team-title;
 }
 .belot-dialog.belot-dialog-setup .team-settings-label > .panel-caption { display: none; }
 .belot-dialog.belot-dialog-setup .team-settings-label strong {
@@ -99,6 +129,37 @@
   justify-self: start;
 }
 .belot-dialog.belot-dialog-setup [data-team="opponent"] .name-setting-field > .panel-caption { justify-self: end; }
+.belot-dialog.belot-dialog-setup .name-setting-field > .player-seat-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(3px, 1cqw, 6px);
+}
+.player-seat-arrow {
+  flex: 0 0 auto;
+  font-size: 1.1em;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.player-seat-caption-text {
+  min-width: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field:is(.self-name-field, .east-name-field) {
+  grid-template-rows: minmax(32px, 1fr) max-content;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="your"] .player-name-field > .panel-caption {
+  justify-self: center;
+  text-align: center;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="opponent"] .player-name-field > .panel-caption {
+  justify-self: start;
+  text-align: left;
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="opponent"] .east-name-field > .panel-caption {
+  justify-self: end;
+  text-align: right;
+}
 .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input {
   width: 100%;
   min-width: 0;

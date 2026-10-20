@@ -15,18 +15,18 @@ function ScoreBar({ snapshot, errorMessage, controls }: ScoreBarProps) {
 
   return (
     <section className="score-bar table-console" aria-label={t("console.tableInformation")}>
-      <div className="table-console-information">
-        <div className="table-console-current">
-          <div className={`trump-line table-trump${trump ? "" : " is-unset"}`}>
+      <MatchDataCard snapshot={snapshot}
+        informationLabel={`${t("Trump")}: ${trump ? tr(trump.label) : t("console.notChosen")}`}>
+        <span className="table-console-current">
+          <span className={`trump-line table-trump${trump ? "" : " is-unset"}`}>
             <span className="table-trump-copy">
               <small className="table-console-label">{t("Trump")}</small>
               <span className={`trump-suit-symbol ${trump?.className ?? ""}`} aria-hidden="true">{trump?.symbol ?? "—"}</span>
               <strong>{trump ? tr(trump.label).replace(/^./, letter => letter.toUpperCase()) : t("console.notChosen")}</strong>
             </span>
-          </div>
-        </div>
-        <MatchDataCard snapshot={snapshot} />
-      </div>
+          </span>
+        </span>
+      </MatchDataCard>
       {controls}
       {errorMessage ? <small className="error-line table-console-error" role="alert">{errorDescription(errorMessage)}</small> : null}
     </section>

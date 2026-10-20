@@ -738,7 +738,7 @@
 
 /* Separate the north and south plays by a visible cushion at every card size. */
 .table-arena .trick-pool {
-  --trick-offset-y: calc(var(--trick-card-height) * .62 + 2px);
+  --trick-offset-y: var(--table-trick-offset-y, calc(var(--trick-card-height) * var(--trick-card-separation, .62) + var(--trick-card-gap, 4px) / 2));
 }
 
 /* Stretch the color controls across their row cells so titles and swatches

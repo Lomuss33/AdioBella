@@ -1,13 +1,18 @@
 import { meldDescription } from "../i18n/presentation";
 import { t, tr, number, countText } from "../i18n";
-import { useId, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { GameSnapshot, MeldDeclarationView } from "../types";
 import { usePopupDialog } from "../lib/usePopupDialog";
 import { teamSide } from "../lib/teamSide";
 
-export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | null }) {
+export default function MatchDataCard({ snapshot, children, informationLabel }: {
+  snapshot: GameSnapshot | null;
+  children: ReactNode;
+  informationLabel: string;
+}) {
   const [showMelds, setShowMelds] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const score = snapshot?.score;
   const gameTitle = t(score?.difficulty === "HARD" ? "gameHeading.hard" : score?.difficulty === "EASY" ? "gameHeading.easy" : "gameHeading.normal", { count: score?.gameNumber || "—" });
   const difficulty = t(score?.difficulty === "HARD" ? "hard" : score?.difficulty === "EASY" ? "easy" : "normal");
@@ -18,22 +23,20 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
-        className="match-data-card"
+        className="match-data-card table-console-information"
         aria-haspopup="dialog"
         aria-expanded={showMelds}
-        aria-label={`${t("Meld details")}: ${gameTitle}, ${summary}`}
+        aria-label={`${t("Meld details")}: ${informationLabel}, ${gameTitle}, ${summary}`}
         title={t("Meld details")}
         onClick={() => setShowMelds(true)}
       >
+        {children}
         <span className="match-summary">
           <span className="match-summary-heading">
             <strong className="match-summary-title">{t("gameNumber", { count: score?.gameNumber || "—" })}</strong>
             <small className="match-summary-difficulty">{difficulty}</small>
-            <svg className="match-summary-open" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <rect x="3" y="5" width="10" height="12" rx="1.5" />
-              <path d="M7 5V3.5A1.5 1.5 0 0 1 8.5 2h7A1.5 1.5 0 0 1 17 3.5v9A1.5 1.5 0 0 1 15.5 14H13" />
-            </svg>
           </span>
           <span className="match-summary-targets" title={summary}>
             <span className="match-summary-goals">
@@ -49,11 +52,14 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
             </span>
           </span>
         </span>
+        <svg className="match-summary-open table-console-open" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="m7 5 5 5-5 5" />
+        </svg>
       </button>
       {showMelds && createPortal(
         <MeldDetails melds={score?.meldDeclarations ?? []}
           yourTeam={snapshot?.players.find(player => player.seat === "SOUTH")?.team}
-          onClose={() => setShowMelds(false)} />,
+          onClose={() => { setShowMelds(false); triggerRef.current?.focus(); }} />,
         document.body
       )}
     </>

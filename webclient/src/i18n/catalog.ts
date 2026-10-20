@@ -130,6 +130,16 @@ export const messages = {
     "Gegner",
     "Oni"
   ],
+  "Alliance": [
+    "Alliance",
+    "Allianz",
+    "Savez"
+  ],
+  "Enemies": [
+    "Enemies",
+    "Feinde",
+    "Opozicija"
+  ],
   "your team": [
     "your team",
     "Dein Team",

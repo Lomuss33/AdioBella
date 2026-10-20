@@ -3,8 +3,16 @@ import type { GameSettingsDrafts, PlayerNameDrafts, TeamNameDrafts } from "../ty
 
 export type CardStyle = "original" | "modern" | "heritage" | "italian" | "german" | "french" | "four-color";
 export const CARD_STYLES: readonly CardStyle[] = ["original", "french", "italian", "german", "modern", "heritage", "four-color"];
-export const ACCENT_COLORS = ["purple", "azure", "teal", "jade", "gold", "copper", "rose", "silver"] as const;
+export const ACCENT_COLORS = ["oxblood", "bottle-green", "midnight", "antique-brass", "ivory", "saddle", "aubergine", "graphite"] as const;
 export type AccentColor = typeof ACCENT_COLORS[number];
+const legacyAccents: Record<string, AccentColor> = {
+  purple: "aubergine", azure: "midnight", teal: "bottle-green", jade: "bottle-green",
+  gold: "antique-brass", silver: "graphite", copper: "saddle", rose: "oxblood"
+};
+function restoreAccent(value: unknown): AccentColor {
+  if (typeof value !== "string") return "oxblood";
+  return choice(legacyAccents[value] ?? value, ACCENT_COLORS, "oxblood");
+}
 export interface VisualSettings { cardStyle: CardStyle; accent: AccentColor; }
 export interface Preferences { version: 1; namesVersion?: 2; game: GameSettingsDrafts; players: PlayerNameDrafts; teams: TeamNameDrafts; visual: VisualSettings; }
 export const PREFERENCES_KEY = "belot-preferences-v1";
@@ -28,11 +36,11 @@ export function loadPreferences(): Preferences {
       difficulty: choice(game.difficulty, ["EASY", "NORMAL", "HARD"], "NORMAL"),
       matchTargetWins: choice(game.matchTargetWins, [1, 3, 5], 3),
       gameLength: choice(game.gameLength, ["SHORT", "LONG"], "LONG"),
-      tableTheme: choice(game.tableTheme ?? readStorage("belot-table-theme"), TABLE_THEMES, "DARK_BLUE")
+      tableTheme: choice(game.tableTheme ?? readStorage("belot-table-theme"), TABLE_THEMES, "FINE_BLACK")
     },
     players: { SOUTH: legacyDefaults ? "" : name(players.SOUTH, 24), NORTH: legacyDefaults ? "" : name(players.NORTH, 24), WEST: legacyDefaults ? "" : name(players.WEST, 24), EAST: legacyDefaults ? "" : name(players.EAST, 24) },
     teams: { yourTeam: legacyDefaults ? "" : name(teams.yourTeam, 30), enemyTeam: legacyDefaults ? "" : name(teams.enemyTeam, 30) },
-    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: choice(visual.accent, ACCENT_COLORS, "jade") }
+    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: restoreAccent(visual.accent) }
   };
 }
 function isLegacyDefaultNames(players: { SOUTH?: unknown; NORTH?: unknown; WEST?: unknown; EAST?: unknown }, teams: { yourTeam?: unknown; enemyTeam?: unknown }) {

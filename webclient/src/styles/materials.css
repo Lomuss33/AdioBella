@@ -159,7 +159,7 @@
 /* Palette samples are pieces of dyed material, rather than luminous tiles. */
 .belot-dialog.belot-dialog-setup :is(.accent-color-choice, .setup-theme-choice) {
   background-color: var(--choice-swatch);
-  background-image: var(--leather-grain), linear-gradient(rgb(255 255 255 / 3%), rgb(0 0 0 / 15%));
+  background-image: none;
   border-color: rgb(255 255 255 / 16%);
   border-radius: 5px;
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 32%), 0 1px 0 rgb(255 255 255 / 4%);

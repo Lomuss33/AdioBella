@@ -2,23 +2,24 @@
 :root {
   --ui-text: #ffffff;
   --ui-muted: #ffffff;
-  --ui-accent-strong: #2c7958;
-  --ui-accent: #71d2a7;
-  --ui-accent-fill: #2c7958;
+  --ui-accent-strong: #702d35;
+  --ui-accent: #ad7b7f;
+  --ui-accent-fill: #702d35;
   --ui-accent-fill-text: #ffffff;
-  /* Text keeps the full accent hue; the pale focus ring has a separate role. */
-  --ui-accent-text: #71d2a7;
+  /* Readability comes from white text, separate from restrained material dyes. */
+  --ui-accent-text: #ffffff;
   /* Compatibility aliases for existing controls; these are accent roles. */
   --ui-gold: var(--ui-accent-strong);
-  --ui-gold-light: var(--ui-accent);
-  --ui-focus: #d7ece2;
+  --ui-gold-light: var(--ui-accent-text);
+  --ui-focus: #c9cdcf;
   --ui-ink: #0b141d;
-  --ui-team-your: #77bdfb;
-  --ui-team-opponent: #f59b8a;
-  --ui-danger: #ff96a3;
-  --ui-warning: #e6bc6f;
-  --ui-success: #7dd8a0;
-  --ui-info: #85c5f4;
+  --ui-team-your: #658158;
+  --ui-team-opponent: #5e7394;
+  --ui-team-text: #ffffff;
+  --ui-danger: #d0aaa9;
+  --ui-warning: #c4b28d;
+  --ui-success: #a8baa9;
+  --ui-info: #a7b8c7;
   --ui-line: color-mix(in srgb, var(--ui-accent) 22%, transparent);
   --ui-highlight: rgb(255 255 255 / 5%);
   /* Neutral interface materials are independent of both color settings. */
@@ -35,10 +36,10 @@
   --card-red: #992d35;
   --card-black: #19201d;
   --page-glow: transparent;
-  --page-top: #10161d;
-  --page-bottom: #080b10;
-  --felt-center: #1b2e40;
-  --felt-edge: #0c1823;
+  --page-top: #10131a;
+  --page-bottom: #080a10;
+  --felt-center: #20252d;
+  --felt-edge: #10141c;
 }
 /* Palette values are applied before paint by appearanceTheme.ts. */
 /* Setup, the table, history, and every portaled dialog share the same materials.
@@ -55,7 +56,7 @@
   --ui-text: #ffffff;
   --ui-muted: #ffffff;
   --ui-gold: var(--ui-accent-strong);
-  --ui-gold-light: var(--ui-accent);
+  --ui-gold-light: var(--ui-accent-text);
   --game-text: var(--ui-text);
   --game-muted: var(--ui-muted);
   --game-line: var(--ui-line);

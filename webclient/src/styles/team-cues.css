@@ -1,0 +1,118 @@
+/* Team pigments identify surfaces and markers; all copy stays white. */
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team],
+.table-arena :is(.game-data-section, .seat-panel, .player-hand-area)[data-team],
+.belot-dialog :is(.match-result-team, .meld-details-player, .meld-popup-player-block,
+  .meld-winner-team-summary, .game-complete-score-row)[data-team] {
+  background-image: linear-gradient(135deg,
+    color-mix(in srgb, var(--team-identity) 20%, transparent),
+    color-mix(in srgb, var(--team-identity) 6%, transparent));
+  border-color: color-mix(in srgb, var(--team-identity) 70%, var(--ui-line));
+}
+
+/* Solid inlays carry identity without lighting up the panel. */
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team],
+.belot-dialog :is(.match-result-team, .meld-details-player, .meld-popup-player-block,
+  .meld-winner-team-summary)[data-team] {
+  border-top-color: var(--team-identity);
+  box-shadow: inset 0 2px 0 var(--team-identity);
+}
+/* Trim wraps around the inner corners; the panels open cleanly to the outer edges. */
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="your"] {
+  border-inline-start-color: transparent;
+  border-inline-end-color: var(--team-identity);
+  border-radius: 0 8px 8px 0;
+  box-shadow: inset 0 2px 0 var(--team-identity),
+    inset -2px 0 0 var(--team-identity);
+}
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team="opponent"] {
+  border-inline-start-color: var(--team-identity);
+  border-inline-end-color: transparent;
+  border-radius: 8px 0 0 8px;
+  box-shadow: inset 0 2px 0 var(--team-identity),
+    inset 2px 0 0 var(--team-identity);
+}
+.table-arena .game-data-section[data-team="your"] {
+  border-left-color: var(--team-identity);
+  box-shadow: inset 2px 0 0 var(--team-identity);
+}
+.table-arena .game-data-section[data-team="opponent"] {
+  border-right-color: var(--team-identity);
+  box-shadow: inset -2px 0 0 var(--team-identity);
+}
+.table-arena .game-data-section[data-team] { border-radius: 0; }
+.table-arena .game-data-section[data-team] .data-list {
+  background: none;
+  border-radius: 0;
+  border-top: 1px solid color-mix(in srgb, var(--team-identity) 55%, transparent);
+}
+.table-arena .game-data-section[data-team] .data-row {
+  position: relative;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.table-arena .game-data-section[data-team] .data-row + .data-row::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 0;
+  border-left: 1px solid color-mix(in srgb, var(--team-identity) 55%, transparent);
+  pointer-events: none;
+}
+.table-arena .game-data-section[data-team] .data-row[data-stat="points"]::after {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 50%;
+  width: 20px;
+  transform: translateX(-50%);
+  border-bottom: 2px solid var(--team-identity);
+  pointer-events: none;
+}
+@container team-score (max-width: 148px) {
+  .table-arena .game-data-section[data-team] .data-row + .data-row::before {
+    inset: 0 0 auto;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--team-identity) 30%, transparent);
+  }
+  .table-arena .game-data-section[data-team] .data-row[data-stat="points"]::after {
+    inset: auto 1px 0 auto;
+    transform: none;
+  }
+}
+.table-arena .seat-panel::before,
+.table-arena .player-hand-area::before { background: var(--team-identity); }
+.table-arena :is(.seat-west, .seat-east)::before { width: 4px; }
+.table-arena .seat-north::before,
+.table-arena .player-hand-area::before { height: 4px; }
+
+/* Compact chips beside identity labels; no backplates behind their text. */
+.table-arena [data-team] .game-data-team-heading > .panel-caption::before,
+.table-arena [data-team] .south-player-team::before,
+.belot-dialog .match-result-team[data-team] .match-result-place::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 1px;
+  background: var(--team-identity);
+  box-shadow: none;
+  vertical-align: .05em;
+}
+.table-arena [data-team] .game-data-team-heading > .panel-caption::before,
+.table-arena [data-team] .south-player-team::before,
+.belot-dialog .match-result-team[data-team] .match-result-place::before { margin-inline-end: 6px; }
+.belot-dialog.belot-dialog-setup .team-seat-pair { opacity: .42; }
+.belot-dialog.belot-dialog-setup .team-seat-table { stroke: var(--team-identity); }
+.belot-dialog.belot-dialog-setup .team-seat-other { opacity: .1; }
+
+/* History repeats the same team inlay and colored play-order counters. */
+.game-layout :is(.terminal-play-row, .terminal-round-winner, .terminal-line)[data-team] {
+  background: color-mix(in srgb, var(--team-identity) 12%, var(--ui-dialog));
+  box-shadow: inset 3px 0 0 var(--team-identity);
+}
+.game-layout .terminal-play-row[data-team] .terminal-play-order {
+  background: color-mix(in srgb, var(--team-identity) 65%, var(--ui-dialog));
+  border: 1px solid var(--team-identity);
+  color: #fff;
+}

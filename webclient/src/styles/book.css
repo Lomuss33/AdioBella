@@ -212,25 +212,8 @@
   .table-arena .arena-controls .match-corner-button { min-height: 30px; padding: 3px 5px; font-size: 10px; }
 }
 
-/* Size the header from the table's real width, not the outer viewport. This
-   keeps all three panels together whenever their columns can safely fit. */
+/* Panel queries follow the actual table width, including any history sidebar. */
 .table-arena {
   container-name: table-arena;
   container-type: inline-size;
-}
-@container table-arena (min-width: 640px) {
-  .table-arena .arena-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); }
-  .table-arena .arena-header > .game-data-card,
-  .table-arena .arena-header .game-data-grid { display: contents; }
-  .table-arena .arena-header [data-team="opponent"] { grid-column: 1; grid-row: 1; }
-  .table-arena .arena-header > .match-data-card { grid-column: 2; grid-row: 1; }
-  .table-arena .arena-header [data-team="your"] { grid-column: 3; grid-row: 1; }
-}
-@container table-arena (width < 640px) {
-  .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); }
-  .table-arena .arena-header > .game-data-card { display: block; grid-column: 1; grid-row: 2; }
-  .table-arena .arena-header .game-data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .table-arena .arena-header [data-team="opponent"],
-  .table-arena .arena-header [data-team="your"] { grid-column: auto; grid-row: auto; }
-  .table-arena .arena-header > .match-data-card { grid-column: 1; grid-row: 1; }
 }

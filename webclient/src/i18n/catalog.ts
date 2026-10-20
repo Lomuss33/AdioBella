@@ -1,5 +1,13 @@
 import { guideMessages } from "./guide";
 export const messages = {
+  "console.tableInformation": ["Table information", "Tischinformationen", "Informacije o stolu"],
+  "console.yourTurn": ["Your turn", "Du bist dran", "Tvoj potez"],
+  "console.currentMove": ["Current move", "Aktueller Zug", "Trenutni potez"],
+  "console.chooseCard": ["Choose a highlighted card.", "Wähle eine markierte Karte.", "Odaberi označenu kartu."],
+  "console.trickPlaying": ["Trick in play", "Stich läuft", "Štih je u tijeku"],
+  "console.trickComplete": ["Trick settled", "Stich entschieden", "Štih je završen"],
+  "console.notChosen": ["Not chosen", "Noch offen", "Nije odabran"],
+  "console.pointsUnit": ["points", "Punkte", "bodova"],
   "team.yourSeats": ["You and your teammate sit opposite each other", "Dein Partner sitzt dir gegenüber", "Ti i partner sjedite jedno nasuprot drugome"],
   "team.opponentSeats": ["Your opponents sit to your left and right", "Deine Gegner sitzen links und rechts von dir", "Protivnici sjede s tvoje lijeve i desne strane"],
   ...guideMessages,
@@ -8,10 +16,10 @@ export const messages = {
     "Sprache",
     "Jezik"
   ],
-  "Automatic (browser)": [
-    "Automatic (browser)",
-    "Automatisch (Browser)",
-    "Automatski (preglednik)"
+  "Automatic": [
+    "Automatic",
+    "Automatisch",
+    "Automatski"
   ],
   "Belot Table": [
     "Belot Table",

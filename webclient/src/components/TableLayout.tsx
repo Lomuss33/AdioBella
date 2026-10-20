@@ -3,7 +3,6 @@ import { t } from "../i18n";
 import { useLayoutEffect, useRef } from "react";
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
 import GameDataCard from "./GameDataCard";
-import MatchDataCard from "./MatchDataCard";
 import MatchCornerControls from "./MatchCornerControls";
 import PlayerHand from "./PlayerHand";
 import ScoreBar from "./ScoreBar";
@@ -90,7 +89,6 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     <section ref={arenaRef} className="table-arena" aria-label={t("Belot table")}>
       <div className="arena-header">
         <GameDataCard snapshot={snapshot} />
-        <MatchDataCard snapshot={snapshot} />
       </div>
       <div className="arena-play">
         {seat("NORTH")}
@@ -105,12 +103,14 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
           winnerGlow={highlightedSeat === "SOUTH"} showDealer={dealerSeat === "SOUTH"}
           showTrumpCaller={declarerSeat === "SOUTH"} onPlayCard={onPlayCard} />
         <div className="arena-status">
-          <ScoreBar snapshot={snapshot} animatedTrick={animatedTrick} errorMessage={errorMessage} />
-          <div className="arena-controls">
-          <TableUtilities onOpenBook={onOpenBook} />
-          <MatchCornerControls canForfeitGame={canForfeitGame} canQuitMatch={canQuitMatch}
-            onForfeitGame={onForfeitGame} onQuitMatch={onQuitMatch} />
-          </div>
+          <ScoreBar snapshot={snapshot} errorMessage={errorMessage}
+            controls={
+              <div className="arena-controls">
+                <TableUtilities onOpenBook={onOpenBook} />
+                <MatchCornerControls canForfeitGame={canForfeitGame} canQuitMatch={canQuitMatch}
+                  onForfeitGame={onForfeitGame} onQuitMatch={onQuitMatch} />
+              </div>
+            } />
         </div>
       </div>
     </section>

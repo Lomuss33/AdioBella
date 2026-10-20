@@ -10,6 +10,7 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
   const [showMelds, setShowMelds] = useState(false);
   const score = snapshot?.score;
   const gameTitle = t(score?.difficulty === "HARD" ? "gameHeading.hard" : score?.difficulty === "EASY" ? "gameHeading.easy" : "gameHeading.normal", { count: score?.gameNumber || "—" });
+  const difficulty = t(score?.difficulty === "HARD" ? "hard" : score?.difficulty === "EASY" ? "easy" : "normal");
   const wins = score?.matchTargetWins ?? 3;
   const points = score?.gameTargetPoints ?? 1001;
   const summaryKey = wins === 1 ? "matchSummary.one" : wins < 5 ? "matchSummary.few" : "matchSummary.other";
@@ -27,26 +28,27 @@ export default function MatchDataCard({ snapshot }: { snapshot: GameSnapshot | n
       >
         <span className="match-summary">
           <span className="match-summary-heading">
-            <strong className="match-summary-title">{gameTitle}</strong>
+            <strong className="match-summary-title">{t("gameNumber", { count: score?.gameNumber || "—" })}</strong>
+            <small className="match-summary-difficulty">{difficulty}</small>
+            <svg className="match-summary-open" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="3" y="5" width="10" height="12" rx="1.5" />
+              <path d="M7 5V3.5A1.5 1.5 0 0 1 8.5 2h7A1.5 1.5 0 0 1 17 3.5v9A1.5 1.5 0 0 1 15.5 14H13" />
+            </svg>
           </span>
           <span className="match-summary-targets" title={summary}>
-            <small className="match-summary-target-caption">{t("First to")}</small>
             <span className="match-summary-goals">
               <span className="match-summary-goal">
                 <strong>{number(wins)}</strong>
                 <small>{countText("wins", wins).slice(number(wins).length).trim()}</small>
               </span>
+              <span className="match-summary-separator" aria-hidden="true">·</span>
               <span className="match-summary-goal">
-                <small>{t("with")}</small>
                 <strong>{number(points)}</strong>
-                <small>{t("matchSummary.pointsUnit")}</small>
+                <small>{t("console.pointsUnit")}</small>
               </span>
             </span>
           </span>
         </span>
-        <svg className="match-summary-open" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="m9 6 6 6-6 6" />
-        </svg>
       </button>
       {showMelds && createPortal(
         <MeldDetails melds={score?.meldDeclarations ?? []}

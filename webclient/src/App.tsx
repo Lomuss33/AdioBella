@@ -10,6 +10,7 @@ import ConfirmPopup from "./components/ConfirmPopup";
 import TableLayout from "./components/TableLayout";
 import { CardStyleProvider } from "./components/CardStyleContext";
 import TerminalLog from "./components/TerminalLog";
+import CurrentMove from "./components/CurrentMove";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
 import { HttpError } from "./lib/serverGateway";
 import {
@@ -797,7 +798,8 @@ function App() {
         />
       </div>
       <section className="after-table">
-        <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team} />
+        <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}
+          currentMove={<CurrentMove snapshot={snapshot} animatedTrick={animatedTrick} />} />
       </section>
       {showBook && <GuideBook initialChapter={showBook} onClose={() => setShowBook(null)} />}
       {confirmExit ? <ConfirmPopup kind={confirmExit} onCancel={() => setConfirmExit(null)} onConfirm={() => {

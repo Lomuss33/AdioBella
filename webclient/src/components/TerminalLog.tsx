@@ -1,6 +1,7 @@
 import { cardDescription, eventDescription, handSettlementDescription } from "../i18n/presentation";
 import { t, countText, useLanguage } from "../i18n";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { GameEvent } from "../types";
 import { seatSide, teamSide } from "../lib/teamSide";
 
@@ -27,7 +28,7 @@ function CompactCardMark({ rank, suit }: { rank?: string; suit?: string }) {
   );
 }
 
-function TerminalLog({ events, matchComplete, yourTeamName }: { events: GameEvent[]; matchComplete?: boolean; yourTeamName?: string }) {
+function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { events: GameEvent[]; matchComplete?: boolean; yourTeamName?: string; currentMove?: ReactNode }) {
   const orderedEvents = useMemo(
     () => [...new Map(events.map((event) => [event.sequence, event])).values()].sort((left, right) => left.sequence - right.sequence),
     [events]
@@ -53,6 +54,7 @@ function TerminalLog({ events, matchComplete, yourTeamName }: { events: GameEven
         </div>
         <span className="terminal-disclosure" aria-hidden="true" />
       </summary>
+      {currentMove}
       <div className="terminal-grid">
         <section className="terminal-section" aria-labelledby="round-feed-heading">
           <div className="terminal-subheader">

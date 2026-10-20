@@ -18,12 +18,14 @@
   box-shadow: none;
 }
 .belot-dialog.belot-dialog-setup .popup-content {
+  --setup-content-inset-start: max(12px, env(safe-area-inset-left));
+  --setup-content-inset-end: max(12px, env(safe-area-inset-right));
   background: var(--ui-dialog);
   width: 100%;
   min-height: 0;
   flex: 1 1 auto;
   gap: clamp(8px, 1.5vh, 16px);
-  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+  padding: max(10px, env(safe-area-inset-top)) var(--setup-content-inset-end) 10px var(--setup-content-inset-start);
   overflow: auto;
 }
 .belot-dialog.belot-dialog-setup :is(.action-popup-header, .action-popup-body) {
@@ -85,12 +87,12 @@
 .belot-dialog.belot-dialog-setup .language-flag-options {
   top: calc(100% + 6px);
   box-sizing: border-box;
-  width: min(210px, calc(100vw - 32px));
+  width: min(148px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
   max-height: min(240px, calc(100dvh - 24px));
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 5px;
+  padding: 4px;
   border: 1px solid color-mix(in srgb, var(--ui-text) 16%, transparent);
   border-radius: 12px;
   background-color: var(--ui-solid);
@@ -107,8 +109,9 @@
 }
 .belot-dialog.belot-dialog-setup .language-flag-options button {
   min-height: 36px;
-  gap: 7px;
-  padding: 6px 8px;
+  grid-template-columns: 20px minmax(0, 1fr) 14px;
+  gap: 6px;
+  padding: 6px;
   border: 1px solid transparent;
   border-radius: 7px;
   color: var(--ui-text);
@@ -116,6 +119,10 @@
   font-weight: 600;
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
 }
+.belot-dialog.belot-dialog-setup .language-flag-options button > span:nth-child(2) {
+  white-space: nowrap;
+}
+.belot-dialog.belot-dialog-setup .language-option-check { justify-self: end; }
 .belot-dialog.belot-dialog-setup .language-flag-options button:first-of-type {
   margin-bottom: 4px;
   border-bottom: 1px solid var(--ui-line);
@@ -133,8 +140,8 @@
 .belot-dialog.belot-dialog-setup .language-option-check {
   display: grid;
   place-items: center;
-  width: 17px;
-  height: 17px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   font-size: 11px;
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { ACCENT_COLORS } from "./preferences";
-import { accentPalettes, accentVariables, TABLE_THEMES, TEAM_COLORS, tablePalettes, tableVariables } from "./appearanceTheme";
+import { accentPalettes, accentVariables, TABLE_THEMES, tablePalettes, tableVariables } from "./appearanceTheme";
 
 function luminance(hex: string) {
   const channels = hex.match(/[a-f\d]{2}/gi)!.map(value => parseInt(value, 16) / 255)
@@ -30,11 +30,12 @@ test("small accent and secondary text remain readable over the brightest felt an
       const secondary = "#ffffff";
       expect(contrast(text, palette.center)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(secondary, palette.center)).toBeGreaterThanOrEqual(4.5);
-      for (const team of [palette.teamYour, palette.teamOpponent]) {
+      for (const team of [accentPalettes[accent].teamYour, accentPalettes[accent].teamOpponent]) {
         // Check the brightest part of an active chevron, not just the panel base.
         const patternedPanel = blend(team, playerPanel, .2);
         expect(contrast(text, patternedPanel)).toBeGreaterThanOrEqual(4.5);
         expect(contrast(secondary, patternedPanel)).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(accentVariables(accent)["--ui-team-text"], patternedPanel)).toBeGreaterThanOrEqual(4.5);
       }
     }
   }
@@ -52,14 +53,14 @@ test("every accent/table combination preserves separate ownership and readable c
       const dialog = blend(tablePalettes[theme].edge, "#10171f", .7);
       const leatherAction = blend("#ffffff", blend(palette.swatch, dialog, .48), .03);
       expect(contrast("#f3f3f5", leatherAction)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette.text, "#0b141d")).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(ui["--ui-accent-text"], "#0b141d")).toBeGreaterThanOrEqual(4.5);
       for (const surface of neutralSurfaces) {
-        expect(contrast(palette.text, surface)).toBeGreaterThanOrEqual(4.5);
-        expect(contrast(palette.focus, surface)).toBeGreaterThanOrEqual(3);
+        expect(contrast(ui["--ui-accent-text"], surface)).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(ui["--ui-focus"], surface)).toBeGreaterThanOrEqual(3);
         expect(contrast("#c5ced8", surface)).toBeGreaterThanOrEqual(4.5);
       }
       // Exposed player/team text stays legible against every felt palette.
-      for (const text of ["#ffffff", tablePalettes[theme].teamYour, tablePalettes[theme].teamOpponent]) {
+      for (const text of [ui["--ui-accent-text"], ui["--ui-team-text"]]) {
         expect(contrast(text, tablePalettes[theme].center)).toBeGreaterThanOrEqual(4.5);
         expect(contrast(text, tablePalettes[theme].edge)).toBeGreaterThanOrEqual(4.5);
       }
@@ -67,26 +68,55 @@ test("every accent/table combination preserves separate ownership and readable c
   }
 });
 
-test("every theme keeps the same bold blue/coral team identity with readable colors", () => {
-  const your = TEAM_COLORS.teamYour.match(/[a-f\d]{2}/gi)!.map(value => parseInt(value, 16));
-  const opponent = TEAM_COLORS.teamOpponent.match(/[a-f\d]{2}/gi)!.map(value => parseInt(value, 16));
-  expect(your[2] - your[0]).toBeGreaterThanOrEqual(90);
-  expect(opponent[0] - opponent[2]).toBeGreaterThanOrEqual(90);
+function hue(hex: string) {
+  const [r, g, b] = hex.match(/[a-f\d]{2}/gi)!.map(value => parseInt(value, 16) / 255);
+  const max = Math.max(r, g, b), delta = max - Math.min(r, g, b);
+  return ((max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) * 60 + 360) % 360;
+}
+function hueDistance(a: string, b: string) {
+  const distance = Math.abs(hue(a) - hue(b));
+  return Math.min(distance, 360 - distance);
+}
+
+test("each accent owns a distinct rival pair, separate from the accent and readable on every table", () => {
   const pairs = new Set<string>();
-  for (const theme of TABLE_THEMES) {
-    const palette = tablePalettes[theme];
-    const variables = tableVariables(theme);
+  for (const accent of ACCENT_COLORS) {
+    const palette = accentPalettes[accent];
+    const variables = accentVariables(accent);
     expect(variables["--ui-team-your"]).toBe(palette.teamYour);
     expect(variables["--ui-team-opponent"]).toBe(palette.teamOpponent);
-    expect(palette.teamYour).toBe(TEAM_COLORS.teamYour);
-    expect(palette.teamOpponent).toBe(TEAM_COLORS.teamOpponent);
-    expect(palette.teamYour).not.toBe(palette.teamOpponent);
+    expect(hueDistance(palette.teamYour, palette.teamOpponent)).toBeGreaterThanOrEqual(100);
+    if (accent !== "graphite" && accent !== "ivory") {
+      expect(hueDistance(palette.teamYour, palette.swatch)).toBeGreaterThanOrEqual(100);
+      expect(hueDistance(palette.teamOpponent, palette.swatch)).toBeGreaterThanOrEqual(100);
+    }
     pairs.add(`${palette.teamYour}/${palette.teamOpponent}`);
-    for (const color of [palette.teamYour, palette.teamOpponent]) {
-      for (const surface of [palette.center, palette.edge, "#10171f", "#17212b"]) {
-        expect(contrast(color, surface)).toBeGreaterThanOrEqual(4.5);
+    for (const color of [variables["--ui-team-text"], variables["--ui-accent-text"]]) {
+      for (const theme of TABLE_THEMES) {
+        for (const surface of [tablePalettes[theme].center, tablePalettes[theme].edge, "#10171f", "#17212b"]) {
+          expect(contrast(color, surface)).toBeGreaterThanOrEqual(4.5);
+        }
       }
     }
   }
-  expect(pairs.size).toBe(1);
+  expect(pairs.size).toBe(ACCENT_COLORS.length);
+});
+
+test("every accent and rival palette uses subdued pigments with separate white text", () => {
+  for (const accent of ACCENT_COLORS) {
+    const palette = accentPalettes[accent];
+    const variables = accentVariables(accent);
+    expect(variables["--ui-accent-text"]).toBe("#ffffff");
+    expect(variables["--ui-team-text"]).toBe("#ffffff");
+    for (const pigment of [palette.swatch, palette.trim, palette.teamYour, palette.teamOpponent]) {
+      const channels = pigment.match(/[a-f\d]{2}/gi)!.map(value => parseInt(value, 16));
+      const max = Math.max(...channels) / 255, min = Math.min(...channels) / 255;
+      const lightness = (max + min) / 2;
+      const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * lightness - 1));
+      expect(Math.max(...channels)).toBeLessThanOrEqual(accent === "ivory" ? 190 : 175);
+      // Deep lacquer can have richer pigment without becoming a bright tint.
+      expect(saturation).toBeLessThanOrEqual(.55);
+      if (saturation > .35) expect(lightness).toBeLessThan(.35);
+    }
+  }
 });

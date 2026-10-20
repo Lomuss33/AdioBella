@@ -27,7 +27,7 @@ export default function TableUtilities({ onOpenBook }: { onOpenBook: () => void 
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg><small aria-hidden="true">{locale.toUpperCase()}</small>
       </button>
       {open && <div id={id} className="language-dropup-options" role="group" aria-label={t("Language")}>
-        {([['auto', t("Automatic (browser)")], ['en', 'English'], ['de', 'Deutsch'], ['hr', 'Hrvatski']] as [LanguagePreference, string][]).map(([value, label]) =>
+        {([['auto', t("Automatic")], ['en', 'English'], ['de', 'Deutsch'], ['hr', 'Hrvatski']] as [LanguagePreference, string][]).map(([value, label]) =>
           <button type="button" key={value} lang={value === "auto" ? locale : value} aria-pressed={preference === value} onClick={() => { setLanguage(value); setOpen(false); trigger.current?.focus(); }}>
             <span>{label}</span><span aria-hidden="true">{preference === value ? '✓' : ''}</span>
           </button>)}

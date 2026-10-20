@@ -47,7 +47,7 @@
   box-shadow: var(--ui-shadow);
  border-color: var(--ui-line); }
 .table-arena :is(button:not(:disabled), a[href], [role="button"]:not([aria-disabled="true"])) { cursor: pointer; }
-.table-arena .arena-header { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 12px; align-items: start; }
+.table-arena .arena-header { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; align-items: start; }
 .table-arena .arena-play { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(200px, 2.8fr) minmax(80px, 1fr); grid-template-areas: ". north ." "west trick east"; grid-template-rows: auto 1fr; align-items: center; gap: 6px 10px; min-width: 0; }
 .table-arena .arena-bottom { display: grid; gap: 8px; min-width: 0; }
 .table-arena [data-team="your"] { --team-color: var(--ui-team-your); --team-surface: var(--ui-glass); }
@@ -92,7 +92,7 @@
 .table-arena .trick-pool > .panel-caption { top: 8px; left: 50%; transform: translateX(-50%); color: var(--ui-muted); background: transparent; font-size: 11px; letter-spacing: .14em; white-space: nowrap; }
 .table-arena .trick-cards .playing-card-face { width: var(--trick-card-width); height: var(--trick-card-height); }
 .table-arena .trick-cards .playing-card-shell { width: var(--trick-card-width); height: var(--trick-card-height); }
-.table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: var(--ui-gold-light); background: var(--ui-solid); border: 0; box-shadow: var(--ui-shadow); }
+.table-arena .trick-points-chip { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 3px 10px; font-size: 13px; color: var(--ui-gold-light); background: transparent; border: 0; box-shadow: none; }
 .table-arena .trick-points-chip[class*="collect-"] { opacity: 0; }
 
 .table-arena .player-hand-area { grid-area: auto; width: min(100%, 600px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
@@ -154,15 +154,6 @@
   .app-shell.game-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); max-width: 2200px; margin-inline: auto;  --game-text: var(--ui-text);  --game-muted: var(--ui-muted);  --game-line: var(--ui-line); }
   .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100svh - 8px); overflow-y: auto; scrollbar-width: thin; }
 }
-/* Swap only the annotated panels: opponents | match details | your team. */
-@media (min-width: 701px) {
-  .table-arena .arena-header { grid-template-columns: minmax(0, 1fr) minmax(180px, 1.2fr) minmax(0, 1fr); }
-  .table-arena .arena-header > .game-data-card,
-  .table-arena .arena-header .game-data-grid { display: contents; }
-  .table-arena .arena-header [data-team="opponent"] { grid-column: 1; grid-row: 1; }
-  .table-arena .arena-header > .match-data-card { grid-column: 2; grid-row: 1; }
-  .table-arena .arena-header [data-team="your"] { grid-column: 3; grid-row: 1; }
-}
 /* Fit the header, play area and hand into one visible viewport. */
 .table-arena .arena-header { min-height: 0; }
 .table-arena .arena-play { min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
@@ -195,7 +186,7 @@
 .table-arena .trick-cards { height: 100%; min-height: 0; }
 /* Measurable even before the first card is played; never occupies layout space. */
 .table-arena .trick-size-guide { position: absolute; width: var(--trick-card-width); height: 0; visibility: hidden; pointer-events: none; }
-.table-arena .trick-points-chip { bottom: 3px;  color: var(--ui-gold-light);  background: var(--ui-solid);  box-shadow: var(--ui-shadow); }
+.table-arena .trick-points-chip { bottom: 3px;  color: var(--ui-gold-light);  background: transparent;  box-shadow: none; }
 .table-arena .player-hand-area { width: min(100%, 640px); padding-top: 0; gap: 3px; }
 .table-arena .player-hand-area .card-fan-row {
   gap: 4px;
@@ -451,6 +442,14 @@
 .game-layout .terminal-panel :is(.terminal-header h2, .terminal-subheader h3, .terminal-count) { color: var(--ui-accent); }
 .game-layout .terminal-disclosure { width: 9px; height: 9px; flex: 0 0 9px; margin: 0 3px 4px 0; transform: rotate(45deg); border: solid var(--ui-muted); border-width: 0 1.5px 1.5px 0; transition: transform 140ms ease; }
 .game-layout .terminal-panel:not([open]) .terminal-disclosure { margin-bottom: 0; transform: rotate(-45deg); }
+.game-layout .terminal-current-move {
+  margin-top: 7px;
+  color: var(--text-context);
+  font: 500 11px/1.3 "Segoe UI", system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.game-layout .terminal-current-move[data-status="action"] { color: var(--text-highlight); }
+.game-layout .terminal-current-move[data-team] { color: var(--text-team); }
 .game-layout .terminal-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 10px; }
 .game-layout .terminal-section { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto minmax(0, 1fr); gap: 8px; padding: 10px; border: 1px solid color-mix(in srgb, var(--game-line) 78%, transparent); border-radius: 11px; background: color-mix(in srgb, var(--ui-solid) 38%, transparent); }
 .game-layout .terminal-subheader { display: flex; min-width: 0; min-height: 26px; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
@@ -608,8 +607,8 @@
   padding: 0;
   border: 0;
   border-radius: 6px;
-  background: var(--ui-dialog);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 28%);
+  background: transparent;
+  box-shadow: none;
   text-shadow: 0 2px 5px rgb(0 0 0 / 40%);
   color: var(--ui-gold-light);
   font-size: 15px;

@@ -12,7 +12,7 @@ export default function LanguageSelect() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const active = preference === "auto" ? locale : preference;
   const options: { value: Flag; label: string }[] = [
-    { value: "auto", label: t("Automatic (browser)") },
+    { value: "auto", label: t("Automatic") },
     { value: "en", label: "English" },
     { value: "de", label: "Deutsch" },
     { value: "hr", label: "Hrvatski" }

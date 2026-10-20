@@ -3,13 +3,19 @@ import { loadPreferences, PREFERENCES_KEY, savePreferences } from "./preferences
 
 afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
 
+test("starts with the oxblood accent and black felt without saved choices", () => {
+  const preferences = loadPreferences();
+  expect(preferences.visual.accent).toBe("oxblood");
+  expect(preferences.game.tableTheme).toBe("FINE_BLACK");
+});
+
 test("restores appearance, names and next-match settings after a reload", () => {
   const preferences = loadPreferences();
   preferences.players.SOUTH = "Ivana";
   preferences.teams.yourTeam = "Friends";
   preferences.game.difficulty = "HARD";
   preferences.game.tableTheme = "DARK_BLUE";
-  preferences.visual = { cardStyle: "modern", accent: "silver" };
+  preferences.visual = { cardStyle: "modern", accent: "graphite" };
   expect(savePreferences(preferences)).toBe(true);
   expect(loadPreferences()).toEqual(preferences);
 });
@@ -22,17 +28,25 @@ test("recovers from malformed or invalid stored settings", () => {
   expect(preferences.game.difficulty).toBe("NORMAL");
   expect(preferences.game.matchTargetWins).toBe(3);
   expect(preferences.players.SOUTH).toHaveLength(24);
-  expect(preferences.visual.accent).toBe("jade");
+  expect(preferences.visual.accent).toBe("oxblood");
 });
 
 test("persists and restores the added accent and felt choices", () => {
   const preferences = loadPreferences();
-  for (const [accent, tableTheme] of [["teal", "TEAL"], ["rose", "PLUM"]] as const) {
+  for (const [accent, tableTheme] of [["bottle-green", "TEAL"], ["oxblood", "PLUM"]] as const) {
     preferences.visual.accent = accent;
     preferences.game.tableTheme = tableTheme;
     expect(savePreferences(preferences)).toBe(true);
     expect(loadPreferences().visual.accent).toBe(accent);
     expect(loadPreferences().game.tableTheme).toBe(tableTheme);
+  }
+});
+
+test("maps saved legacy accents to the new casino palette", () => {
+  const replacements = { purple: "aubergine", azure: "midnight", jade: "bottle-green", teal: "bottle-green", gold: "antique-brass", silver: "graphite", copper: "saddle", rose: "oxblood" };
+  for (const [legacy, accent] of Object.entries(replacements)) {
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ version: 1, visual: { accent: legacy } }));
+    expect(loadPreferences().visual.accent).toBe(accent);
   }
 });
 

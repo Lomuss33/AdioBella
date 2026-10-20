@@ -9,24 +9,25 @@ afterEach(() => setLanguage("en"));
 test("offers eight named colors per palette and exposes selection without relying on color", async () => {
   setLanguage("en");
   const accentChange = vi.fn(), tableChange = vi.fn();
-  render(<><AccentColorPicker value="teal" onChange={accentChange} /><TableColorPicker value="PLUM" onChange={tableChange} /></>);
+  render(<><AccentColorPicker value="bottle-green" onChange={accentChange} /><TableColorPicker value="PLUM" onChange={tableChange} /></>);
   const accents = within(screen.getByRole("group", { name: "Interface accent" }));
   const tables = within(screen.getByRole("group", { name: "table color" }));
   expect(accents.getAllByRole("button")).toHaveLength(8);
   expect(tables.getAllByRole("button")).toHaveLength(8);
-  expect(accents.getByRole("button", { name: "Teal" })).toHaveAttribute("aria-pressed", "true");
+  expect(accents.getByRole("button", { name: "Bottle green" })).toHaveAttribute("aria-pressed", "true");
   expect(tables.getByRole("button", { name: "Plum" })).toHaveAttribute("aria-pressed", "true");
   const user = userEvent.setup();
-  await user.click(accents.getByRole("button", { name: "Rose" }));
+  await user.click(accents.getByRole("button", { name: "Oxblood" }));
   await user.click(tables.getByRole("button", { name: "Teal" }));
-  expect(accentChange).toHaveBeenCalledWith("rose");
+  expect(accentChange).toHaveBeenCalledWith("oxblood");
   expect(tableChange).toHaveBeenCalledWith("TEAL");
 });
 
 test("localizes the new colors in Croatian", () => {
   setLanguage("hr");
-  render(<><AccentColorPicker value="rose" onChange={() => {}} /><TableColorPicker value="PLUM" onChange={() => {}} /></>);
-  expect(screen.getByRole("button", { name: "Ružičasta" })).toHaveAttribute("aria-pressed", "true");
+  render(<><AccentColorPicker value="oxblood" onChange={() => {}} /><TableColorPicker value="PLUM" onChange={() => {}} /></>);
+  expect(within(screen.getByRole("group", { name: "Naglasak sučelja" })).getByRole("button", { name: "Bordo" })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("button", { name: "Šljiva" })).toHaveAttribute("aria-pressed", "true");
-  expect(screen.getAllByRole("button", { name: "Petrolej" })).toHaveLength(2);
+  expect(screen.getByRole("button", { name: "Starinska mjed" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Petrolej" })).toBeInTheDocument();
 });

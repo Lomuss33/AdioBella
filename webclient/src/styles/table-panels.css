@@ -4,45 +4,40 @@
 .table-arena .seat-east { justify-self: end; }
 @media (min-height: 501px) {
   @container table-arena (min-width: 640px) {
-    .table-arena .seat-north { margin-block-start: 4px; }
+    .table-arena .seat-north { margin-block-start: 3px; }
   }
 }
-@container table-arena (min-width: 640px) {
-  .table-arena .arena-header > .match-data-card { align-self: stretch; }
-}
-/* Short, wide tables share two header rows to free room for play. Taller
-   screens retain the separate teammate row; phone landscape has its own layout. */
-@media (min-height: 501px) and (max-height: 800px) {
+/* The north seat shares the scoreboard row now that match details live below. */
+@media (min-height: 501px) {
   @container table-stage (min-width: 680px) {
     .table-arena {
-      --compact-seat-height: 56px;
-      --compact-seat-inset: 4px;
+      --compact-seat-height: 54px;
+      --compact-seat-inset: 3px;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
-      grid-template-rows: auto calc(var(--compact-seat-height) + var(--compact-seat-inset)) minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       column-gap: 6px;
     }
     .table-arena .arena-header,
-    .table-arena .arena-play { display: contents; }
-    .table-arena .arena-header [data-team="opponent"] { grid-column: 1; grid-row: 1 / 3; }
-    .table-arena .arena-header [data-team="your"] { grid-column: 3; grid-row: 1 / 3; }
-    .table-arena .arena-header .game-data-section {
-      margin-block-end: calc(var(--compact-seat-height) / 2);
-    }
-    .table-arena .arena-header > .match-data-card { grid-column: 2; grid-row: 1; align-self: stretch; }
+    .table-arena .arena-play,
+    .table-arena .arena-header > .game-data-card,
+    .table-arena .arena-header .game-data-grid { display: contents; }
+    .table-arena .arena-header [data-team="opponent"] { grid-area: 1 / 1; }
+    .table-arena .arena-header [data-team="your"] { grid-area: 1 / 3; }
     .table-arena .arena-play > .seat-north {
-      grid-area: 2 / 2;
+      grid-area: 1 / 2;
       align-self: start;
       height: var(--compact-seat-height);
       margin-block-start: var(--compact-seat-inset);
     }
-    .table-arena .arena-play > .seat-west { grid-area: 3 / 1; }
-    .table-arena .arena-play > .seat-east { grid-area: 3 / 3; }
-    .table-arena .arena-play > .trick-pool-shell { grid-area: 3 / 2; }
-    .table-arena .arena-bottom { grid-column: 1 / -1; grid-row: 4; }
+    .table-arena .arena-play > .seat-west { grid-area: 2 / 1; }
+    .table-arena .arena-play > .seat-east { grid-area: 2 / 3; }
+    .table-arena .arena-play > .trick-pool-shell { grid-area: 2 / 2; }
+    .table-arena .arena-bottom { grid-column: 1 / -1; grid-row: 3; }
   }
 }
-.table-arena .arena-header { gap: 4px 6px; align-items: stretch; }
+.table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 4px 6px; align-items: stretch; }
 .table-arena { row-gap: 3px; }
+.table-arena .arena-play { row-gap: 5px; }
 .table-arena .game-data-grid { position: relative; gap: 6px; align-items: stretch; }
 .table-arena .game-data-grid::after {
   content: "vs.";
@@ -68,7 +63,8 @@
 .table-arena .game-data-section {
   container-name: team-score;
   grid-template-rows: 1fr auto;
-  padding: 7px 10px;
+  padding: 5px 10px 0;
+  row-gap: 2px;
   border: 1px solid var(--ui-line);
   border-radius: 3px;
   background: var(--ui-glass);
@@ -120,9 +116,9 @@
 }
 .table-arena .game-data-section .data-list {
   display: grid;
-  grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr) minmax(0, .85fr);
+  grid-template-columns: repeat(3, minmax(max-content, 1fr));
   align-items: stretch;
-  margin-top: 6px;
+  margin-top: 4px;
   gap: 4px clamp(3px, 2cqw, 10px);
   text-align: center;
 }
@@ -134,8 +130,8 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 5px 1px;
+  min-height: 0;
+  padding: 5px 1px 2px;
   gap: 4px;
   border: 1px solid color-mix(in srgb, var(--ui-line) 55%, transparent);
   border-radius: 6px;
@@ -149,8 +145,10 @@
   color: var(--ui-muted);
   font: 650 clamp(10px, 4.8cqw, 11px)/1.25 "Segoe UI", system-ui, sans-serif;
   letter-spacing: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
   max-width: 100%;
   text-align: center;
 }
@@ -165,6 +163,19 @@
   gap: 0 1px;
 }
 .table-arena .game-data-section .data-target { font-size: 10px; font-weight: 600; }
+/* Keep complete labels readable when three intrinsic-width columns cannot fit. */
+@container team-score (max-width: 148px) {
+  .table-arena .game-data-section .data-list { grid-template-columns: minmax(0, 1fr); margin-top: 3px; gap: 0; }
+  .table-arena .game-data-section .data-row {
+    flex-direction: row;
+    justify-content: space-between;
+    min-height: 0;
+    padding: 2px 1px;
+    gap: 6px;
+  }
+  .table-arena .game-data-section .data-label { text-align: start; }
+  .table-arena .game-data-section .data-value { justify-content: end; text-align: end; }
+}
 .table-arena .match-data-card {
   display: grid;
   height: auto;
@@ -242,66 +253,30 @@
   stroke-linejoin: round;
 }
 .table-arena .match-data-card:hover .match-summary-open { stroke: var(--ui-text); }
-/* A full-height center panel gets a centered hierarchy rather than a thin
-   line of text floating inside a tall surface. Compact tables keep the inline version. */
-@media (min-height: 801px) {
-  @container table-arena (min-width: 640px) {
-    .table-arena .match-data-card { grid-template-columns: minmax(0, 1fr) clamp(16px, 4cqw, 22px); padding: clamp(8px, 2cqw, 12px); }
-    .table-arena .match-summary {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      align-content: center;
-      justify-items: center;
-      gap: 9px;
-      text-align: center;
-    }
-    .table-arena .match-summary-heading,
-    .table-arena .match-summary-targets { justify-content: center; }
-    .table-arena .match-summary-title { font-size: clamp(14px, 3.7cqw, 18px); }
-    .table-arena .match-summary-target-caption,
-    .table-arena .match-summary-goal small { font-size: clamp(10px, 2.7cqw, 12px); }
-    .table-arena .match-summary-goal strong { font-size: clamp(15px, 4cqw, 20px); }
-    .table-arena .match-summary-open { width: 22px; height: 22px; }
-  }
-}
-@container match-summary-card (max-width: 420px) {
-  .table-arena .match-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .table-arena .match-summary-heading,
-  .table-arena .match-summary-targets { justify-content: center; }
-}
-@container match-summary-card (max-width: 260px) {
-  .table-arena .match-summary { gap: 5px; }
-  .table-arena .match-summary-targets { display: grid; justify-items: center; gap: 2px; }
-  .table-arena .match-summary-goals { gap: 3px 6px; }
-  .table-arena .match-summary-target-caption,
-  .table-arena .match-summary-goal small { font-size: 10px; }
-  .table-arena .match-summary-goal strong { font-size: 13px; }
-}
 /* Moderate-width tables keep more room for the two team names. */
 @container table-arena (640px <= width < 860px) {
-  .table-arena .arena-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr); }
-  .table-arena .game-data-section { padding: 6px 8px; }
+  .table-arena .game-data-section { padding: 5px 8px 0; }
 }
 @media (min-height: 501px) and (max-height: 650px) {
   .table-arena .match-data-card { padding-block: 5px; min-height: 32px; }
   .table-arena .match-summary { row-gap: 3px; }
 }
 @container table-arena (max-width: 339px) {
-  .table-arena .game-data-section { padding: 6px; }
+  .table-arena .game-data-section { padding: 5px 6px 0; }
   .table-arena .game-data-section .data-list { gap: 4px 3px; }
 }
 .table-arena { --player-panel-surface: color-mix(in srgb, var(--ui-dialog) 85%, transparent); }
 .table-arena .seat-panel {
   width: min(100%, clamp(96px, 18cqw, 168px));
   max-width: none;
-  height: 56px;
-  padding: 4px 8px;
+  height: 54px;
+  padding: 3px 8px;
   grid-template-rows: minmax(0, 1fr) 13px;
   border: 1px solid var(--ui-line);
   border-radius: 3px;
   background: var(--player-panel-surface);
   box-shadow: none;
-  gap: 2px;
+  gap: 1px;
   text-align: center;
 }
 /* Seat accents follow their table position and never consume layout space. */
@@ -325,7 +300,7 @@
   max-width: none;
   position: relative;
   isolation: isolate;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border: 0;
   border-top: .5px solid color-mix(in srgb, var(--team-color) 35%, transparent);
   border-radius: 0;
@@ -514,8 +489,8 @@
   }
 }
 @media (max-width: 380px) {
-  .table-arena .game-data-section { padding: 6px; }
-  .table-arena .seat-panel { padding: 4px 6px; }
+  .table-arena .game-data-section { padding: 5px 6px 0; }
+  .table-arena .seat-panel { padding: 3px 6px; }
   .table-arena .seat-main-copy strong { font-size: 12px; }
 }
 /* When all seats share a row, their outer edges and reserved badge rows align. */
@@ -531,11 +506,11 @@
   @container table-arena (min-width: 480px) {
     .table-arena .arena-play > .seat-west,
     .table-arena .arena-play > .seat-east {
-      height: clamp(76px, 13cqw, 104px);
-      padding-block: 12px;
+      height: clamp(72px, calc(13cqw - 4px), 100px);
+      padding-block: 10px;
       grid-template-rows: auto 13px;
       align-content: center;
-      gap: 7px;
+      gap: 5px;
     }
   }
   @container table-arena (480px <= width < 700px) {
@@ -543,18 +518,18 @@
       grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
       grid-template-areas: ". north ." "west trick east";
       grid-template-rows: auto minmax(0, 1fr);
-      gap: 6px;
+      gap: 5px 6px;
     }
-    .table-arena .arena-play > .seat-north { align-self: start; margin-block-start: 4px; }
+    .table-arena .arena-play > .seat-north { align-self: start; margin-block-start: 3px; }
     .table-arena .arena-play > .seat-west,
     .table-arena .arena-play > .seat-east { align-self: center; }
   }
 }
 @media (max-height: 500px) and (min-width: 600px) {
-  .table-arena .seat-panel { width: 100%; height: 48px; align-self: start; }
+  .table-arena .seat-panel { width: 100%; height: 46px; align-self: start; }
   .table-arena .seat-north { margin-block-start: 0; }
-  .table-arena .game-data-section { padding-block: 4px; }
+  .table-arena .game-data-section { padding-block: 3px 0; }
   .table-arena .game-data-section .data-list { margin-top: 3px; }
-  .table-arena .seat-panel { padding-block: 4px; }
+  .table-arena .seat-panel { padding-block: 3px; }
   .table-arena .seat-badges { min-height: 13px; }
 }

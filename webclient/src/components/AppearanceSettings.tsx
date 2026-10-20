@@ -16,14 +16,14 @@ const cardStyleMessages: Record<VisualSettings["cardStyle"], MessageKey> = {
   "four-color": "book.fourColor"
 };
 const accentLabels: Record<VisualSettings["accent"], MessageKey> = {
-  purple: "book.purple",
-  azure: "book.azure",
-  jade: "book.jade",
-  gold: "book.gold",
-  silver: "book.silver",
-  copper: "book.copper",
-  teal: "book.teal",
-  rose: "book.rose"
+  oxblood: "book.oxblood",
+  "bottle-green": "book.bottleGreen",
+  midnight: "book.midnight",
+  "antique-brass": "book.antiqueBrass",
+  ivory: "book.ivory",
+  saddle: "book.saddle",
+  aubergine: "book.aubergine",
+  graphite: "book.graphite"
 };
 const tableLabels: Record<TableTheme, MessageKey> = {
   GREEN: "green", TEAL: "teal felt", DARK_BLUE: "dark blue", PLUM: "plum felt",

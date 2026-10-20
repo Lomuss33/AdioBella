@@ -7,15 +7,16 @@
   --text-body: #ffffff;
   --text-context: #ffffff;
   --text-match: var(--ui-accent-text);
-  --text-highlight: var(--ui-accent);
+  --text-highlight: var(--ui-accent-text);
   --text-award: var(--ui-accent-text);
   color: var(--text-body);
 }
 :is(.game-layout, .belot-dialog) [data-team="your"],
-.belot-dialog[data-team="your"] { --text-team: var(--ui-team-your); }
+.belot-dialog[data-team="your"] { --team-identity: var(--ui-team-your); }
 :is(.game-layout, .belot-dialog) [data-team="opponent"],
-.belot-dialog[data-team="opponent"] { --text-team: var(--ui-team-opponent); }
+.belot-dialog[data-team="opponent"] { --team-identity: var(--ui-team-opponent); }
 :is(.game-layout, .belot-dialog) [data-team] {
+  --text-team: var(--ui-team-text);
   --text-team-context: var(--text-team);
 }
 
@@ -31,13 +32,13 @@
 .belot-dialog.belot-dialog-setup [data-team] .team-settings-label strong {
   font-weight: 700;
 }
-.belot-dialog.belot-dialog-setup .team-settings-row[data-team] { border-top: 2px solid var(--text-team); }
-.table-arena .game-data-section[data-team="your"] { border-left-color: var(--text-team); }
-.table-arena .game-data-section[data-team="opponent"] { border-right-color: var(--text-team); }
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team] { border-top: 2px solid var(--team-identity); }
+.table-arena .game-data-section[data-team="your"] { border-left-color: var(--team-identity); }
+.table-arena .game-data-section[data-team="opponent"] { border-right-color: var(--team-identity); }
 .table-arena .seat-panel::before,
 .table-arena .player-hand-area::before { background: color-mix(in srgb, var(--team-color) 80%, transparent); }
-.belot-dialog :is(.match-result-team, .meld-details-player)[data-team] { border-top: 2px solid var(--text-team); }
-.game-layout :is(.terminal-play-row, .terminal-round-winner, .terminal-line)[data-team] { border-left-color: var(--text-team); }
+.belot-dialog :is(.match-result-team, .meld-details-player)[data-team] { border-top: 2px solid var(--team-identity); }
+.game-layout :is(.terminal-play-row, .terminal-round-winner, .terminal-line)[data-team] { border-left-color: var(--team-identity); }
 .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input { color: #fff; }
 .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field input::placeholder { color: var(--text-team-context); }
 .table-arena .game-data-section [data-stat="points"] .data-value { color: var(--text-team); }
@@ -72,7 +73,7 @@
 .table-arena :is(.seat-badge, .south-inline-badge) { color: var(--ui-info); }
 .table-arena :is(.seat-badge-trump, .south-inline-badge-trump) { color: var(--text-highlight); }
 .table-arena .trump-suit-symbol:is(.hearts, .diams),
-.game-layout .terminal-play-card.is-red-suit { color: #ff92a0; }
+.game-layout .terminal-play-card.is-red-suit { color: var(--ui-danger); }
 .table-arena .score-prompt > strong[data-status="waiting"] { color: var(--text-context); }
 .table-arena .score-prompt > strong[data-status="action"] { color: var(--text-highlight); }
 .table-arena .score-prompt > strong[data-team] { color: var(--text-team); }

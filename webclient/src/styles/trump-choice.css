@@ -1,3 +1,10 @@
+/* Keep the dealt hand fully visible while choosing a suit. */
+.belot-dialog.belot-dialog-trump {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* Size the choices from the dialog, keeping a useful touch target on phones. */
 .belot-dialog-trump .popup-footer.trump-controls {
   grid-template-columns: repeat(var(--trump-choice-columns, 4), minmax(0, 1fr));

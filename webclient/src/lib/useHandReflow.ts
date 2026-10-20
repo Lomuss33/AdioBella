@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { getCenteredHandPositions, getHandRemoval, HAND_CAPACITY } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY, HAND_LAYOUT_REQUEST } from "./handLayout";
 
 const REFLOW_DURATION_MS = 260;
 const CENTERING_DELAY_MS = 55;
@@ -30,13 +30,15 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
     const synchronize = (animate: boolean) => {
       const spaces = [...row.querySelectorAll<HTMLElement>(".hand-slot-empty")];
       const nodes = [...row.querySelectorAll<HTMLElement>(".hand-card-slot")];
-      const style = getComputedStyle(row);
-      const columns = Math.max(1, Math.min(HAND_CAPACITY, Math.round(Number(style.getPropertyValue("--hand-columns"))) || HAND_CAPACITY));
       const keys = nodes.map(node => node.dataset.cardKey!);
       const previous = previousRef.current;
       // Capture before collapsing a row, including any interrupted movement.
       const before = animate ? new Map(nodes.filter(node => previous?.keys.includes(node.dataset.cardKey!))
         .map(node => [node.dataset.cardKey!, node.getBoundingClientRect()])) : new Map<string, DOMRect>();
+      if (animate) row.dispatchEvent(new Event(HAND_LAYOUT_REQUEST));
+      const style = getComputedStyle(row);
+      const columns = getHandColumns(nodes.length, Number(style.getPropertyValue("--hand-columns")) || HAND_CAPACITY);
+      row.style.setProperty("--hand-grid-columns", String(columns));
       const rows = Math.max(1, Math.ceil(nodes.length / columns));
       spaces.forEach((space, index) => {
         const display = index < rows * columns ? "" : "none";
@@ -57,7 +59,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       const sameSize = previous?.columns === columns
         && Math.abs(previous.width - first.width) < .5 && Math.abs(previous.height - first.height) < .5;
       const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      const shouldAnimate = animate && sameSize && (removal !== null || restoringCard) && !reducedMotion;
+      const shouldAnimate = animate && (removal !== null || restoringCard) && !reducedMotion;
 
       let rowStart = 0;
       const preferredRows = previous?.columns === columns ? previous.rowSizes.map(size => {
@@ -99,7 +101,9 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
           if (!old || typeof node.animate !== "function") return;
           const dx = old.left - after[index].left;
           const dy = old.top - after[index].top;
-          if (Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
+          const scaleX = old.width / after[index].width;
+          const scaleY = old.height / after[index].height;
+          if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(scaleX - 1) < .005 && Math.abs(scaleY - 1) < .005) return;
 
           const oldIndex = previous.keys.indexOf(key);
           const followsCentering = removal && (
@@ -108,8 +112,8 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
           );
           const delay = followsCentering ? CENTERING_DELAY_MS : 0;
           const animation = node.animate([
-            { transform: `translate(${dx}px, ${dy}px)` },
-            { transform: "translate(0, 0)" }
+            { transform: `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`, transformOrigin: "top left" },
+            { transform: "translate(0, 0) scale(1)", transformOrigin: "top left" }
           ], {
             duration: REFLOW_DURATION_MS - delay,
             delay,

@@ -1,4 +1,19 @@
-import { getCenteredHandPositions, getHandRemoval, HAND_CAPACITY } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY } from "./handLayout";
+
+test("uses all seven tracks for seven cards while preserving the four-column phone limit", () => {
+  expect(getHandColumns(7, 8)).toBe(7);
+  expect(getHandColumns(7, 4)).toBe(4);
+  expect(getHandColumns(3, 4)).toBe(3);
+  expect(getHandColumns(0, 8)).toBe(1);
+  for (const limit of [4, 8]) for (let count = 1; count <= HAND_CAPACITY; count++) {
+    const columns = getHandColumns(count, limit);
+    const positions = getCenteredHandPositions(count, columns);
+    expect(columns).toBeLessThanOrEqual(limit);
+    expect(positions).toHaveLength(count);
+    expect(positions.every(position => position.column >= 0 && position.column + 1 <= columns)).toBe(true);
+    expect(Math.ceil(count / columns)).toBe(Math.ceil(count / limit));
+  }
+});
 
 test.each([8, 4])("centers every remaining hand and every row with %i columns", columns => {
   for (let count = 0; count <= HAND_CAPACITY; count++) {

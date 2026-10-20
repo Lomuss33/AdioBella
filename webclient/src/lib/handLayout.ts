@@ -1,4 +1,10 @@
 export const HAND_CAPACITY = 8;
+export const HAND_LAYOUT_REQUEST = "belot-hand-layout-request";
+
+/** Use the available columns for the cards still in hand, with no empty end tracks. */
+export function getHandColumns(cardCount: number, columnLimit: number) {
+  return Math.max(1, Math.min(HAND_CAPACITY, Math.floor(columnLimit) || HAND_CAPACITY, Math.floor(cardCount) || 1));
+}
 
 /** Positions use card pitches, so the same layout works at every card size. */
 export function getCenteredHandPositions(cardCount: number, columns: number, preferredRowSizes: readonly number[] = []) {

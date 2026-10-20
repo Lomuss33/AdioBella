@@ -1000,24 +1000,6 @@
 .belot-dialog-setup .language-flag-chevron { flex: 0 0 13px; width: 13px; height: 13px; color: var(--ui-gold-light); transition: transform 140ms ease; }
 .belot-dialog-setup .language-flag-trigger[aria-expanded="true"] .language-flag-chevron { transform: rotate(180deg); }
 .belot-dialog.belot-dialog-setup .setup-toolbar .table-square-button { top: 50%; right: 0; transform: translateY(-50%); }
-.belot-dialog.belot-dialog-setup .language-flag-options {
-  top: calc(100% + 8px);
-  width: 210px;
-  max-width: calc(100vw - 40px);
-  padding: 5px;
-  border-color: color-mix(in srgb, var(--ui-gold-light) 32%, var(--ui-line));
-  border-radius: 12px;
-  background: var(--ui-dialog);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 48%);
-}
-.belot-dialog.belot-dialog-setup .language-flag-options button {
-  grid-template-columns: 24px minmax(0, 1fr) 16px;
-  min-height: 38px;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 7px;
-  font-size: 13px;
-}
 @media (max-width: 380px), (max-height: 520px) {
   .belot-dialog.belot-dialog-setup .match-length-choices button { font-size: 21px; }
   .belot-dialog.belot-dialog-setup .start-heading-row { padding-inline: 72px; min-height: 36px; }

@@ -2,6 +2,7 @@
 :root[data-card-style="italian"] .table-arena { --playing-card-height-factor: 2; }
 :root[data-card-style="german"] .table-arena { --playing-card-height-factor: 1.56; }
 :root[data-card-style="four-color"] .table-arena { --playing-card-height-factor: 1.392; }
+:root[data-card-style="heritage"] .table-arena { --playing-card-height-factor: 1.4; }
 .app-shell.game-layout {
   --game-text: var(--ui-text);
   --game-muted: var(--ui-muted);
@@ -99,7 +100,7 @@
 .table-arena .trick-points-chip[class*="collect-"] { opacity: 0; }
 
 .table-arena .player-hand-area { grid-area: auto; width: min(100%, 600px); min-width: 0; margin: 0 auto; padding: 4px 0 0; gap: 7px; }
-.table-arena .player-hand-area .card-fan-row { --hand-columns: 8; position: relative; grid-template-columns: repeat(8, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .95)))); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
+.table-arena .player-hand-area .card-fan-row { position: relative; grid-template-columns: repeat(var(--hand-grid-columns, var(--hand-columns, 8)), minmax(0, var(--hand-card-max, var(--trick-card-max)))); width: 100%; max-width: none; gap: clamp(3px, .65vw, 9px); align-items: start; padding: 4px 2px; }
 .table-arena .hand-slot { min-width: 0; }
 .table-arena .hand-card-slot { position: absolute; display: grid; justify-items: center; min-width: 0; visibility: hidden; }
 .table-arena .hand-slot-empty::before { content: ""; display: block; width: 100%; aspect-ratio: 1 / var(--playing-card-height-factor, 1.42); }
@@ -133,7 +134,7 @@
 .game-layout :is(summary, button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
 
 @media (max-width: 700px) {
-  .table-arena { --trick-card-max: 96px; padding: var(--arena-inset); gap: 6px;     }
+  .table-arena { padding: var(--arena-inset); gap: 6px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .table-arena .arena-play { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; gap: 6px; }
   .table-arena .seat-panel { padding: 5px; align-self: start;     }
@@ -148,7 +149,7 @@
   .table-arena .player-hand-area { width: min(100%, 600px); }
 }
 @media (max-height: 500px) and (min-width: 600px) {
-  .table-arena { --trick-card-max: 96px; min-height: 0; gap: 4px;     }
+  .table-arena { min-height: 0; gap: 4px;     }
   .table-arena .arena-header { grid-template-columns: minmax(0, 1.5fr) minmax(180px, 1fr); }
   .table-arena .arena-play { grid-template-columns: minmax(70px, 1fr) minmax(180px, 2fr) minmax(70px, 1fr); grid-template-areas: ". north ." "west trick east"; gap: 3px; }
   .table-arena .seat-panel { padding: 3px 6px;     }
@@ -177,17 +178,16 @@
   container-type: size;
 }
 .table-arena .trick-pool {
-  /* Share the responsive cap with card faces and animation offsets.
-     Reserve vertical space for padding and the ownership marker. */
-  --trick-card-separation: .62;
+  /* Keep fallback geometry consistent with the cross used by the solver. */
+  --trick-card-separation: .5;
   --trick-card-gap: 4px;
-  --trick-card-width: var(--table-card-width, max(32px, min(var(--trick-card-max), calc((100cqh - var(--trick-vertical-reserve, 66px)) / (var(--playing-card-height-factor, 1.42) * (1 + 2 * var(--trick-card-separation)))), calc((100cqw - 24px) / 3.8))));
+  --trick-card-width: var(--table-card-width, max(1px, min(var(--trick-card-max), calc((100cqh - 56px) / (var(--playing-card-height-factor, 1.42) * 2)), calc((100cqw - 24px) / 3))));
   --trick-card-height: calc(var(--trick-card-width) * var(--playing-card-height-factor, 1.42));
   --trick-offset-y: var(--table-trick-offset-y, calc(var(--trick-card-height) * var(--trick-card-separation) + var(--trick-card-gap) / 2));
-  --trick-offset-x: var(--table-trick-offset-x, calc(var(--trick-card-width) * 1.4));
+  --trick-offset-x: var(--table-trick-offset-x, calc(var(--trick-card-width) + var(--trick-card-gap)));
   --trick-entry-offset-y: calc(var(--trick-card-height) * .8);
   --trick-entry-offset-x: calc(var(--trick-card-width) * 1.8);
-  position: absolute; inset: 0; height: 100%; padding: 20px 6px 24px;
+  position: absolute; inset: 0 0 38px; height: auto; padding: 6px 6px 4px;
   border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .table-arena .trick-cards { height: 100%; min-height: 0; }
 /* Measurable even before the first card is played; never occupies layout space. */
@@ -201,13 +201,6 @@
   align-content: center;
 }
 .table-arena .south-inline-info { flex-wrap: nowrap; }
-/* Four cards per row keep the hand readable on narrow portrait screens. */
-@media (max-width: 400px) {
-  .table-arena .player-hand-area .card-fan-row {
-    --hand-columns: 4;
-    grid-template-columns: repeat(4, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .95))));
-  }
-}
 .table-arena .south-inline-main { flex-wrap: nowrap; min-width: 0;  color: var(--ui-text); }
 .table-arena .south-inline-main strong,
 .table-arena .south-inline-main > span:last-child { min-width: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
@@ -235,7 +228,7 @@
   .table-arena .arena-play { grid-column: 1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "west north east" "trick trick trick"; }
   .table-arena .arena-bottom { grid-column: 2; grid-row: 2; align-content: center; }
   .table-arena .player-hand-area { width: min(100%, 208px); }
-  .table-arena .player-hand-area .card-fan-row { --hand-columns: 4; grid-template-columns: repeat(4, minmax(0, var(--hand-card-max, calc(var(--trick-card-max) * .95)))); gap: 4px; }
+  .table-arena .player-hand-area .card-fan-row { gap: 4px; }
   .table-arena .score-item { padding: 3px 6px;  background: var(--ui-glass); }
   .table-arena .score-item > strong { font-size: 12px; line-height: 1.25; }
   .table-arena .seat-main-copy small { display: none; }
@@ -608,7 +601,7 @@
 .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
   top: auto;
   right: auto;
-  bottom: clamp(3px, 1.2cqh, 12px);
+  bottom: 0;
   left: 50%;
   display: grid;
   width: max-content;
@@ -660,28 +653,4 @@
 @keyframes table-trick-points-pulse {
   0%, 100% { transform: translate(-50%, 0) scale(1); }
   50% { transform: translate(-50%, 0) scale(1.1); }
-}
-@media (min-width: 701px) {
-  /* Give the points their own clear lane below the played cards. */
-  .table-arena .arena-play > .trick-pool-shell > .trick-pool {
-    --trick-vertical-reserve: 90px;
-    bottom: 38px;
-    height: auto;
-  }
-  .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
-    bottom: 0;
-  }
-}
-@media (min-width: 701px) and (min-height: 501px) {
-  .table-arena .arena-play > .trick-pool-shell > .trick-pool {
-    /* Account for the .62-card vertical offset, padding, and score lane.
-       Leave a small gap above the trick instead of letting north touch its seat. */
-    --trick-vertical-reserve: 104px;
-    top: 12px;
-  }
-}
-@media (max-width: 700px) {
-  .table-arena .arena-play > .trick-pool-shell > .trick-points-chip {
-    bottom: calc(-1 * clamp(4px, 1.5svh, 10px));
-  }
 }

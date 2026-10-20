@@ -4,13 +4,14 @@ import type { Locale } from "../i18n";
 
 type Flag = Locale | "auto";
 
-export default function LanguageSelect() {
+export default function LanguageSelect({ variant = "flag" }: { variant?: "flag" | "table" }) {
   const { preference, locale, setLanguage } = useLanguage();
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const active = preference === "auto" ? locale : preference;
+  const table = variant === "table";
   const options: { value: Flag; label: string }[] = [
     { value: "auto", label: t("Automatic") },
     { value: "en", label: "English" },
@@ -27,15 +28,23 @@ export default function LanguageSelect() {
     return () => document.removeEventListener("pointerdown", closeOutside);
   }, [open]);
 
-  return <div className="language-select language-flag-select" onKeyDown={event => {
+  return <div className={`language-select language-flag-select${table ? " language-dropup" : ""}`} onKeyDown={event => {
     if (event.key === "Escape" && open) {
+      event.preventDefault();
       event.stopPropagation();
       setOpen(false);
       triggerRef.current?.focus();
     }
+  }} onBlur={event => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
   }} ref={ref}>
-    <button ref={triggerRef} type="button" className="language-flag-trigger" aria-label={`${t("Language")}: ${options.find(option => option.value === preference)?.label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
-      <FlagIcon language={active} /><span className="language-code" aria-hidden="true">{active.toUpperCase()}</span><svg className="language-flag-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <button ref={triggerRef} type="button" className={table ? "table-square-button language-trigger" : "language-flag-trigger"} aria-label={table ? t("Language") : `${t("Language")}: ${options.find(option => option.value === preference)?.label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
+      {table ? <>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></svg>
+        <small aria-hidden="true">{locale.toUpperCase()}</small>
+      </> : <>
+        <FlagIcon language={active} /><span className="language-code" aria-hidden="true">{active.toUpperCase()}</span><svg className="language-flag-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </>}
     </button>
     {open && <div id={id} className="language-flag-options" role="group" aria-label={t("Language")}>
       <div className="language-menu-heading" aria-hidden="true">{t("Language")}</div>

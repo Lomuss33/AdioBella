@@ -21,6 +21,7 @@ import "./styles/meld-review.css";
 import "./styles/materials.css";
 import "./styles/text-roles.css";
 import "./styles/team-cues.css";
+import "./styles/language-select.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

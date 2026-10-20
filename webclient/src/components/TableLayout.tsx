@@ -8,8 +8,8 @@ import PlayerHand from "./PlayerHand";
 import ScoreBar from "./ScoreBar";
 import SeatPanel from "./SeatPanel";
 import TrickPile from "./TrickPile";
-import { fitSharedCards, fitTrickCards } from "../lib/tableCardSizing";
-import { HAND_CAPACITY } from "../lib/handLayout";
+import { fitTableCards, placeTrickCards, type CardLayoutMode } from "../lib/tableCardSizing";
+import { getHandColumns, HAND_LAYOUT_REQUEST } from "../lib/handLayout";
 
 interface TableLayoutProps {
   snapshot: GameSnapshot | null;
@@ -45,63 +45,63 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     const play = arena?.querySelector<HTMLElement>(".arena-play");
     if (!arena || !pool || !trickCards || !shell || !handRow || !handArea || !status || !bottom || !play) return;
     let frame = 0;
-    let previousHandWidth = 0;
+    let previousMode: CardLayoutMode | undefined;
     const syncHandSize = () => {
       const handStyle = getComputedStyle(handRow);
       const poolStyle = getComputedStyle(pool);
       const arenaStyle = getComputedStyle(arena);
       const bottomStyle = getComputedStyle(bottom);
       const px = (value: string) => parseFloat(value) || 0;
-      const columns = Math.max(1, Math.min(HAND_CAPACITY, Math.round(Number(handStyle.getPropertyValue("--hand-columns"))) || HAND_CAPACITY));
-      const capacityRows = Math.ceil(HAND_CAPACITY / columns);
-      const rows = Math.max(1, Math.ceil((Number(handRow.dataset.cardCount) || 0) / columns));
       const ratio = px(poolStyle.getPropertyValue("--playing-card-height-factor")) || 1.42;
-      const span = 1 + 2 * (px(poolStyle.getPropertyValue("--trick-card-separation")) || .62);
       const row = handRow.getBoundingClientRect();
       const field = pool.getBoundingClientRect();
       const table = shell.getBoundingClientRect();
       const arenaBounds = arena.getBoundingClientRect();
       if (!row.width || !field.width) return;
-      const handInsets = px(handStyle.paddingTop) + px(handStyle.paddingBottom) + px(handStyle.rowGap) * (rows - 1);
-      const capacityInsets = px(handStyle.paddingTop) + px(handStyle.paddingBottom) + px(handStyle.rowGap) * (capacityRows - 1);
+      const handInsets = px(handStyle.paddingTop) + px(handStyle.paddingBottom);
       const handChrome = handArea.getBoundingClientRect().height - row.height;
-      const handWidthLimit = Math.max(1, (row.width - px(handStyle.paddingLeft) - px(handStyle.paddingRight) - px(handStyle.columnGap) * (columns - 1)) / columns);
-      const trickWidthLimit = Math.max(1, Math.min(px(poolStyle.getPropertyValue("--trick-card-max")) || 120,
-        (field.width - px(poolStyle.paddingLeft) - px(poolStyle.paddingRight) - 4) / 3.8));
+      const gap = px(poolStyle.getPropertyValue("--trick-card-gap")) || 4;
+      // Two pixels of safety around the trick cover fractional CSS rounding.
       const trickReserve = px(poolStyle.top) + px(poolStyle.bottom) + px(poolStyle.paddingTop) + px(poolStyle.paddingBottom)
-        + px(poolStyle.getPropertyValue("--trick-card-gap")) + 4;
-      let handWidth: number;
-      if (bottomStyle.display === "contents") {
-        // Landscape gives each set its own lane; neither has to shrink to match the other.
-        const laneHeight = arenaBounds.bottom - px(arenaStyle.paddingBottom) - status.getBoundingClientRect().height - play.getBoundingClientRect().top;
-        handWidth = Math.max(1, Math.floor(Math.min(handWidthLimit,
-          (laneHeight - handChrome - capacityInsets) / (ratio * capacityRows)) * 4) / 4);
-      } else {
-        // This budget is independent of the current card sizes, avoiding resize oscillation.
-        const height = arenaBounds.bottom - px(arenaStyle.paddingBottom) - table.top - status.getBoundingClientRect().height
-          - handChrome - handInsets - px(arenaStyle.rowGap) - px(bottomStyle.rowGap) - trickReserve;
-        // Keep the hand's size independent of trick arrangement and remaining rows.
-        const fullHand = fitSharedCards({ height: height + handInsets - capacityInsets, trickWidthLimit,
-          handWidthLimit, handRows: capacityRows, aspectRatio: ratio, trickSpan: span });
-        handWidth = fullHand.hand;
-      }
-      if (handWidth !== previousHandWidth) {
-        previousHandWidth = handWidth;
-        arena.style.setProperty("--hand-card-max", `${handWidth}px`);
-      }
-      // Hand sizing has settled before measuring this field; absolute trick cards
-      // cannot change its dimensions or feed their own size back into the layout.
-      const space = trickCards.getBoundingClientRect();
-      const layout = fitTrickCards({ width: space.width, height: space.height,
+        + 4;
+      const laneBottom = arenaBounds.bottom - px(arenaStyle.paddingBottom) - status.getBoundingClientRect().height;
+      const common = {
+        handCount: Number(handRow.dataset.layoutCount) || 1,
+        handWidth: row.width - px(handStyle.paddingLeft) - px(handStyle.paddingRight),
+        trickWidth: field.width - px(poolStyle.paddingLeft) - px(poolStyle.paddingRight) - 4,
         maxCardWidth: px(poolStyle.getPropertyValue("--trick-card-max")) || 120,
-        aspectRatio: ratio, gap: px(poolStyle.getPropertyValue("--trick-card-gap")) || 4,
-        allowSpread: window.matchMedia("(max-width: 700px), (max-height: 500px)").matches });
+        aspectRatio: ratio, handGap: px(handStyle.columnGap), handRowGap: px(handStyle.rowGap), trickGap: gap,
+        previous: previousMode
+      };
+      const layout = fitTableCards(bottomStyle.display === "contents"
+        ? { ...common, flow: "beside",
+          handHeight: laneBottom - play.getBoundingClientRect().top - handChrome - handInsets,
+          trickHeight: table.height - trickReserve }
+        : { ...common, flow: "stacked",
+          height: laneBottom - table.top - handChrome - handInsets - px(arenaStyle.rowGap)
+            - px(bottomStyle.rowGap) - trickReserve });
+      previousMode = layout;
+      arena.dataset.handRows = String(layout.handRows);
+      arena.dataset.trickLayout = layout.trickLayout;
+      handRow.style.setProperty("--hand-columns", String(layout.handColumns));
+      arena.style.setProperty("--hand-card-max", `${layout.cardWidth}px`);
+      // Collapse obsolete ghost tracks now, before measuring the trick or the
+      // hand reflow. ResizeObserver then sees an already settled arrangement.
+      const columns = getHandColumns(Number(handRow.dataset.cardCount), layout.handColumns);
+      handRow.style.setProperty("--hand-grid-columns", String(columns));
+      const rows = Math.max(1, Math.ceil((Number(handRow.dataset.cardCount) || 0) / columns));
+      handRow.querySelectorAll<HTMLElement>(".hand-slot-empty").forEach((slot, index) => {
+        const display = index < rows * columns ? "" : "none";
+        if (slot.style.display !== display) slot.style.display = display;
+      });
+      const space = trickCards.getBoundingClientRect();
+      const offsets = placeTrickCards(layout.trickLayout, layout.cardWidth, ratio, gap, space.height - 4);
       const properties = {
         "--table-card-width": layout.cardWidth,
-        "--table-trick-offset-x": layout.offsetX,
-        "--table-trick-offset-y": layout.offsetY,
-        "--trick-north-offset-x": layout.northX,
-        "--trick-south-offset-x": layout.southX
+        "--table-trick-offset-x": offsets.offsetX,
+        "--table-trick-offset-y": offsets.offsetY,
+        "--trick-north-offset-x": offsets.northX,
+        "--trick-south-offset-x": offsets.southX
       };
       for (const [property, value] of Object.entries(properties)) {
         const next = `${value}px`;
@@ -109,6 +109,8 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       }
     };
     syncHandSize();
+    // Settle card-count-driven sizes before the hand captures its reflow targets.
+    handRow.addEventListener(HAND_LAYOUT_REQUEST, syncHandSize);
     const scheduleSync = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(syncHandSize);
@@ -118,8 +120,13 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     window.addEventListener("resize", scheduleSync);
     return () => {
       observer.disconnect();
+      handRow.removeEventListener(HAND_LAYOUT_REQUEST, syncHandSize);
       window.removeEventListener("resize", scheduleSync);
       cancelAnimationFrame(frame);
+      delete arena.dataset.handRows;
+      delete arena.dataset.trickLayout;
+      handRow.style.removeProperty("--hand-columns");
+      handRow.style.removeProperty("--hand-grid-columns");
       arena.style.removeProperty("--hand-card-max");
       arena.style.removeProperty("--table-card-width");
       arena.style.removeProperty("--table-trick-offset-x");

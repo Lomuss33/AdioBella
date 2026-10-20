@@ -124,11 +124,12 @@
   white-space: normal;
   text-align: start;
 }
-.table-arena .table-console .table-trump .trump-suit-symbol { flex: 0 0 auto; font: 18px/1 Georgia, serif; }
-.table-arena .table-console .table-trump.is-unset .trump-suit-symbol { font-size: 14px; opacity: .5; }
-.table-arena .table-console .table-trump-copy { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; gap: 4px; }
+/* The dash and every suit share a box, so choosing trump cannot resize the row. */
+.table-arena .table-console .table-trump .trump-suit-symbol { display: inline-grid; place-items: center; width: 18px; height: 18px; font: 18px/1 Georgia, serif; }
+.table-arena .table-console .table-trump.is-unset .trump-suit-symbol { opacity: .5; }
+.table-arena .table-console .table-trump-copy { display: grid; grid-template-columns: max-content 18px minmax(0, 1fr); align-items: center; min-width: 0; gap: 4px; }
 .table-arena .table-console .table-console-label { font: 650 9px/1.25 "Segoe UI", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
-.table-arena .table-console .table-trump-copy > strong { color: var(--ui-text); font: 600 11px/1.25 "Segoe UI", system-ui, sans-serif; overflow-wrap: anywhere; }
+.table-arena .table-console .table-trump-copy > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ui-text); font: 600 11px/1.25 "Segoe UI", system-ui, sans-serif; }
 
 /* Quiet tools and match actions form one dock, without individual field frames. */
 .table-arena .table-console > .arena-controls {
@@ -194,7 +195,6 @@
   clip-path: none;
   white-space: normal;
 }
-.table-arena .table-console .language-dropup-options { right: 0; left: auto; }
 .table-arena .table-console .language-trigger small { bottom: 1px; font-size: 7.5px; }
 .table-arena .table-console .arena-controls .language-trigger > svg { width: 15px; height: 15px; flex-basis: 15px; }
 .table-arena .table-console .table-console-error { grid-column: 1 / -1; grid-row: auto; min-width: 0; margin: 0; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }

@@ -1,3 +1,11 @@
+/* Let the hand reach the table edges, keeping a safe 2px card outline inset. */
+.table-arena .player-hand-area > .card-fan-row {
+  width: calc(100% + 12px);
+  margin-inline: -6px;
+  padding-inline: 0;
+  column-gap: 3px;
+}
+
 /* Scoreboard and seats share a quiet, squared surface with clear team edges. */
 .game-layout .table-stage { container: table-stage / inline-size; }
 .table-arena .seat-west { justify-self: start; }
@@ -448,6 +456,11 @@
   white-space: normal;
   overflow-wrap: anywhere;
   text-align: right;
+}
+/* Reserve the caller badge before trump selection, including its wrapped row. */
+.table-arena .south-inline-status-row .south-inline-badge-trump.south-inline-badge-placeholder {
+  display: block;
+  visibility: hidden;
 }
 .table-arena .south-inline-info-winner .south-player-name { color: var(--team-color); }
 /* Accent is the primary reading and interaction color; team-colored captions

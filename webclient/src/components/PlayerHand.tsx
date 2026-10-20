@@ -44,7 +44,8 @@ function PlayerHand({
       data-team="your" role="group" aria-label={t("Your hand")}
     >
       <div className="player-hand-decoration" aria-hidden="true" />
-      <div ref={rowRef} className="card-fan-row" data-card-count={visibleCards.length}>
+      <div ref={rowRef} className="card-fan-row" data-card-count={visibleCards.length}
+        data-layout-count={pendingType === "CHOOSE_TRUMP" ? HAND_CAPACITY : visibleCards.length}>
         {HAND_SPACES.map(index => <div key={`space-${index}`} className="hand-slot hand-slot-empty" aria-hidden="true" />)}
         {visibleCards.map(slot => (
           <div key={slot.key} className="hand-card-slot" data-card-key={slot.key}>
@@ -73,7 +74,7 @@ function PlayerHand({
             className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
             aria-hidden={showTrumpCaller ? undefined : true}
           >
-            {showTrumpCaller ? t("trump") : ""}
+            {t("trump")}
           </span>
         </div>
       </div>

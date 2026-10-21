@@ -749,11 +749,42 @@ function App() {
     snapshot.pendingAction.type !== "START_NEXT_GAME" &&
     animatedTrick === null;
 
+  const isChoosingTrump = snapshot?.pendingAction.type === "CHOOSE_TRUMP";
+  const actionPanel = (
+    <ActionPanel
+      pendingAction={snapshot?.pendingAction}
+      errorMessage={errorMessage}
+      playerNames={playerNameDrafts}
+      teamNames={teamNameDrafts}
+      yourTeamName={playersBySeat.SOUTH?.team}
+      gameSettings={gameSettings}
+      gameCompleteSummary={gameCompleteSummary}
+      matchCompleteSummary={matchCompleteSummary}
+      onPlayerNameChange={handlePlayerNameChange}
+      onTeamNameChange={handleTeamNameChange}
+      onGameSettingsChange={handleGameSettingsChange}
+      onStart={() => void handleStartMatch()}
+      onStartWithGuide={() => void handleStartMatch(true)}
+      onStartRematch={handleStartRematch}
+      onOpenSettingsMenu={handleOpenSettingsMenu}
+      onChooseTrump={handleChooseTrump}
+      onReportMelds={handleReportMelds}
+      onAcknowledgeMelds={handleAcknowledgeMelds}
+      pendingBelaChoiceCard={belaChoiceCard}
+      onPlayWithBela={handlePlayWithBela}
+      onPlayWithoutBela={handlePlayWithoutBela}
+      onOpenBook={() => setShowBook("welcome")}
+      visual={visual}
+      onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
+    />
+  );
+
   return (
     <CardStyleProvider value={visual.cardStyle}>
     <main className="app-shell game-layout">
       <div className={`table-stage ${snapshot?.pendingAction.type === "START_MATCH" ? "table-stage-setup" : ""}`}>
         <TableLayout
+          trumpChoicePanel={isChoosingTrump ? actionPanel : undefined}
           snapshot={snapshot}
           playersBySeat={playersBySeat}
           onPlayCard={handleCardClick}
@@ -770,32 +801,7 @@ function App() {
           onQuitMatch={() => setConfirmExit("match")}
           onOpenBook={() => setShowBook("welcome")}
         />
-        <ActionPanel
-          pendingAction={snapshot?.pendingAction}
-          errorMessage={errorMessage}
-          playerNames={playerNameDrafts}
-          teamNames={teamNameDrafts}
-          yourTeamName={playersBySeat.SOUTH?.team}
-          gameSettings={gameSettings}
-          gameCompleteSummary={gameCompleteSummary}
-          matchCompleteSummary={matchCompleteSummary}
-          onPlayerNameChange={handlePlayerNameChange}
-          onTeamNameChange={handleTeamNameChange}
-          onGameSettingsChange={handleGameSettingsChange}
-          onStart={() => void handleStartMatch()}
-          onStartWithGuide={() => void handleStartMatch(true)}
-          onStartRematch={handleStartRematch}
-          onOpenSettingsMenu={handleOpenSettingsMenu}
-          onChooseTrump={handleChooseTrump}
-          onReportMelds={handleReportMelds}
-          onAcknowledgeMelds={handleAcknowledgeMelds}
-          pendingBelaChoiceCard={belaChoiceCard}
-          onPlayWithBela={handlePlayWithBela}
-          onPlayWithoutBela={handlePlayWithoutBela}
-          onOpenBook={() => setShowBook("welcome")}
-          visual={visual}
-          onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
-        />
+        {!isChoosingTrump ? actionPanel : null}
       </div>
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}

@@ -1,6 +1,6 @@
 import TableUtilities from "./TableUtilities";
 import { t } from "../i18n";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
 import GameDataCard from "./GameDataCard";
 import MatchCornerControls from "./MatchCornerControls";
@@ -27,11 +27,12 @@ interface TableLayoutProps {
   onForfeitGame: () => void;
   onQuitMatch: () => void;
   onOpenBook: () => void;
+  trumpChoicePanel?: ReactNode;
 }
 
 function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
-  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook }: TableLayoutProps) {
+  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, trumpChoicePanel }: TableLayoutProps) {
   const arenaRef = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const arena = arenaRef.current;
@@ -152,6 +153,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         {seat("WEST")}
         <TrickPile trick={snapshot?.trick ?? { leadPlayerId: null, cards: [] }}
           trumpSuit={snapshot?.trumpSuit ?? null} animatedTrick={animatedTrick} />
+        {trumpChoicePanel ? <div className="table-trump-picker">{trumpChoicePanel}</div> : null}
         {seat("EAST")}
       </div>
       <div className="arena-bottom">

@@ -26,6 +26,32 @@ function resultProps(): ComponentProps<typeof ActionPanel> {
   };
 }
 
+test.each([true, false])("places the trump instruction after the choices and keeps them usable (skip: %s)", async canSkip => {
+  const props = resultProps();
+  props.matchCompleteSummary = null;
+  props.pendingAction = {
+    type: "CHOOSE_TRUMP", actingPlayerId: "SOUTH", legalCardIndices: [],
+    legalTrumpChoices: canSkip ? ["SKIP", "CLUBS", "DIAMONDS", "SPADES", "HEARTS"] : ["CLUBS", "DIAMONDS", "SPADES", "HEARTS"],
+    belaEligibleCardIndices: [], availableMelds: [], meldWinner: null, validationMessage: null, prompt: ""
+  };
+  render(<ActionPanel {...props} />);
+  const dialog = screen.getByRole("dialog", { name: "Choose the trump suit" });
+  const instruction = screen.getByText(canSkip ? "Choose the trump suit or skip." : "Choose the trump suit.");
+  expect(dialog).toHaveAccessibleDescription(instruction.textContent!);
+  const title = within(dialog).getByRole("heading");
+  const choices = within(dialog).getAllByRole("button");
+  expect(choices).toHaveLength(canSkip ? 5 : 4);
+  expect(title.compareDocumentPosition(choices[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(choices.at(-1)!.compareDocumentPosition(instruction) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const user = userEvent.setup();
+  await user.click(choices[0]);
+  expect(props.onChooseTrump).toHaveBeenLastCalledWith("HEARTS");
+  if (canSkip) {
+    await user.click(choices.at(-1)!);
+    expect(props.onChooseTrump).toHaveBeenLastCalledWith("SKIP");
+  }
+});
+
 test("capitalizes team and player word starts while preserving typed capitals and the editing caret", async () => {
   setLanguage("en");
   function Setup() {

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 /** Native top-layer modal, with its height following the mobile keyboard viewport. */
-export function usePopupDialog(visible: boolean, modal = false) {
+export function usePopupDialog(visible: boolean, modal = false, fitToViewport = true) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -31,7 +31,7 @@ export function usePopupDialog(visible: boolean, modal = false) {
     };
     const fitViewport = () => {
       // Preserve native pinch zoom; only follow keyboard/browser chrome resizing.
-      if (viewport && viewport.scale === 1) {
+      if (fitToViewport && viewport && viewport.scale === 1) {
         dialog.style.height = `${viewport.height}px`;
         dialog.style.top = `${viewport.offsetTop}px`;
       }
@@ -51,9 +51,11 @@ export function usePopupDialog(visible: boolean, modal = false) {
       viewport?.removeEventListener("scroll", fitViewport);
       dialog.removeEventListener("keydown", containTab);
       dialog.close();
+      dialog.style.removeProperty("height");
+      dialog.style.removeProperty("top");
       document.body.style.overflow = previousOverflow;
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [visible, modal]);
+  }, [visible, modal, fitToViewport]);
   return dialogRef;
 }

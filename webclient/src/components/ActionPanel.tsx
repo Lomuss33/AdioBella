@@ -5,7 +5,7 @@ import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
 import { t, tr, countText, getLocale, number } from "../i18n";
 import LanguageSelect from "./LanguageSelect";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import type {
   CardView,
   GameCompleteSummary,
@@ -93,7 +93,8 @@ function ActionPanel({
   const isMatchComplete = matchCompleteSummary !== null;
   const humanTeam = yourTeamName ?? (teamNames.yourTeam.trim() || defaultNames[getLocale()].teams.yourTeam);
   const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
-  const dialogRef = usePopupDialog(isPopupVisible);
+  const dialogRef = usePopupDialog(isPopupVisible, false, !isTrumpChoice);
+  const instructionId = useId();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,6 +137,7 @@ function ActionPanel({
       ref={dialogRef}
       className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${isReportMelds || isAcknowledgeMelds || isTrumpChoice ? "belot-dialog-floating-actions" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
+      aria-describedby={isTrumpChoice ? instructionId : undefined}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
     >
@@ -151,7 +153,7 @@ function ActionPanel({
                 <div className="start-heading-row">
                   <div className="start-heading-copy">
                     <h2 className="action-popup-title">{title}</h2>
-                    {subtitle ? <p className="action-popup-subtitle">{subtitle}</p> : null}
+                    {subtitle && !isTrumpChoice ? <p className="action-popup-subtitle">{subtitle}</p> : null}
                   </div>
                   {isStart && <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>}
                 </div>
@@ -303,6 +305,7 @@ function ActionPanel({
                   )
                 : null}
             </div>
+            {isTrumpChoice ? <p id={instructionId} className="action-popup-subtitle trump-choice-instruction">{subtitle}</p> : null}
       </div>
     </dialog>
   );

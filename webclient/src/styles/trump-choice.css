@@ -5,12 +5,69 @@
   -webkit-backdrop-filter: none;
 }
 
+/* The picker occupies the table's trick lane, rather than floating over the hand. */
+.table-arena:has(.table-trump-picker) {
+  grid-template-rows: auto minmax(min-content, 1fr) auto;
+}
+.table-arena .arena-play:has(.table-trump-picker) {
+  min-height: min-content;
+  grid-template-rows: auto minmax(min-content, 1fr);
+}
+.table-arena .table-trump-picker {
+  grid-area: trick;
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  min-width: 0;
+  z-index: 2;
+}
+/* Wide tables flatten the play wrapper into the arena's three-column grid. */
+@media (min-height: 501px) {
+  @container table-stage (min-width: 680px) {
+    .table-arena .table-trump-picker { grid-area: 2 / 2; }
+  }
+}
+.table-trump-picker .belot-dialog.belot-dialog-trump {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 8px;
+  overflow: visible;
+}
+.table-trump-picker .belot-dialog-trump .popup-card {
+  width: min(100%, 520px);
+  max-width: 100%;
+  max-height: none;
+  overflow: visible;
+  gap: 8px;
+}
+.table-trump-picker .belot-dialog-trump .popup-card > .popup-content {
+  flex: none;
+  padding: 0;
+  overflow: visible;
+}
+.table-trump-picker .belot-dialog-trump .action-popup-header { margin: 0; }
+.table-trump-picker .belot-dialog-trump .action-popup-title {
+  font-size: 22px;
+  text-align: center;
+}
+.table-trump-picker .belot-dialog-trump .popup-footer.trump-controls { padding: 0; }
+.belot-dialog-trump .trump-choice-instruction {
+  align-self: center;
+  text-align: center;
+  pointer-events: auto;
+}
+
 /* Size the choices from the dialog, keeping a useful touch target on phones. */
 .belot-dialog-trump .popup-footer.trump-controls {
   grid-template-columns: repeat(var(--trump-choice-columns, 4), minmax(0, 1fr));
   grid-auto-rows: auto;
   align-items: stretch;
-  gap: 6px;
+  gap: clamp(3px, 1.2cqw, 6px);
   padding: 8px 12px 14px;
 }
 .belot-dialog-trump .trump-controls > .suit-choice-button {
@@ -54,20 +111,6 @@
 .belot-dialog-trump .trump-controls > .suit-choice-button:focus-visible {
   outline: 2px solid var(--ui-focus);
   outline-offset: 2px;
-}
-@container trump-choice (max-width: 279px) {
-  .belot-dialog-trump .popup-footer.trump-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .belot-dialog-trump .trump-controls > .suit-choice-button { height: 76px; min-height: 76px; }
-  .belot-dialog-trump .trump-controls > .suit-choice-skip {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 36px;
-    min-height: 36px;
-    gap: 8px;
-  }
-  .belot-dialog-trump .trump-controls .suit-choice-skip-icon { width: 20px; height: 20px; }
 }
 @media (hover: none) {
   .belot-dialog-trump .trump-controls > .suit-choice-button:hover { transform: none; }

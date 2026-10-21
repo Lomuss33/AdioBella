@@ -9,7 +9,7 @@ import ScoreBar from "./ScoreBar";
 import SeatPanel from "./SeatPanel";
 import TrickPile from "./TrickPile";
 import { fitTableCards, placeTrickCards, type CardLayoutMode } from "../lib/tableCardSizing";
-import { getHandColumns, HAND_LAYOUT_REQUEST } from "../lib/handLayout";
+import { getHandColumns, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST } from "../lib/handLayout";
 
 interface TableLayoutProps {
   snapshot: GameSnapshot | null;
@@ -44,6 +44,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     const status = arena?.querySelector<HTMLElement>(".arena-status");
     const bottom = arena?.querySelector<HTMLElement>(".arena-bottom");
     const play = arena?.querySelector<HTMLElement>(".arena-play");
+    const trumpDialog = arena?.querySelector<HTMLElement>(".belot-dialog-trump");
     if (!arena || !pool || !trickCards || !shell || !handRow || !handArea || !status || !bottom || !play) return;
     let frame = 0;
     let previousMode: CardLayoutMode | undefined;
@@ -72,6 +73,8 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         trickWidth: field.width - px(poolStyle.paddingLeft) - px(poolStyle.paddingRight) - 4,
         maxCardWidth: px(poolStyle.getPropertyValue("--trick-card-max")) || 120,
         aspectRatio: ratio, handGap: px(handStyle.columnGap), handRowGap: px(handStyle.rowGap), trickGap: gap,
+        // Reserve the picker's natural height without feeding the stretched lane back into the solver.
+        minimumTrickHeight: Math.max(0, (trumpDialog?.getBoundingClientRect().height ?? 0) - trickReserve),
         previous: previousMode
       };
       const layout = fitTableCards(bottomStyle.display === "contents"
@@ -109,15 +112,21 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         if (arena.style.getPropertyValue(property) !== next) arena.style.setProperty(property, next);
       }
     };
-    syncHandSize();
+    const applyLayout = () => {
+      syncHandSize();
+      handRow.dispatchEvent(new Event(HAND_LAYOUT_APPLIED));
+    };
+    applyLayout();
     // Settle card-count-driven sizes before the hand captures its reflow targets.
+    // The requesting reflow applies these sizes itself, retaining its animation.
     handRow.addEventListener(HAND_LAYOUT_REQUEST, syncHandSize);
     const scheduleSync = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(syncHandSize);
+      frame = requestAnimationFrame(applyLayout);
     };
     const observer = new ResizeObserver(scheduleSync);
     [arena, pool, handRow, handArea, status].forEach(element => observer.observe(element));
+    if (trumpDialog) observer.observe(trumpDialog);
     window.addEventListener("resize", scheduleSync);
     return () => {
       observer.disconnect();
@@ -135,7 +144,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       arena.style.removeProperty("--trick-north-offset-x");
       arena.style.removeProperty("--trick-south-offset-x");
     };
-  }, [Boolean(playersBySeat.SOUTH)]);
+  }, [Boolean(playersBySeat.SOUTH), Boolean(trumpChoicePanel)]);
   const dealerSeat = snapshot?.players.find((player) => player.dealer)?.seat;
   const declarerSeat = snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat;
   const seat = (position: Seat) => <SeatPanel

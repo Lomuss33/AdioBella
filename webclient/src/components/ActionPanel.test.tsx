@@ -165,3 +165,30 @@ test("groups winning melds by player and keeps the team total distinct", async (
   await userEvent.setup().click(screen.getByRole("button", { name: "Continue" }));
   expect(props.onAcknowledgeMelds).toHaveBeenCalledOnce();
 });
+
+test("keeps every card and award with its player when one teammate has two combinations", async () => {
+  const props = resultProps();
+  const combination = (suit: string) => ({ kind: "SEQUENCE", label: "Sequence of 3", points: 20, comparisonValue: 3,
+    cards: ["SEVEN", "EIGHT", "NINE"].map(rank => ({ suit, rank, label: `${rank}_${suit}`, faceUp: true, playable: false })) });
+  props.matchCompleteSummary = null;
+  props.pendingAction = {
+    type: "ACKNOWLEDGE_MELDS", actingPlayerId: null, legalCardIndices: [], legalTrumpChoices: [],
+    belaEligibleCardIndices: [], availableMelds: [], validationMessage: null, prompt: "",
+    meldWinner: { teamName: "High Command", players: [
+      { playerId: "WEST", playerName: "Wellington", teamName: "High Command", totalPoints: 40,
+        melds: [combination("SPADES"), combination("HEARTS")] },
+      { playerId: "EAST", playerName: "Nelson", teamName: "High Command", totalPoints: 20, melds: [combination("CLUBS")] }
+    ] }
+  };
+  render(<ActionPanel {...props} />);
+  expect(screen.getByLabelText("60 points")).toBeInTheDocument();
+  const first = within(screen.getByRole("region", { name: "Wellington" }));
+  const second = within(screen.getByRole("region", { name: "Nelson" }));
+  expect(first.getByLabelText("40 points")).toBeInTheDocument();
+  expect(first.getAllByRole("img")).toHaveLength(6);
+  expect(second.getAllByRole("img")).toHaveLength(3);
+  expect(first.getAllByRole("region")).toHaveLength(2);
+  expect(first.getAllByText("+20 points")).toHaveLength(2);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Continue" }));
+  expect(props.onAcknowledgeMelds).toHaveBeenCalledOnce();
+});

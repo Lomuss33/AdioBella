@@ -1,5 +1,6 @@
 export const HAND_CAPACITY = 8;
 export const HAND_LAYOUT_REQUEST = "belot-hand-layout-request";
+export const HAND_LAYOUT_APPLIED = "belot-hand-layout-applied";
 
 /** Use the available columns for the cards still in hand, with no empty end tracks. */
 export function getHandColumns(cardCount: number, columnLimit: number) {

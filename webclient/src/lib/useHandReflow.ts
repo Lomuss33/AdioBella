@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY, HAND_LAYOUT_REQUEST } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST } from "./handLayout";
 
 const REFLOW_DURATION_MS = 260;
 const CENTERING_DELAY_MS = 55;
@@ -143,8 +143,12 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => synchronizeRef.current(false));
     };
+    const applyLayout = () => synchronizeRef.current(false);
+    // The parent sizes the grid after this child's layout effect. Apply its final
+    // geometry synchronously rather than showing cards at the fallback size.
+    row.addEventListener(HAND_LAYOUT_APPLIED, applyLayout);
     // Absolute card positions cannot resize the grid, so sync before the next paint.
-    const observer = new ResizeObserver(() => synchronizeRef.current(false));
+    const observer = new ResizeObserver(applyLayout);
     observer.observe(row);
     if (row.firstElementChild) observer.observe(row.firstElementChild);
     window.addEventListener("resize", resize);
@@ -153,6 +157,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      row.removeEventListener(HAND_LAYOUT_APPLIED, applyLayout);
       window.removeEventListener("resize", resize);
       motion?.removeEventListener("change", resize);
       animationsRef.current.forEach(animation => animation.cancel());

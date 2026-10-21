@@ -45,6 +45,28 @@ test("fits independent landscape lanes with the same card size", () => {
   expect(layout.cardWidth).toBe(56.5);
 });
 
+test("reserves room for larger trump buttons while maximizing the visible hand", () => {
+  for (const minimumTrickHeight of [140, 200, 260]) {
+    for (const aspectRatio of [1.4, 2]) {
+      const space = { ...base, handWidth: 320, height: 380, minimumTrickHeight, aspectRatio };
+      const result = fitTableCards(space);
+      const fits = (width: number, rows: number, mode: "cross" | "spread") => {
+        const columns = Math.ceil(space.handCount / rows);
+        const trick = trickFootprint(mode, width, aspectRatio, space.trickGap);
+        const handHeight = rows * width * aspectRatio + (rows - 1) * space.handRowGap;
+        return columns * width + (columns - 1) * space.handGap <= space.handWidth
+          && trick.width <= space.trickWidth
+          && handHeight + Math.max(trick.height, minimumTrickHeight) <= space.height;
+      };
+      expect(result.cardWidth).toBeGreaterThan(0);
+      expect(fits(result.cardWidth, result.handRows, result.trickLayout)).toBe(true);
+      for (const rows of [1, 2]) for (const mode of ["cross", "spread"] as const) {
+        expect(fits(result.cardWidth + .25, rows, mode)).toBe(false);
+      }
+    }
+  }
+});
+
 test("maximizes a collision-free shared size across decks, counts, gaps and both flows", () => {
   for (const aspectRatio of [1.392, 1.4, 1.42, 1.56, 2]) {
     for (let handCount = 1; handCount <= 8; handCount++) {

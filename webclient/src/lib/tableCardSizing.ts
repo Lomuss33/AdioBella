@@ -16,6 +16,7 @@ interface CardSpace {
   handGap: number;
   handRowGap: number;
   trickGap: number;
+  minimumTrickHeight?: number;
   previous?: CardLayoutMode;
 }
 
@@ -67,7 +68,8 @@ export function fitTableCards(space: TableCardSpace): TableCardLayout {
       const trickWidthLimit = (space.trickWidth - (geometry.columns - 1) * space.trickGap) / geometry.columns;
       const trickFixedHeight = geometry.verticalGaps * space.trickGap;
       const heightLimit = space.flow === "stacked"
-        ? (space.height - handFixedHeight - trickFixedHeight) / (ratio * (handRows + geometry.verticalSpan))
+        ? Math.min((space.height - handFixedHeight - trickFixedHeight) / (ratio * (handRows + geometry.verticalSpan)),
+          (space.height - handFixedHeight - (space.minimumTrickHeight ?? 0)) / (ratio * handRows))
         : Math.min((space.handHeight - handFixedHeight) / (ratio * handRows),
           (space.trickHeight - trickFixedHeight) / (ratio * geometry.verticalSpan));
       candidates.push({ handRows, handColumns, trickLayout,

@@ -1,52 +1,76 @@
-/* One hierarchy for melds: team award, player totals, then contributing sets. */
+/* Compact declarations adapt to their real width, height and card content. */
+.belot-dialog.belot-dialog-meld-action .popup-card {
+  --meld-card-width: 64px;
+  --meld-card-ratio: 1.42;
+  width: min(100%, 780px);
+  max-height: 100%;
+}
+.belot-dialog-meld-action .popup-card:has(.playing-card-shell[data-card-style="italian"]) { --meld-card-ratio: 2; }
+.belot-dialog-meld-action .popup-card:has(.playing-card-shell[data-card-style="german"]) { --meld-card-ratio: 1.56; }
+.belot-dialog-meld-action .popup-card:has(.playing-card-shell[data-card-style="four-color"]) { --meld-card-ratio: 1.392; }
+.belot-dialog-meld-action .popup-card:has(.playing-card-shell[data-card-style="heritage"]) { --meld-card-ratio: 1.4; }
+.belot-dialog.belot-dialog-meld-action .popup-content {
+  flex: 1 1 auto;
+  padding: 10px 12px 6px;
+  overflow: auto;
+}
 .belot-dialog-meld-action .action-popup-header {
-  margin-bottom: 8px;
+  width: 100%;
+  margin: 0 0 8px;
   padding: 0;
   border: 0;
-  justify-items: stretch;
   text-align: center;
 }
 .belot-dialog-meld-action .start-heading-copy { justify-items: center; text-align: center; }
-.belot-dialog-meld-action .meld-popup-body { gap: 8px; }
-.belot-dialog-meld-action .action-popup-title { font-size: clamp(20px, 3vw, 24px); letter-spacing: -.025em; text-align: center; }
-.belot-dialog-meld-action .meld-winner-stack { gap: 6px; }
+.belot-dialog-meld-action .action-popup-title { font-size: clamp(18px, 2.8vw, 24px); line-height: 1.15; text-align: center; }
+.belot-dialog-meld-action .meld-popup-body { gap: 6px; }
+.belot-dialog-meld-action .meld-popup-stack {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  justify-self: stretch;
+  gap: 6px;
+}
+.belot-dialog-meld-action .meld-winner-players {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+  align-items: start;
+}
 .belot-dialog-meld-action .meld-winner-team-summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
-  row-gap: 4px;
-  padding: 8px 14px;
-  border: 1px solid color-mix(in srgb, var(--ui-accent) 22%, var(--ui-line));
-  border-top: 2px solid var(--ui-accent);
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--ui-line);
   border-radius: 0;
   background: var(--ui-control);
 }
 .belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity {
-  display: grid;
-  justify-content: start;
-  gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 2px 10px;
 }
-.belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity > span {
-  font-size: 11px;
-  letter-spacing: .08em;
-  color: var(--ui-accent);
-}
-.belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity strong { font-size: 18px; }
+.belot-dialog-meld-action .meld-team-identity > span { font-size: 10px; line-height: 1.25; letter-spacing: .06em; }
+.belot-dialog-meld-action .meld-team-identity strong { font-size: 16px; line-height: 1.25; }
 .belot-dialog-meld-action .meld-player-total {
-  display: grid;
-  justify-items: end;
-  gap: 0;
-  text-align: right;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
 }
 .belot-dialog-meld-action .meld-player-total strong {
-  font: 700 22px/1.1 "Segoe UI", system-ui, sans-serif;
-  letter-spacing: -.035em;
+  font: 750 20px/1.1 "Segoe UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
-.belot-dialog-meld-action .meld-player-total span { font-size: 10px; font-weight: 400; line-height: 1.2; }
-.belot-dialog-meld-action .meld-winner-team-summary .meld-player-total strong { font-size: 30px; }
-.belot-dialog-meld-action .meld-popup-player-block,
-.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block {
-  --meld-inset: clamp(12px, 3vw, 16px);
+.belot-dialog-meld-action .meld-player-total span { font-size: 10px; line-height: 1.2; }
+.belot-dialog-meld-action .meld-winner-team-summary .meld-player-total strong { font-size: 24px; }
+.belot-dialog-meld-action .meld-popup-player-block {
+  --meld-inset: 8px;
+  align-self: start;
   width: 100%;
   padding: 0;
   gap: 0;
@@ -55,44 +79,141 @@
   border-radius: 0;
   background: var(--ui-control);
 }
-.belot-dialog-meld-action .meld-winner-stack > .meld-popup-player-block:last-child { border-bottom: 1px solid var(--ui-line); }
 .belot-dialog-meld-action .meld-player-summary {
-  padding: 8px var(--meld-inset);
-  gap: 4px 12px;
-  border-radius: 0;
-  border-bottom: 1px solid var(--ui-line);
-}
-.belot-dialog-meld-action .meld-player-identity { display: grid; gap: 2px; }
-.belot-dialog-meld-action .meld-player-identity > span { font-size: 11px; letter-spacing: .06em; }
-.belot-dialog-meld-action .meld-player-identity strong { font-size: 16px; }
-.belot-dialog-meld-action .meld-team-summary {
-  justify-content: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   padding: 6px var(--meld-inset);
-  background: var(--ui-control);
+  gap: 4px 8px;
+  border: 0;
   border-bottom: 1px solid var(--ui-line);
 }
-.belot-dialog-meld-action .meld-team-summary .meld-team-identity {
-  width: 100%;
-  justify-content: space-between;
-  gap: 3px 12px;
-}
-.belot-dialog-meld-action .meld-team-summary .meld-team-identity > span { font-size: 11px; letter-spacing: .06em; }
-.belot-dialog-meld-action .meld-team-summary .meld-team-identity strong { font-size: 13px; text-align: right; }
-.belot-dialog-meld-action .meld-combination-list { padding: 8px var(--meld-inset) 10px; gap: 6px; }
-.belot-dialog-meld-action .meld-combination-list-label { color: var(--ui-muted); font: 650 11px/1.3 "Segoe UI", system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; }
-.belot-dialog-meld-action .meld-combination-block {
-  width: 100%;
+.belot-dialog-meld-action .meld-player-identity { display: block; min-width: 0; }
+.belot-dialog-meld-action .meld-player-identity strong { font-size: 15px; line-height: 1.25; }
+/* Names and individual combination descriptions already identify these fields. */
+.belot-dialog-meld-action .meld-player-identity > span,
+.belot-dialog-meld-action .meld-combination-list-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  margin: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
   border: 0;
+}
+.belot-dialog-meld-action .meld-team-summary { padding: 5px var(--meld-inset); border-bottom: 1px solid var(--ui-line); }
+.belot-dialog-meld-action .meld-team-summary .meld-team-identity { justify-content: space-between; gap: 3px 8px; }
+.belot-dialog-meld-action .meld-team-summary .meld-team-identity strong { font-size: 13px; }
+.belot-dialog-meld-action .meld-combination-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  padding: 6px var(--meld-inset);
   gap: 6px;
 }
+.belot-dialog-meld-action .meld-combination-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  gap: 5px;
+  border: 0;
+}
 .belot-dialog-meld-action .meld-combination-block + .meld-combination-block { padding-top: 6px; border-top: 1px solid var(--ui-line); }
-.belot-dialog-meld-action .meld-combination-heading { justify-content: space-between; flex-wrap: wrap; gap: 3px 10px; }
-.belot-dialog-meld-action .meld-combination-name { flex: 1 1 auto; }
-.belot-dialog-meld-action .meld-combination-name strong { font-size: 13px; line-height: 1.4; }
-.belot-dialog-meld-action .meld-combination-points { padding: 3px 6px; border-radius: 5px; background: var(--ui-control); font-size: 11px; }
-.belot-dialog-meld-action .meld-card-row { width: 100%; margin: 0; padding: 0; gap: 4px 6px; }
-@media (max-width: 380px) {
-  .belot-dialog-meld-action .meld-winner-team-summary { padding: 8px 12px; }
+.belot-dialog-meld-action .meld-combination-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 6px; }
+.belot-dialog-meld-action .meld-combination-name { flex: 1 1 auto; min-width: 0; }
+.belot-dialog-meld-action .meld-combination-name strong { font-size: 12px; line-height: 1.3; }
+.belot-dialog-meld-action .meld-combination-points { padding: 0; border-radius: 0; background: none; font-size: 11px; line-height: 1.4; }
+.belot-dialog-meld-action .meld-card-row {
+  display: grid;
+  grid-template-columns: repeat(var(--meld-card-count, 1), minmax(0, var(--meld-card-width)));
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  align-items: start;
+  gap: 3px;
+}
+.belot-dialog-meld-action .meld-card-row .playing-card-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1 / var(--meld-card-ratio);
+}
+.belot-dialog-meld-action .meld-card-row .playing-card-face { width: 100%; height: 100%; }
+.belot-dialog.belot-dialog-meld-action .popup-footer {
+  padding: 6px 12px max(8px, env(safe-area-inset-bottom));
+  gap: 6px;
+}
+.belot-dialog.belot-dialog-meld-action.belot-dialog-floating-actions .popup-footer .action-button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 5px;
+}
+/* Player panels become columns; a single player's two sets can share a row too. */
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-winner-players,
+.belot-dialog-meld-action[data-meld-layout="columns-rows"] .meld-winner-players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-popup-body > .meld-popup-player-block[data-meld-count="2"],
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-winner-players > .meld-popup-player-block:only-child { grid-column: 1 / -1; }
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-popup-body > .meld-popup-player-block[data-meld-count="2"] > .meld-combination-list,
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-winner-players > .meld-popup-player-block:only-child:not([data-meld-count="1"]) > .meld-combination-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-popup-body > .meld-popup-player-block[data-meld-count="2"] .meld-combination-block + .meld-combination-block,
+.belot-dialog-meld-action[data-meld-layout="columns"] .meld-winner-players > .meld-popup-player-block:only-child:not([data-meld-count="1"]) .meld-combination-block + .meld-combination-block { padding-top: 0; border-top: 0; }
+/* Short screens put the evidence to the right of its description and score. */
+.belot-dialog-meld-action:is([data-meld-layout="rows"], [data-meld-layout="columns-rows"]) .meld-combination-block {
+  grid-template-columns: minmax(100px, .75fr) minmax(0, 1.5fr);
+  align-items: center;
+  gap: 8px;
+}
+.belot-dialog-meld-action:is([data-meld-layout="rows"], [data-meld-layout="columns-rows"]) .meld-combination-heading { display: grid; justify-content: start; gap: 3px; }
+@media (max-width: 299px) {
+  .belot-dialog.belot-dialog-meld-action .popup-content { padding-inline: 6px; }
+  .belot-dialog-meld-action .meld-combination-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .belot-dialog-meld-action .meld-winner-team-summary .meld-team-identity { display: grid; gap: 1px; }
+}
+/* If even the smallest readable full-detail view cannot fit, keep the evidence
+   and awards, and move the descriptive copy out of the visual reading order. */
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-combination-block {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+}
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-combination-heading { grid-column: 2; grid-row: 1; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-card-row { grid-column: 1; grid-row: 1; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-combination-name,
+.belot-dialog-meld-action[data-meld-density="compact"] [data-meld-count="1"] .meld-combination-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.belot-dialog-meld-action[data-meld-density="compact"] [data-meld-count="1"] .meld-combination-block { grid-template-columns: minmax(0, 1fr); }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-player-summary { padding-block: 3px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-player-identity strong { font-size: 13px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-player-total strong { font-size: 18px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-player-total span { display: none; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-team-identity strong { font-size: 14px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-winner-team-summary { padding-block: 2px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-winner-team-summary .meld-player-total strong { font-size: 20px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-combination-list { padding-block: 2px; gap: 3px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-combination-block + .meld-combination-block { padding-top: 3px; }
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-winner-stack,
+.belot-dialog-meld-action[data-meld-density="compact"] .meld-winner-players { gap: 3px; }
+@media (max-height: 500px) {
+  .belot-dialog.belot-dialog-meld-action .popup-content { padding-block: 6px 3px; }
+  .belot-dialog-meld-action .action-popup-header { margin-bottom: 5px; }
+  .belot-dialog-meld-action .meld-team-identity > span,
+  .belot-dialog-meld-action .meld-player-summary .meld-player-total span { display: none; }
+  .belot-dialog-meld-action .meld-winner-team-summary { padding-block: 5px; }
+  .belot-dialog.belot-dialog-meld-action .popup-footer { padding-block: 4px; }
 }

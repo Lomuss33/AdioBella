@@ -31,7 +31,7 @@
 .belot-dialog:not(.belot-dialog-setup) .popup-footer { background: var(--ui-solid); }
 .belot-dialog:not(.belot-dialog-setup) .action-button:not(.action-button-primary) { color: var(--ui-accent); }
 
-.belot-dialog:not(.belot-dialog-setup):not(.guide-dialog):not(.belot-dialog-melds):not(.belot-dialog-match-result) .popup-card {
+.belot-dialog:not(.belot-dialog-setup):not(.guide-dialog):not(.belot-dialog-melds):not(.belot-dialog-match-result):not(.belot-dialog-meld-action) .popup-card {
   width: min(100%, 560px);
 }
 

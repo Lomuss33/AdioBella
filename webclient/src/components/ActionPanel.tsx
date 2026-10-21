@@ -5,7 +5,7 @@ import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
 import { t, tr, countText, getLocale, number } from "../i18n";
 import LanguageSelect from "./LanguageSelect";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from "react";
 import type {
   CardView,
   GameCompleteSummary,
@@ -21,6 +21,7 @@ import type {
 import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 import { usePopupDialog } from "../lib/usePopupDialog";
+import { useMeldReviewLayout } from "../lib/useMeldReviewLayout";
 import { capitalizeInsertedNameWords } from "../lib/nameCapitalization";
 import { teamSide } from "../lib/teamSide";
 
@@ -96,6 +97,7 @@ function ActionPanel({
   const dialogRef = usePopupDialog(isPopupVisible, false, !isTrumpChoice);
   const instructionId = useId();
   const contentRef = useRef<HTMLDivElement>(null);
+  useMeldReviewLayout(dialogRef, isReportMelds || isAcknowledgeMelds, pendingAction);
 
   useEffect(() => {
     if (!isPopupVisible) return;
@@ -404,7 +406,7 @@ function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: Meld
   }
 
   return (
-    <section className="meld-popup-stack meld-popup-player-block" data-team={teamSide(meldSet.teamName, yourTeam)} aria-label={meldSet.playerName}>
+    <section className="meld-popup-stack meld-popup-player-block" data-team={teamSide(meldSet.teamName, yourTeam)} data-meld-count={meldSet.melds.length} aria-label={meldSet.playerName}>
       {showTeam ? (
         <div className="meld-team-summary">
           <div className="meld-team-identity">
@@ -426,14 +428,14 @@ function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: Meld
       <div className="meld-combination-list">
         <span className="meld-combination-list-label">{t("Combinations")}</span>
         {meldSet.melds.length > 0 ? meldSet.melds.map((meld) => (
-          <section key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block">
+          <section key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block" aria-label={`${meldDescription(meld)}, ${countText("points", meld.points)}`}>
             <div className="meld-combination-heading">
               <div className="meld-combination-name">
                 <strong>{meldDescription(meld)}</strong>
               </div>
               <span className="meld-combination-points">+{countText("points", meld.points)}</span>
             </div>
-            <div className="meld-card-row">
+            <div className="meld-card-row" style={{ "--meld-card-count": Math.max(1, meld.cards.length) } as CSSProperties}>
               {meld.cards.map((card) => (
                 <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
               ))}
@@ -465,9 +467,11 @@ function MeldWinnerSection({ meldWinner, yourTeam }: { meldWinner: MeldWinnerVie
           <span>{t("points")}</span>
         </div>
       </div>
-      {meldWinner.players.map((meldSet) => (
-        <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} yourTeam={yourTeam} />
-      ))}
+      <div className="meld-winner-players">
+        {meldWinner.players.map((meldSet) => (
+          <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} yourTeam={yourTeam} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,14 +1,16 @@
 import { cardKey, cardPoints, toRenderedTrickCards } from "../lib/trickAnimation";
 import type { AnimatedTrickState, TrickView } from "../types";
 import PlayingCard from "./PlayingCard";
+import type { ReactNode } from "react";
 
 interface TrickPileProps {
   trick: TrickView;
   trumpSuit?: string | null;
   animatedTrick?: AnimatedTrickState | null;
+  children?: ReactNode;
 }
 
-function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
+function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps) {
   const renderedCards = toRenderedTrickCards(animatedTrick ?? null, trick.cards);
   const staticPoints = renderedCards.reduce((total, playedCard) => total + cardPoints(playedCard.card, trumpSuit ?? null), 0);
   const showPointsChip = animatedTrick?.pointsVisible || staticPoints > 0;
@@ -16,6 +18,7 @@ function TrickPile({ trick, trumpSuit, animatedTrick }: TrickPileProps) {
 
   return (
     <div className="trick-pool-shell">
+      {children}
       <div className="trick-pool">
         <span className="trick-size-guide" aria-hidden="true" />
         <div

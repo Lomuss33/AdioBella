@@ -1,4 +1,19 @@
-import { fitMeldReview } from "./meldReviewLayout";
+import { fitMeldReview, getMeldCardColumns, getMeldCardRows } from "./meldReviewLayout";
+
+test.each<[number, number[]]>([
+  [1, [1]], [2, [2]], [3, [3]], [4, [4]], [5, [5]],
+  [6, [3, 3]], [7, [4, 3]], [8, [4, 4]]
+])("balances %i meld cards without changing their order", (count, lengths) => {
+  const cards = Array.from({ length: count }, (_, index) => index);
+  const rows = getMeldCardRows(cards);
+  expect(rows.map(row => row.length)).toEqual(lengths);
+  expect(rows.flat()).toEqual(cards);
+  expect(getMeldCardColumns(cards.length)).toBe(Math.max(...lengths));
+});
+
+test("has no card rows for an empty combination", () => {
+  expect(getMeldCardRows([])).toEqual([]);
+});
 
 test("keeps all descriptions and the preferred arrangement when full-size cards fit", () => {
   const result = fitMeldReview(["columns", "rows", "stacked"], (_, density, width) => {

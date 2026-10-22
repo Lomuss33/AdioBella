@@ -21,13 +21,13 @@
   gap: 3px;
 }
 
-/* Settings keep their content height instead of stretching into blank bands. */
-.belot-dialog.belot-dialog-setup .popup-content { gap: clamp(6px, 1.2vh, 12px); }
+/* Share spare height between settings; retain their natural size when scrolling. */
+.belot-dialog.belot-dialog-setup .popup-content { gap: clamp(5px, 1vh, 10px); }
 .belot-dialog.belot-dialog-setup .action-popup-body {
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
-  gap: clamp(6px, 1.2vh, 12px);
+  flex: 1 0 auto;
+  gap: clamp(5px, 1vh, 10px);
 }
 .belot-dialog.belot-dialog-setup .team-settings-grid {
   flex: 1.5 0 auto;
@@ -36,16 +36,18 @@
 .belot-dialog.belot-dialog-setup .setup-options-grid {
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
-  gap: 6px;
+  flex: 1 0 auto;
+  gap: 5px;
 }
 .belot-dialog.belot-dialog-setup .setup-options-row {
-  flex: 0 0 auto;
+  flex: 1 0 auto;
   align-items: stretch;
 }
+/* Favor the deck preview and palettes when sharing surplus screen height. */
+.belot-dialog.belot-dialog-setup .setup-options-row:first-child { flex-grow: .85; }
 .belot-dialog.belot-dialog-setup .setup-options-row > * {
   align-content: center;
-  grid-template-rows: max-content max-content;
+  grid-template-rows: max-content minmax(var(--setup-option-height), 1fr);
 }
 .belot-dialog.belot-dialog-setup .setup-options-row:not(.setup-colors-row) > * {
   padding-block: 0;
@@ -59,7 +61,7 @@
   height: 100%;
 }
 .belot-dialog.belot-dialog-setup .setup-colors-row {
-  flex: 0 0 auto;
+  flex: 1 0 auto;
   align-self: stretch;
   height: auto;
   min-height: 0;
@@ -71,15 +73,16 @@
 .belot-dialog.belot-dialog-setup .setup-colors-row :is(.accent-color-choices, .setup-theme-buttons) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(2, var(--setup-swatch-height));
-  height: calc(2 * var(--setup-swatch-height) + 4px);
+  grid-template-rows: repeat(2, minmax(var(--setup-swatch-height), 1fr));
+  height: auto;
+  min-height: calc(2 * var(--setup-swatch-height) + 4px);
   gap: 4px 5px;
   align-content: stretch;
 }
 .belot-dialog.belot-dialog-setup .setup-colors-row :is(.accent-color-choice, .setup-theme-choice) {
-  height: var(--setup-swatch-height);
+  height: 100%;
   min-height: var(--setup-swatch-height);
-  max-height: var(--setup-swatch-height);
+  max-height: none;
 }
 @media (min-width: 600px) and (max-height: 520px) {
   .belot-dialog.belot-dialog-setup .action-popup-body {
@@ -152,21 +155,37 @@
 }
 
 
-/* A spread hand: larger card faces use the available preview height while
-   overlapping slightly so all six samples remain visible beside the arrow. */
+/* Size cards from the actual preview slot, then give the arrow the remaining
+   width. The fan overlaps when needed instead of reducing the card height. */
 .belot-dialog.belot-dialog-setup .setup-options-row > .appearance-card-style { padding-inline: 0; }
 .belot-dialog.belot-dialog-setup .card-style-preview-row,
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery { width: 100%; min-width: 0; }
+.belot-dialog.belot-dialog-setup .card-style-preview-viewport {
+  container-type: size;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--setup-option-height);
+}
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery {
   --preview-card-ratio: 1.42;
-  --preview-card-height: clamp(50px, 8vh, 62px);
+  --preview-button-min: 30px;
+  --preview-control-gap: 7px;
+  /* Even at the width limit, expose each card's corner in the six-card fan. */
+  --preview-card-height: min(100cqh, calc((100cqw - var(--preview-button-min) - var(--preview-control-gap)) * var(--preview-card-ratio) / 2));
   --preview-card-width: calc(var(--preview-card-height) / var(--preview-card-ratio));
-  grid-template-columns: minmax(0, calc(6 * var(--preview-card-width) + 20px)) minmax(28px, 1fr);
+  container-type: normal;
+  height: auto;
+  grid-template-columns: minmax(0, calc(6 * var(--preview-card-width) + 20px)) minmax(var(--preview-button-min), 1fr);
+  gap: var(--preview-control-gap);
 }
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery > .card-style-next {
   align-self: stretch;
   height: auto;
   width: 100%;
+  min-width: var(--preview-button-min);
 }
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery > .card-style-next svg {
   width: min(calc(100% - 8px), calc(var(--preview-card-height) * .75));
@@ -176,6 +195,7 @@
   align-self: center;
 }
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery > .appearance-preview {
+  container-type: normal;
   width: 100%;
   height: var(--preview-card-height);
   grid-template-columns: repeat(5, minmax(0, 1fr)) var(--preview-card-width);
@@ -198,13 +218,6 @@
   justify-self: start;
   opacity: 1;
 }
-@media (max-height: 520px) {
-  .belot-dialog.belot-dialog-setup .card-style-preview-gallery {
-    --preview-card-height: clamp(36px, 7vh, 44px);
-  }
-}
-
-
 /* Compact segmented choices: thin edges, clear type, and a restrained active state. */
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) {
   height: clamp(36px, 5vh, 40px);

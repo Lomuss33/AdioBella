@@ -1,5 +1,5 @@
 import { useEffect, type RefObject } from "react";
-import { fitMeldReview, type MeldLayout } from "./meldReviewLayout";
+import { fitMeldReview } from "./meldReviewLayout";
 
 /** Fit actual declarations, including translated names and the selected deck. */
 export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, enabled: boolean, contentKey: unknown) {
@@ -18,18 +18,8 @@ export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, ena
         getComputedStyle(card).getPropertyValue("--meld-card-ratio"), body?.textContent].join(":");
       if (size === lastSize) return;
       lastSize = size;
-      const width = content.clientWidth;
-      const players = content.querySelectorAll(".meld-popup-player-block").length;
-      const canUseColumns = width >= 480;
-      const canUseRows = width >= 390;
-      const layouts: MeldLayout[] = dialog.clientHeight <= 540
-        ? ["rows", "columns", "columns-rows", "stacked"]
-        : ["columns", "stacked", "rows", "columns-rows"];
-      const candidates = layouts.filter(layout => layout === "stacked"
-        || layout === "columns" && canUseColumns
-        || layout === "rows" && canUseRows
-        || layout === "columns-rows" && players > 1 && width >= 720);
-      const best = fitMeldReview(candidates, (layout, density, width) => {
+      // Keep one content column: the longest card row owns the popup width.
+      const best = fitMeldReview(["stacked"], (layout, density, width) => {
         dialog.dataset.meldLayout = layout;
         dialog.dataset.meldDensity = density;
         card.style.setProperty("--meld-card-width", `${width}px`);

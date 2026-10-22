@@ -44,14 +44,13 @@
   }
 }
 .table-arena .arena-header { grid-template-columns: minmax(0, 1fr); gap: 4px 6px; align-items: stretch; }
-.table-arena { row-gap: 3px; }
+.table-arena { position: relative; row-gap: 3px; }
 .table-arena .arena-play { row-gap: 5px; }
 .table-arena .game-data-grid { position: relative; gap: 6px 0; align-items: stretch; }
-.table-arena .game-data-grid::after {
-  content: "vs.";
+.table-arena .game-data-versus {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 16px;
   transform: translate(-50%, -50%);
   z-index: 1;
   display: grid;
@@ -65,8 +64,12 @@
   font: 650 9px/1 "Segoe UI", system-ui, sans-serif;
   pointer-events: none;
 }
-@container table-arena (min-width: 640px) {
-  .table-arena .game-data-grid::after { display: none; }
+@media (min-height: 501px) {
+  @container table-stage (min-width: 680px) {
+    .table-arena .arena-play > .seat-panel.seat-north {
+      margin-block-start: max(var(--compact-seat-inset), var(--score-heading-bottom, 30px));
+    }
+  }
 }
 .table-arena .game-data-section {
   container-name: team-score;
@@ -78,8 +81,8 @@
   background: var(--ui-glass);
   box-shadow: none;
 }
-.table-arena .game-data-section[data-team="opponent"] { border-right: 2px solid var(--team-color); }
-.table-arena .game-data-section[data-team="your"] { border-left: 2px solid var(--team-color); }
+.table-arena .game-data-section[data-team="opponent"] { border-right: 2px solid var(--team-color); padding-inline-end: 14px; }
+.table-arena .game-data-section[data-team="your"] { border-left: 2px solid var(--team-color); padding-inline-start: 14px; }
 .table-arena .game-data-team-heading {
   display: flex;
   width: 100%;
@@ -441,26 +444,48 @@
   overflow-wrap: anywhere;
 }
 .table-arena .south-inline-status-row {
+  container: south-status / inline-size;
+  position: relative;
   grid-column: 3;
   grid-row: 1;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: center;
   min-width: 0;
   width: 100%;
+  height: 15px;
   gap: 3px;
 }
+/* A quiet text-only role label, aligned with the player metadata. */
 .table-arena .south-inline-status-row .south-inline-badge {
+  flex: 0 1 auto;
   max-width: 100%;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-align: right;
+  height: 15px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ui-muted);
+  font: 600 10px/15px "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
-/* Reserve the caller badge before trump selection, including its wrapped row. */
-.table-arena .south-inline-status-row .south-inline-badge-trump.south-inline-badge-placeholder {
-  display: block;
-  visibility: hidden;
+.table-arena .south-inline-status-row .south-inline-badge-trump {
+  color: var(--ui-accent-text);
+  font-weight: 750;
+}
+.table-arena .south-inline-status-row .south-inline-badge-placeholder { display: none; }
+@container south-status (max-width: 100px) {
+  .table-arena .south-inline-status-row .south-inline-badge {
+    padding-inline: 1px;
+    font-size: 9px;
+    letter-spacing: .025em;
+  }
 }
 .table-arena .south-inline-info-winner .south-player-name { color: var(--team-color); }
 /* Accent is the primary reading and interaction color; team-colored captions

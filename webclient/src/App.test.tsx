@@ -85,7 +85,7 @@ test("renders the table and terminal", async () => {
 
   render(<App />);
 
-  expect(await screen.findByRole("heading", { name: "Game history" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Live game history" })).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "Belot table" })).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
   expect(screen.getByPlaceholderText("Lionheart")).toBeInTheDocument();

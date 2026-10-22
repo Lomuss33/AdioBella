@@ -5,7 +5,7 @@ import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
 import { t, tr, countText, getLocale, number } from "../i18n";
 import LanguageSelect from "./LanguageSelect";
-import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import type {
   CardView,
   GameCompleteSummary,
@@ -22,6 +22,7 @@ import PlayingCard from "./PlayingCard";
 import SuitChoiceButton from "./SuitChoiceButton";
 import { usePopupDialog } from "../lib/usePopupDialog";
 import { useMeldReviewLayout } from "../lib/useMeldReviewLayout";
+import { getMeldCardColumns, getMeldCardRows } from "../lib/meldReviewLayout";
 import { capitalizeInsertedNameWords } from "../lib/nameCapitalization";
 import { teamSide } from "../lib/teamSide";
 
@@ -93,11 +94,14 @@ function ActionPanel({
   const isBelaChoice = pendingBelaChoiceCard !== null;
   const isMatchComplete = matchCompleteSummary !== null;
   const humanTeam = yourTeamName ?? (teamNames.yourTeam.trim() || defaultNames[getLocale()].teams.yourTeam);
+  const meldSets = isReportMelds ? pendingAction?.availableMelds.slice(0, 1) : pendingAction?.meldWinner?.players;
+  const meldColumns = Math.max(1, ...(meldSets ?? []).flatMap(set =>
+    set.melds.map(meld => getMeldCardColumns(meld.cards.length))));
   const isPopupVisible = isStart || isNextGame || isTrumpChoice || isReportMelds || isAcknowledgeMelds || isBelaChoice || isMatchComplete;
-  const dialogRef = usePopupDialog(isPopupVisible, false, !isTrumpChoice);
-  const instructionId = useId();
+  const isTableAction = isTrumpChoice || isReportMelds;
+  const dialogRef = usePopupDialog(isPopupVisible, { fitToViewport: !isTableAction, lockPageScroll: !isTableAction });
   const contentRef = useRef<HTMLDivElement>(null);
-  useMeldReviewLayout(dialogRef, isReportMelds || isAcknowledgeMelds, pendingAction);
+  useMeldReviewLayout(dialogRef, isAcknowledgeMelds, pendingAction);
 
   useEffect(() => {
     if (!isPopupVisible) return;
@@ -127,7 +131,7 @@ function ActionPanel({
     : isNextGame
       ? gameCompleteWinnerMessage(gameCompleteSummary)
       : isTrumpChoice
-        ? (pendingAction?.legalTrumpChoices.includes("SKIP") ? t("Choose the trump suit or skip.") : t("Choose the trump suit."))
+        ? null
         : isReportMelds
           ? null
           : isAcknowledgeMelds
@@ -137,13 +141,13 @@ function ActionPanel({
   return (
     <dialog
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds || isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${isReportMelds || isAcknowledgeMelds || isTrumpChoice ? "belot-dialog-floating-actions" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
+      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds ? "belot-dialog-meld-choice" : ""} ${isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${isReportMelds || isAcknowledgeMelds || isTrumpChoice ? "belot-dialog-floating-actions" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
-      aria-describedby={isTrumpChoice ? instructionId : undefined}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
     >
-      <div className="popup-card">
+      <div className="popup-card" style={isAcknowledgeMelds
+        ? { "--meld-max-columns": meldColumns } as CSSProperties : undefined}>
             <div ref={contentRef} tabIndex={-1} className="popup-content">
               <div className={`action-popup-header ${isStart ? "action-popup-header-start" : ""}`}>
                 {isMatchComplete ? <div className="match-result-emblem" aria-hidden="true">
@@ -155,7 +159,7 @@ function ActionPanel({
                 <div className="start-heading-row">
                   <div className="start-heading-copy">
                     <h2 className="action-popup-title">{title}</h2>
-                    {subtitle && !isTrumpChoice ? <p className="action-popup-subtitle">{subtitle}</p> : null}
+                    {subtitle ? <p className="action-popup-subtitle">{subtitle}</p> : null}
                   </div>
                   {isStart && <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>}
                 </div>
@@ -167,7 +171,6 @@ function ActionPanel({
                   <div className="team-settings-grid">
                     <TeamSettingsRow
                       side="your"
-                      heading={t("Alliance")}
                       teamLabel={t("your team")}
                       teamValue={teamNames.yourTeam}
                       teamPlaceholder={defaultNames[getLocale()].teams.yourTeam}
@@ -183,7 +186,6 @@ function ActionPanel({
                     />
                     <TeamSettingsRow
                       side="opponent"
-                      heading={t("Enemies")}
                       teamLabel={t("enemy team")}
                       teamValue={teamNames.enemyTeam}
                       teamPlaceholder={defaultNames[getLocale()].teams.enemyTeam}
@@ -225,9 +227,7 @@ function ActionPanel({
                 </div>
               ) : null}
               {isReportMelds ? (
-                <div className="action-popup-body meld-popup-body">
-                  <MeldSetSection meldSet={pendingAction?.availableMelds?.[0] ?? null} yourTeam={humanTeam} showTeam />
-                </div>
+                <MeldChoiceSection meldSet={pendingAction?.availableMelds?.[0] ?? null} />
               ) : null}
               {isAcknowledgeMelds ? (
                 <div className="action-popup-body meld-popup-body">
@@ -307,7 +307,6 @@ function ActionPanel({
                   )
                 : null}
             </div>
-            {isTrumpChoice ? <p id={instructionId} className="action-popup-subtitle trump-choice-instruction">{subtitle}</p> : null}
       </div>
     </dialog>
   );
@@ -400,6 +399,28 @@ function MatchCompleteSummaryPanel({ summary, yourTeam }: { summary: MatchComple
   );
 }
 
+function MeldChoiceSection({ meldSet }: { meldSet: MeldSetView | null }) {
+  if (!meldSet?.melds.length) return <p className="meld-choice-empty">{t("No melds available.")}</p>;
+  return <div className="meld-choice-list" role="list" aria-label={t("Combinations")}
+    style={{ "--meld-choice-count": meldSet.melds.length } as CSSProperties}>
+    {meldSet.melds.map((meld, index) => {
+      const rows = getMeldCardRows(meld.cards);
+      return <section key={`${meld.kind}-${index}`} className="meld-choice-set" role="listitem"
+        aria-label={`${meldDescription(meld)}, ${countText("points", meld.points)}`}
+        style={{ "--meld-choice-rows": Math.max(1, rows.length),
+          "--meld-choice-columns": getMeldCardColumns(meld.cards.length) } as CSSProperties}>
+        <span className="meld-choice-points">+{countText("points", meld.points)}</span>
+        <div className="meld-choice-cards">
+          {rows.map((cards, row) => <div key={row} className="meld-choice-card-line"
+            style={{ "--meld-card-count": cards.length } as CSSProperties}>
+            {cards.map(card => <PlayingCard key={`${card.suit}-${card.rank}`} card={card} disabled />)}
+          </div>)}
+        </div>
+      </section>;
+    })}
+  </div>;
+}
+
 function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: MeldSetView | null; yourTeam: string; showTeam?: boolean }) {
   if (!meldSet) {
     return <p className="panel-caption">{t("No melds available.")}</p>;
@@ -435,9 +456,13 @@ function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: Meld
               </div>
               <span className="meld-combination-points">+{countText("points", meld.points)}</span>
             </div>
-            <div className="meld-card-row" style={{ "--meld-card-count": Math.max(1, meld.cards.length) } as CSSProperties}>
-              {meld.cards.map((card) => (
-                <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
+            <div className="meld-card-row" data-card-count={meld.cards.length}>
+              {getMeldCardRows(meld.cards).map((cards, row) => (
+                <div key={row} className="meld-card-line" style={{ "--meld-card-count": cards.length } as CSSProperties}>
+                  {cards.map(card => (
+                    <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
+                  ))}
+                </div>
               ))}
             </div>
           </section>
@@ -479,7 +504,6 @@ function MeldWinnerSection({ meldWinner, yourTeam }: { meldWinner: MeldWinnerVie
 
 interface TeamSettingsRowProps {
   side: "your" | "opponent";
-  heading: string;
   teamLabel: string;
   teamValue: string;
   teamPlaceholder: string;
@@ -496,7 +520,6 @@ interface TeamSettingsRowProps {
 
 function TeamSettingsRow({
   side,
-  heading,
   teamLabel,
   teamValue,
   teamPlaceholder,
@@ -511,20 +534,16 @@ function TeamSettingsRow({
   onSecondPlayerChange
 }: TeamSettingsRowProps) {
   return (
-    <section className="team-settings-row" data-team={side}>
-      <div className="team-settings-label">
-        <span className="panel-caption">{t("team")}</span>
-        <svg className="team-seat-pair" viewBox="0 0 28 28" role="img" aria-label={t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}>
-          <title>{t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}</title>
-          <rect className="team-seat-table" x="7" y="7" width="14" height="14" rx="4" />
-          <path className="team-seat-link" d={side === "your" ? "M14 5v18" : "M5 14h18"} />
-          <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="1" width="8" height="4" rx="1.5" />
-          <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="23" width="8" height="4" rx="1.5" />
-          <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="1" y="10" width="4" height="8" rx="1.5" />
-          <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="23" y="10" width="4" height="8" rx="1.5" />
-        </svg>
-        <strong>{heading}</strong>
-      </div>
+    <section className="team-settings-row" data-team={side} aria-label={teamLabel}>
+      <svg className="team-seat-pair" viewBox="0 0 28 28" role="img" aria-label={t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}>
+        <title>{t(side === "your" ? "team.yourSeats" : "team.opponentSeats")}</title>
+        <rect className="team-seat-table" x="7" y="7" width="14" height="14" rx="4" />
+        <path className="team-seat-link" d={side === "your" ? "M14 5v18" : "M5 14h18"} />
+        <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="1" width="8" height="4" rx="1.5" />
+        <rect className={side === "your" ? "team-seat-active" : "team-seat-other"} x="10" y="23" width="8" height="4" rx="1.5" />
+        <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="1" y="10" width="4" height="8" rx="1.5" />
+        <rect className={side === "opponent" ? "team-seat-active" : "team-seat-other"} x="23" y="10" width="4" height="8" rx="1.5" />
+      </svg>
       <label className="name-setting-field team-name-field">
         <PlayerSeatCaption label={teamLabel} arrow={side === "your" ? "↑" : "←"} endArrow={side === "your" ? "↓" : "→"} />
         <input type="text" value={teamValue} placeholder={teamPlaceholder} maxLength={30} autoCapitalize="words" onChange={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue, (event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={(event) => updateNameInput(event.currentTarget, onTeamChange, teamValue)} />

@@ -750,6 +750,7 @@ function App() {
     animatedTrick === null;
 
   const isChoosingTrump = snapshot?.pendingAction.type === "CHOOSE_TRUMP";
+  const isTableAction = isChoosingTrump || snapshot?.pendingAction.type === "REPORT_MELDS";
   const actionPanel = (
     <ActionPanel
       pendingAction={snapshot?.pendingAction}
@@ -784,7 +785,7 @@ function App() {
     <main className="app-shell game-layout">
       <div className={`table-stage ${snapshot?.pendingAction.type === "START_MATCH" ? "table-stage-setup" : ""}`}>
         <TableLayout
-          trumpChoicePanel={isChoosingTrump ? actionPanel : undefined}
+          tableActionPanel={isTableAction ? actionPanel : undefined}
           snapshot={snapshot}
           playersBySeat={playersBySeat}
           onPlayCard={handleCardClick}
@@ -801,7 +802,7 @@ function App() {
           onQuitMatch={() => setConfirmExit("match")}
           onOpenBook={() => setShowBook("welcome")}
         />
-        {!isChoosingTrump ? actionPanel : null}
+        {!isTableAction ? actionPanel : null}
       </div>
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}

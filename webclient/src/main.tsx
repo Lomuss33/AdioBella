@@ -18,10 +18,12 @@ import "./styles/match-result.css";
 import "./styles/meld-details.css";
 import "./styles/trump-choice.css";
 import "./styles/meld-review.css";
+import "./styles/meld-choice.css";
 import "./styles/materials.css";
 import "./styles/text-roles.css";
 import "./styles/team-cues.css";
 import "./styles/language-select.css";
+import "./styles/terminal.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

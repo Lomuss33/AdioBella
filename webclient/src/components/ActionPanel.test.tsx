@@ -26,7 +26,7 @@ function resultProps(): ComponentProps<typeof ActionPanel> {
   };
 }
 
-test.each([true, false])("places the trump instruction after the choices and keeps them usable (skip: %s)", async canSkip => {
+test.each([true, false])("keeps trump choices usable without the redundant instruction (skip: %s)", async canSkip => {
   const props = resultProps();
   props.matchCompleteSummary = null;
   props.pendingAction = {
@@ -34,15 +34,17 @@ test.each([true, false])("places the trump instruction after the choices and kee
     legalTrumpChoices: canSkip ? ["SKIP", "CLUBS", "DIAMONDS", "SPADES", "HEARTS"] : ["CLUBS", "DIAMONDS", "SPADES", "HEARTS"],
     belaEligibleCardIndices: [], availableMelds: [], meldWinner: null, validationMessage: null, prompt: ""
   };
-  render(<ActionPanel {...props} />);
+  const previousOverflow = document.body.style.overflow;
+  const { unmount } = render(<ActionPanel {...props} />);
+  expect(document.body.style.overflow).toBe(previousOverflow);
   const dialog = screen.getByRole("dialog", { name: "Choose the trump suit" });
-  const instruction = screen.getByText(canSkip ? "Choose the trump suit or skip." : "Choose the trump suit.");
-  expect(dialog).toHaveAccessibleDescription(instruction.textContent!);
+  expect(screen.queryByText("Choose the trump suit or skip.")).not.toBeInTheDocument();
+  expect(screen.queryByText("Choose the trump suit.")).not.toBeInTheDocument();
+  expect(dialog).not.toHaveAttribute("aria-describedby");
   const title = within(dialog).getByRole("heading");
   const choices = within(dialog).getAllByRole("button");
   expect(choices).toHaveLength(canSkip ? 5 : 4);
   expect(title.compareDocumentPosition(choices[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(choices.at(-1)!.compareDocumentPosition(instruction) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   const user = userEvent.setup();
   await user.click(choices[0]);
   expect(props.onChooseTrump).toHaveBeenLastCalledWith("HEARTS");
@@ -50,6 +52,35 @@ test.each([true, false])("places the trump instruction after the choices and kee
     await user.click(choices.at(-1)!);
     expect(props.onChooseTrump).toHaveBeenLastCalledWith("SKIP");
   }
+  unmount();
+  expect(document.body.style.overflow).toBe(previousOverflow);
+});
+
+test("shows only meld evidence and awards while leaving the page unlocked for the visible hand", async () => {
+  const props = resultProps();
+  props.matchCompleteSummary = null;
+  props.pendingAction = {
+    type: "REPORT_MELDS", actingPlayerId: "SOUTH", legalCardIndices: [], legalTrumpChoices: [],
+    belaEligibleCardIndices: [], meldWinner: null, validationMessage: null, prompt: "",
+    availableMelds: [{ playerId: "SOUTH", playerName: "Tomislav", teamName: "High Command", totalPoints: 40,
+      melds: ["HEARTS", "SPADES"].map(suit => ({ kind: "SEQUENCE", label: "Sequence of 3", points: 20, comparisonValue: 3,
+        cards: ["JACK", "QUEEN", "KING"].map(rank => ({ suit, rank, label: `${rank}_${suit}`, faceUp: true, playable: false })) })) }]
+  };
+  const previousOverflow = document.body.style.overflow;
+  render(<ActionPanel {...props} />);
+  const dialog = screen.getByRole("dialog", { name: "Your melds" });
+  expect(dialog).toHaveClass("belot-dialog-meld-choice");
+  expect(document.body.style.overflow).toBe(previousOverflow);
+  expect(within(dialog).getAllByRole("listitem")).toHaveLength(2);
+  expect(within(dialog).getAllByRole("img")).toHaveLength(6);
+  expect(within(dialog).getAllByText("+20 points")).toHaveLength(2);
+  expect(screen.queryByText("Tomislav")).not.toBeInTheDocument();
+  expect(screen.queryByText("High Command")).not.toBeInTheDocument();
+  const user = userEvent.setup();
+  await user.click(within(dialog).getByRole("button", { name: "Pass" }));
+  expect(props.onReportMelds).toHaveBeenLastCalledWith(false);
+  await user.click(within(dialog).getByRole("button", { name: "Declare melds" }));
+  expect(props.onReportMelds).toHaveBeenLastCalledWith(true);
 });
 
 test("capitalizes team and player word starts while preserving typed capitals and the editing caret", async () => {

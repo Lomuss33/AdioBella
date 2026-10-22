@@ -4,12 +4,12 @@
   --team-edge-start: var(--setup-content-inset-start, 12px);
   --team-edge-end: var(--setup-content-inset-end, 12px);
   position: relative;
-  anchor-scope: --setup-team-title;
+  anchor-scope: --setup-team-caption;
 }
 .belot-dialog.belot-dialog-setup .team-settings-versus {
   position: absolute;
-  top: 18px;
-  top: anchor(--setup-team-title center, 18px);
+  top: 16px;
+  top: anchor(--setup-team-caption center, 16px);
   left: 50%;
   z-index: 2;
   transform: translate(-50%, -50%);
@@ -38,7 +38,7 @@
   container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: max-content repeat(3, auto);
+  grid-template-rows: repeat(3, auto);
   align-content: start;
   align-self: start;
   gap: var(--team-field-gap);
@@ -83,8 +83,8 @@
   text-align: center;
   color: var(--team-tone);
 }
-.belot-dialog.belot-dialog-setup [data-team="your"] .team-settings-label {
-  anchor-name: --setup-team-title;
+.belot-dialog.belot-dialog-setup [data-team="your"] .team-name-field > .panel-caption {
+  anchor-name: --setup-team-caption;
 }
 .belot-dialog.belot-dialog-setup .team-settings-label > .panel-caption { display: none; }
 .belot-dialog.belot-dialog-setup .team-settings-label strong {
@@ -190,6 +190,7 @@
   right: auto;
   transform: translate(-50%, -50%);
   z-index: 0;
+  color: var(--team-tone);
   display: block;
   /* Follow the panel height; extra screen width must not enlarge the diagram vertically. */
   width: auto;

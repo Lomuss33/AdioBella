@@ -27,12 +27,12 @@ interface TableLayoutProps {
   onForfeitGame: () => void;
   onQuitMatch: () => void;
   onOpenBook: () => void;
-  trumpChoicePanel?: ReactNode;
+  tableActionPanel?: ReactNode;
 }
 
 function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
-  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, trumpChoicePanel }: TableLayoutProps) {
+  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, tableActionPanel }: TableLayoutProps) {
   const arenaRef = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const arena = arenaRef.current;
@@ -44,7 +44,6 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     const status = arena?.querySelector<HTMLElement>(".arena-status");
     const bottom = arena?.querySelector<HTMLElement>(".arena-bottom");
     const play = arena?.querySelector<HTMLElement>(".arena-play");
-    const trumpDialog = arena?.querySelector<HTMLElement>(".belot-dialog-trump");
     if (!arena || !pool || !trickCards || !shell || !handRow || !handArea || !status || !bottom || !play) return;
     let frame = 0;
     let previousMode: CardLayoutMode | undefined;
@@ -73,17 +72,17 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         trickWidth: field.width - px(poolStyle.paddingLeft) - px(poolStyle.paddingRight) - 4,
         maxCardWidth: px(poolStyle.getPropertyValue("--trick-card-max")) || 120,
         aspectRatio: ratio, handGap: px(handStyle.columnGap), handRowGap: px(handStyle.rowGap), trickGap: gap,
-        // Reserve the picker's natural height without feeding the stretched lane back into the solver.
-        minimumTrickHeight: Math.max(0, (trumpDialog?.getBoundingClientRect().height ?? 0) - trickReserve),
         previous: previousMode
       };
-      const layout = fitTableCards(bottomStyle.display === "contents"
-        ? { ...common, flow: "beside",
+      const beside = bottomStyle.display === "contents";
+      const space = beside
+        ? { ...common, flow: "beside" as const,
           handHeight: laneBottom - play.getBoundingClientRect().top - handChrome - handInsets,
           trickHeight: table.height - trickReserve }
-        : { ...common, flow: "stacked",
+        : { ...common, flow: "stacked" as const,
           height: laneBottom - table.top - handChrome - handInsets - px(arenaStyle.rowGap)
-            - px(bottomStyle.rowGap) - trickReserve });
+            - px(bottomStyle.rowGap) - trickReserve };
+      const layout = fitTableCards(space);
       previousMode = layout;
       arena.dataset.handRows = String(layout.handRows);
       arena.dataset.trickLayout = layout.trickLayout;
@@ -93,13 +92,12 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       // hand reflow. ResizeObserver then sees an already settled arrangement.
       const columns = getHandColumns(Number(handRow.dataset.cardCount), layout.handColumns);
       handRow.style.setProperty("--hand-grid-columns", String(columns));
-      const rows = Math.max(1, Math.ceil((Number(handRow.dataset.cardCount) || 0) / columns));
       handRow.querySelectorAll<HTMLElement>(".hand-slot-empty").forEach((slot, index) => {
-        const display = index < rows * columns ? "" : "none";
+        const display = index < Math.max(1, Number(handRow.dataset.cardCount) || 0) ? "" : "none";
         if (slot.style.display !== display) slot.style.display = display;
       });
-      const space = trickCards.getBoundingClientRect();
-      const offsets = placeTrickCards(layout.trickLayout, layout.cardWidth, ratio, gap, space.height - 4);
+      const trickBounds = trickCards.getBoundingClientRect();
+      const offsets = placeTrickCards(layout.trickLayout, layout.cardWidth, ratio, gap, trickBounds.height - 4);
       const properties = {
         "--table-card-width": layout.cardWidth,
         "--table-trick-offset-x": offsets.offsetX,
@@ -126,7 +124,6 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     };
     const observer = new ResizeObserver(scheduleSync);
     [arena, pool, handRow, handArea, status].forEach(element => observer.observe(element));
-    if (trumpDialog) observer.observe(trumpDialog);
     window.addEventListener("resize", scheduleSync);
     return () => {
       observer.disconnect();
@@ -144,7 +141,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       arena.style.removeProperty("--trick-north-offset-x");
       arena.style.removeProperty("--trick-south-offset-x");
     };
-  }, [Boolean(playersBySeat.SOUTH), Boolean(trumpChoicePanel)]);
+  }, [Boolean(playersBySeat.SOUTH)]);
   const dealerSeat = snapshot?.players.find((player) => player.dealer)?.seat;
   const declarerSeat = snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat;
   const seat = (position: Seat) => <SeatPanel
@@ -161,8 +158,9 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         {seat("NORTH")}
         {seat("WEST")}
         <TrickPile trick={snapshot?.trick ?? { leadPlayerId: null, cards: [] }}
-          trumpSuit={snapshot?.trumpSuit ?? null} animatedTrick={animatedTrick} />
-        {trumpChoicePanel ? <div className="table-trump-picker">{trumpChoicePanel}</div> : null}
+          trumpSuit={snapshot?.trumpSuit ?? null} animatedTrick={animatedTrick}>
+          {tableActionPanel ? <div className={snapshot?.pendingAction.type === "REPORT_MELDS" ? "table-meld-picker" : "table-trump-picker"}>{tableActionPanel}</div> : null}
+        </TrickPile>
         {seat("EAST")}
       </div>
       <div className="arena-bottom">

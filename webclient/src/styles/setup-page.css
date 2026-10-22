@@ -1,6 +1,10 @@
 /* Setup is a full-screen destination; in-game dialogs keep their own layout. */
+html:has(.belot-dialog-setup[open]) {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
 .belot-dialog.belot-dialog-setup {
-  --setup-action-height: 72px;
+  --setup-action-height: 68px;
   padding: 0;
   background: var(--ui-dialog);
   backdrop-filter: none;
@@ -8,8 +12,8 @@
 }
 .belot-dialog.belot-dialog-setup[open] { display: block; }
 .belot-dialog.belot-dialog-setup .popup-card {
-  width: min(100%, 880px) !important;
-  max-width: 880px !important;
+  width: min(100%, 840px) !important;
+  max-width: 840px !important;
   margin-inline: auto;
   height: 100%;
   max-height: none;
@@ -26,7 +30,7 @@
   min-height: 0;
   flex: 1 1 auto;
   gap: clamp(8px, 1.5vh, 16px);
-  padding: max(10px, env(safe-area-inset-top)) var(--setup-content-inset-end) 10px var(--setup-content-inset-start);
+  padding: max(8px, env(safe-area-inset-top)) var(--setup-content-inset-end) 10px var(--setup-content-inset-start);
   overflow: auto;
 }
 .belot-dialog.belot-dialog-setup :is(.action-popup-header, .action-popup-body) {
@@ -88,7 +92,7 @@
 .belot-dialog.belot-dialog-setup .action-popup-body { gap: 12px; }
 .belot-dialog.belot-dialog-setup .team-settings-grid { gap: 12px; }
 .belot-dialog.belot-dialog-setup .setup-options-grid { gap: 6px; }
-.belot-dialog.belot-dialog-setup .setup-options-row { gap: 24px; }
+.belot-dialog.belot-dialog-setup .setup-options-row { gap: 20px; }
 .belot-dialog.belot-dialog-setup .setup-options-row > * {
   padding: 5px 0;
   border: 0;
@@ -114,7 +118,7 @@
   .belot-dialog.belot-dialog-setup .start-heading-row { gap: 8px; }
   .belot-dialog.belot-dialog-setup .team-settings-grid { gap: 12px; }
   .belot-dialog.belot-dialog-setup .team-settings-row { padding: 10px; gap: 6px; }
-  .belot-dialog.belot-dialog-setup .setup-options-row { gap: 16px; }
+  .belot-dialog.belot-dialog-setup .setup-options-row { gap: 14px; }
 }
 @media (max-width: 350px) {
   .belot-dialog.belot-dialog-setup .language-flag-trigger { gap: 4px; padding-inline: 7px; }
@@ -205,7 +209,7 @@
 }
 .setup-guide-button > svg { flex-shrink: 0; }
 @media (max-width: 360px), (max-height: 520px) {
-  .belot-dialog.belot-dialog-setup { --setup-action-height: 60px; }
+  .belot-dialog.belot-dialog-setup { --setup-action-height: 56px; }
   .belot-dialog.belot-dialog-setup .popup-footer:has(.setup-guide-button) .action-button { font-size: 11px; gap: 5px; }
 }
 

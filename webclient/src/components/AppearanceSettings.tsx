@@ -52,13 +52,15 @@ export function CardStylePicker({ value, onChange }: { value: VisualSettings["ca
   return <div className="appearance-setting appearance-card-style" role="group" aria-label={t("book.cardStyle")}>
     <div className="card-style-preview-row">
       <output className="card-style-name" aria-live="polite">{t("book.cards")}: {t(cardStyleMessages[value])}</output>
-      <div className="card-style-preview-gallery">
-        <div className="appearance-preview" data-card-style={value} role="group" aria-label={t("book.preview")}>
-          {previewCards.map(card => <PlayingCard key={card.label} card={card} disabled />)}
+      <div className="card-style-preview-viewport">
+        <div className="card-style-preview-gallery">
+          <div className="appearance-preview" data-card-style={value} role="group" aria-label={t("book.preview")}>
+            {previewCards.map(card => <PlayingCard key={card.label} card={card} disabled />)}
+          </div>
+          <button className="card-style-next" type="button" aria-label={t("book.nextCardStyle")} title={t("book.nextCardStyle")} onClick={() => onChange(values[(index + 1) % values.length])}>
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
         </div>
-        <button className="card-style-next" type="button" aria-label={t("book.nextCardStyle")} title={t("book.nextCardStyle")} onClick={() => onChange(values[(index + 1) % values.length])}>
-          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
       </div>
     </div>
   </div>;

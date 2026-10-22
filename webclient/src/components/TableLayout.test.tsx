@@ -17,7 +17,7 @@ const table = (south: PlayerView | undefined, choosingTrump = false) => (
     <TableLayout snapshot={null} playersBySeat={{ SOUTH: south }} onPlayCard={noop}
       errorMessage={null} canForfeitGame={false} canQuitMatch={false}
       onForfeitGame={noop} onQuitMatch={noop} onOpenBook={noop}
-      trumpChoicePanel={choosingTrump ? <div className="belot-dialog-trump" /> : undefined} />
+      tableActionPanel={choosingTrump ? <div className="belot-dialog-trump" /> : undefined} />
   </StrictMode>
 );
 

@@ -5,45 +5,37 @@
   -webkit-backdrop-filter: none;
 }
 
-/* The picker occupies the table's trick lane, rather than floating over the hand. */
-.table-arena:has(.table-trump-picker) {
-  grid-template-rows: auto minmax(min-content, 1fr) auto;
-}
-.table-arena .arena-play:has(.table-trump-picker) {
-  min-height: min-content;
-  grid-template-rows: auto minmax(min-content, 1fr);
-}
-.table-arena .table-trump-picker {
-  grid-area: trick;
+/* Selection replaces only the trick contents. It cannot size a table track. */
+.table-arena :is(.table-trump-picker, .table-meld-picker) {
+  position: absolute;
+  inset: 0;
   display: grid;
-  align-self: stretch;
   place-items: center;
   min-width: 0;
+  min-height: 0;
   z-index: 2;
 }
-/* Wide tables flatten the play wrapper into the arena's three-column grid. */
-@media (min-height: 501px) {
-  @container table-stage (min-width: 680px) {
-    .table-arena .table-trump-picker { grid-area: 2 / 2; }
-  }
-}
+.table-arena .table-trump-picker { container: trump-table / size; }
 .table-trump-picker .belot-dialog.belot-dialog-trump {
-  position: static;
-  inset: auto;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: 8px;
+  padding: 6px;
   overflow: visible;
 }
 .table-trump-picker .belot-dialog-trump .popup-card {
-  width: min(100%, 520px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(100%, 600px);
+  height: min(100%, 460px);
   max-width: 100%;
   max-height: none;
   overflow: visible;
-  gap: 8px;
+  gap: 6px;
 }
 .table-trump-picker .belot-dialog-trump .popup-card > .popup-content {
   flex: none;
@@ -52,24 +44,18 @@
 }
 .table-trump-picker .belot-dialog-trump .action-popup-header { margin: 0; }
 .table-trump-picker .belot-dialog-trump .action-popup-title {
-  font-size: 22px;
+  font-size: 20px;
   text-align: center;
 }
-.table-trump-picker .belot-dialog-trump .popup-footer.trump-controls { padding: 0; }
-.belot-dialog-trump .trump-choice-instruction {
-  align-self: center;
-  text-align: center;
-  pointer-events: auto;
+.table-trump-picker .belot-dialog-trump .popup-footer.trump-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 34px;
+  min-height: 0;
+  padding: 0;
+  gap: 6px;
 }
-
 /* Size the choices from the dialog, keeping a useful touch target on phones. */
-.belot-dialog-trump .popup-footer.trump-controls {
-  grid-template-columns: repeat(var(--trump-choice-columns, 4), minmax(0, 1fr));
-  grid-auto-rows: auto;
-  align-items: stretch;
-  gap: clamp(3px, 1.2cqw, 6px);
-  padding: 8px 12px 14px;
-}
 .belot-dialog-trump .trump-controls > .suit-choice-button {
   display: grid;
   grid-column: auto;
@@ -80,9 +66,10 @@
   justify-items: center;
   width: 100%;
   max-width: none;
-  height: clamp(108px, 30cqw, 152px);
+  height: 100%;
+  max-height: 180px;
   min-width: 0;
-  min-height: 64px;
+  min-height: 44px;
   aspect-ratio: auto;
   padding: 0;
   gap: 0;
@@ -90,6 +77,9 @@
   overflow: hidden;
 }
 .belot-dialog-trump .trump-controls .suit-choice-visual {
+  container: suit-preview / size;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -116,8 +106,9 @@
   box-shadow: inset 0 2px 4px rgb(0 0 0 / 25%);
 }
 .belot-dialog-trump .trump-controls .suit-choice-visual > .playing-card-shell {
-  width: auto;
-  height: 100%;
+  width: min(100cqw, calc(100cqh / var(--playing-card-height-factor, 1.42)));
+  height: min(100cqh, calc(100cqw * var(--playing-card-height-factor, 1.42)));
+  min-width: 0;
   max-width: 100%;
   max-height: 100%;
   aspect-ratio: 1 / var(--playing-card-height-factor, 1.42);
@@ -166,8 +157,12 @@
   text-align: center;
 }
 .belot-dialog-trump .trump-controls > .suit-choice-skip {
-  padding: 8px 4px;
-  gap: 6px;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  min-height: 34px;
+  padding: 4px 8px;
+  gap: 8px;
   border-color: var(--material-trim);
   background: var(--material-leather);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 3px 0 rgb(0 0 0 / 22%);
@@ -177,19 +172,26 @@
   outline: 2px solid var(--ui-focus);
   outline-offset: 2px;
 }
-@container trump-choice (max-width: 340px) {
-  .belot-dialog-trump .popup-footer.trump-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .belot-dialog-trump .trump-controls > .suit-choice-button { height: 104px; }
-  .belot-dialog-trump .trump-controls > .suit-choice-skip {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: center;
-    height: 36px;
-    min-height: 36px;
-    padding: 6px 12px;
-    gap: 8px;
+.table-trump-picker .belot-dialog-trump .trump-controls .suit-choice-skip-icon { width: 20px; height: 20px; }
+/* Reflow the options inside the existing lane, using both its dimensions. */
+@container trump-table (min-width: 360px) or (max-height: 240px) {
+  .table-trump-picker .belot-dialog-trump .popup-footer.trump-controls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    gap: 4px;
   }
-  .belot-dialog-trump .trump-controls .suit-choice-skip-icon { width: 20px; height: 20px; }
+}
+@container trump-table (min-width: 460px) {
+  .table-trump-picker .belot-dialog-trump-can-skip .popup-footer.trump-controls { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .table-trump-picker .belot-dialog-trump .trump-controls > .suit-choice-skip {
+    grid-column: auto;
+    display: grid;
+    align-content: center;
+  }
+}
+@container trump-table (max-height: 240px) {
+  .table-trump-picker .belot-dialog-trump .popup-card { gap: 4px; }
+  .table-trump-picker .belot-dialog-trump .action-popup-title { font-size: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .belot-dialog-trump .trump-controls > .suit-choice-button[data-suit] { transition: none; }

@@ -39,8 +39,9 @@ function SeatPanel({ player, seat, winnerGlow, showDealer, showTrumpCaller }: Se
         <span
           className={`seat-badge seat-badge-trump ${showTrumpCaller ? "" : "seat-badge-placeholder"}`.trim()}
           aria-hidden={showTrumpCaller ? undefined : true}
+          title={showTrumpCaller ? t("player.trumpCallerDescription") : undefined}
         >
-          {showTrumpCaller ? t("trump") : ""}
+          {showTrumpCaller ? t("player.trumpCaller") : ""}
         </span>
       </div>
     </div>

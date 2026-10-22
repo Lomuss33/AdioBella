@@ -28,7 +28,7 @@
   letter-spacing: .035em;
 }
 .belot-dialog.belot-dialog-setup .setup-options-row > :is(.appearance-accent-setting, .appearance-table-colors) {
-  grid-template-rows: max-content max-content;
+  grid-template-rows: max-content minmax(calc(2 * var(--setup-swatch-height) + 4px), 1fr);
   gap: 3px;
 }
 .belot-dialog.belot-dialog-setup .setup-options-row > * {
@@ -40,12 +40,15 @@
 .belot-dialog.belot-dialog-setup .setup-options-row > .appearance-card-style {
   min-height: 0;
   padding-block: 0;
+  grid-template-rows: minmax(0, 1fr);
 }
 .belot-dialog.belot-dialog-setup .card-style-preview-row {
+  grid-template-rows: max-content minmax(var(--setup-option-height), 1fr);
+  align-content: stretch;
   gap: 3px;
 }
 .belot-dialog.belot-dialog-setup .card-style-preview-gallery {
-  --preview-card-height: var(--setup-option-height);
+  align-self: stretch;
 }
 .belot-dialog.belot-dialog-setup .team-settings-label strong {
   font-size: clamp(10px, 11cqw, clamp(20px, calc(17px + .5vw), 28px));
@@ -66,7 +69,9 @@
   font-size: clamp(9px, calc(6px + 3cqw), var(--setup-label-size));
 }
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) {
-  height: var(--setup-option-height);
+  height: auto;
+  min-height: var(--setup-option-height);
+  align-self: stretch;
 }
 .belot-dialog.belot-dialog-setup .setup-options-row :is(.setup-segment-control, .match-length-choices) button {
   font-size: var(--setup-control-size);
@@ -87,13 +92,13 @@
   container-type: inline-size;
   align-self: stretch;
   align-content: start;
-  grid-template-rows: max-content var(--setup-option-height);
+  grid-template-rows: max-content minmax(var(--setup-option-height), 1fr);
   padding-block: 0;
   gap: 3px;
 }
 .belot-dialog.belot-dialog-setup [data-setting="mode"] .setup-segment-control {
-  height: var(--setup-option-height);
-  min-height: 0;
+  height: auto;
+  min-height: var(--setup-option-height);
   align-self: stretch;
 }
 .belot-dialog.belot-dialog-setup .setup-options-row .setup-segment-control:not(.setup-segment-numeric) button {
@@ -130,7 +135,7 @@
     align-self: stretch;
     align-content: stretch;
     align-items: stretch;
-    grid-template-rows: max-content repeat(3, minmax(min-content, 1fr));
+    grid-template-rows: repeat(3, minmax(min-content, 1fr));
     --team-field-gap: 7px;
   }
   .belot-dialog.belot-dialog-setup .team-settings-row .name-setting-field {

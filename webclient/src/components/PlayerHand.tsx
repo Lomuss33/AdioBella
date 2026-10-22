@@ -65,16 +65,18 @@ function PlayerHand({
         <strong className="south-player-name" title={player.name}>{player.name}</strong>
         <div className="south-inline-status-row">
           <span
-            className={`south-inline-badge ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
+            className={`south-inline-badge south-inline-badge-dealer ${showDealer ? "" : "south-inline-badge-placeholder"}`.trim()}
             aria-hidden={showDealer ? undefined : true}
+            title={showDealer ? t("dealer") : undefined}
           >
             {showDealer ? t("dealer") : ""}
           </span>
           <span
             className={`south-inline-badge south-inline-badge-trump ${showTrumpCaller ? "" : "south-inline-badge-placeholder"}`.trim()}
             aria-hidden={showTrumpCaller ? undefined : true}
+            title={showTrumpCaller ? t("player.trumpCallerDescription") : undefined}
           >
-            {t("trump")}
+            {t("player.trumpCaller")}
           </span>
         </div>
       </div>

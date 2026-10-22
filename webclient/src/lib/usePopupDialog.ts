@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 
-/** Native top-layer modal, with its height following the mobile keyboard viewport. */
-export function usePopupDialog(visible: boolean, modal = false, fitToViewport = true) {
+/** Shared dialog behavior; inline table controls keep the page and viewport intact. */
+export function usePopupDialog(visible: boolean, {
+  modal = false, fitToViewport = true, lockPageScroll = true
+}: { modal?: boolean; fitToViewport?: boolean; lockPageScroll?: boolean } = {}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -36,7 +38,7 @@ export function usePopupDialog(visible: boolean, modal = false, fitToViewport = 
         dialog.style.top = `${viewport.offsetTop}px`;
       }
     };
-    document.body.style.overflow = "hidden";
+    if (lockPageScroll) document.body.style.overflow = "hidden";
     // Native modal dialogs enter the browser's top layer and make the rest of
     // the document inert, which prevents preview annotation overlays from
     // selecting popup controls. Keep popups in the document layer instead.
@@ -53,9 +55,9 @@ export function usePopupDialog(visible: boolean, modal = false, fitToViewport = 
       dialog.close();
       dialog.style.removeProperty("height");
       dialog.style.removeProperty("top");
-      document.body.style.overflow = previousOverflow;
+      if (lockPageScroll) document.body.style.overflow = previousOverflow;
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [visible, modal, fitToViewport]);
+  }, [visible, modal, fitToViewport, lockPageScroll]);
   return dialogRef;
 }

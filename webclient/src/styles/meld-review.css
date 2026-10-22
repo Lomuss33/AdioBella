@@ -2,7 +2,9 @@
 .belot-dialog.belot-dialog-meld-action .popup-card {
   --meld-card-width: 64px;
   --meld-card-ratio: 1.42;
-  width: min(100%, 780px);
+  /* 42px covers the content padding, player border and card-list insets. */
+  width: min(100%, max(280px, calc(var(--meld-max-columns, 3) * var(--meld-card-width)
+    + (var(--meld-max-columns, 3) - 1) * 3px + 42px)));
   max-height: 100%;
 }
 .belot-dialog-meld-action .popup-card:has(.playing-card-shell[data-card-style="italian"]) { --meld-card-ratio: 2; }
@@ -130,12 +132,20 @@
 .belot-dialog-meld-action .meld-combination-points { padding: 0; border-radius: 0; background: none; font-size: 11px; line-height: 1.4; }
 .belot-dialog-meld-action .meld-card-row {
   display: grid;
-  grid-template-columns: repeat(var(--meld-card-count, 1), minmax(0, var(--meld-card-width)));
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
   min-width: 0;
   max-width: 100%;
   margin: 0;
   padding: 0;
+  justify-content: center;
+  align-items: start;
+  gap: 3px;
+}
+.belot-dialog-meld-action .meld-card-line {
+  display: grid;
+  grid-template-columns: repeat(var(--meld-card-count, 1), minmax(0, var(--meld-card-width)));
+  min-width: 0;
   justify-content: center;
   align-items: start;
   gap: 3px;

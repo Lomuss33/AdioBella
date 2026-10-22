@@ -1,0 +1,189 @@
+/* History belongs to the same felt table, with accent-dyed trim and controls. */
+.game-layout .terminal-panel,
+.game-layout .terminal-panel * { border-radius: 0; }
+.game-layout .terminal-panel {
+  --history-edge: color-mix(in srgb, var(--ui-accent) 58%, var(--felt-edge));
+  --history-surface: color-mix(in srgb, var(--felt-center) 90%, var(--ui-accent-fill));
+  padding: 12px;
+  border: 1px solid var(--history-edge);
+  border-top: 3px solid var(--ui-accent-fill);
+  background-color: var(--felt-edge);
+  background-image: var(--felt-grain), linear-gradient(135deg, var(--history-surface), var(--felt-edge) 80%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 8px 24px rgb(0 0 0 / 22%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #fff;
+}
+.game-layout .terminal-panel .terminal-header {
+  min-height: 42px;
+  padding: 0 0 10px;
+  border-bottom: 0;
+}
+.game-layout .terminal-panel .terminal-header::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  min-width: 8px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--history-edge), transparent);
+}
+.game-layout .terminal-panel .terminal-heading { flex-wrap: nowrap; gap: 10px; }
+.game-layout .terminal-panel .terminal-heading-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid var(--history-edge);
+  border-inline-start: 2px solid var(--ui-accent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ui-accent) 16%, var(--felt-edge)), var(--felt-edge));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+  color: var(--ui-accent);
+}
+.game-layout .terminal-panel .terminal-heading-mark svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.game-layout .terminal-panel .terminal-header h2 {
+  min-width: 0;
+  color: #fff;
+  font: 700 clamp(18px, 2vw, 22px)/1.2 Georgia, "Times New Roman", serif;
+  text-wrap: balance;
+}
+.game-layout .terminal-panel .terminal-disclosure {
+  order: 2;
+  border-color: var(--ui-accent);
+}
+.game-layout .terminal-panel .terminal-current-move {
+  margin-top: 10px;
+  padding: 7px 9px;
+  border-inline-start: 3px solid var(--ui-accent-fill);
+  background: color-mix(in srgb, var(--ui-accent-fill) 16%, var(--felt-edge));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.game-layout .terminal-panel .terminal-section {
+  padding: 9px;
+  border: 1px solid var(--history-edge);
+  border-top: 2px solid var(--ui-accent);
+  background: color-mix(in srgb, var(--felt-edge) 78%, transparent);
+}
+.game-layout .terminal-panel .terminal-subheader { min-height: 32px; gap: 5px 8px; }
+.game-layout .terminal-panel .terminal-subheader h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .075em;
+}
+.game-layout .terminal-panel .terminal-subheader h3::before {
+  content: "";
+  width: 3px;
+  height: 13px;
+  flex: 0 0 3px;
+  background: var(--ui-accent);
+}
+.game-layout .terminal-panel :is(.terminal-count, .terminal-trick-state, .terminal-forfeit, .terminal-last-trick-bonus) {
+  padding: 3px 6px;
+  border: 1px solid var(--history-edge);
+  background: color-mix(in srgb, var(--ui-accent-fill) 16%, var(--felt-edge));
+  color: #fff;
+  font-size: 10px;
+}
+.game-layout .terminal-panel :is(.terminal-feed-order, .terminal-latest) {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--ui-accent);
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+  font-size: 11px;
+  font-weight: 750;
+}
+.game-layout .terminal-panel :is(.terminal-feed-order, .terminal-latest):hover {
+  border-color: var(--ui-focus);
+  background: color-mix(in srgb, var(--ui-accent-fill) 92%, #000);
+  color: var(--ui-accent-fill-text);
+}
+.game-layout .terminal-panel .terminal-latest::before { border-color: currentColor; }
+.game-layout .terminal-panel :is(.terminal-round-group, .terminal-match-game) {
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 32%, var(--felt-edge));
+  background: color-mix(in srgb, var(--ui-accent-fill) 8%, var(--felt-center));
+}
+.game-layout .terminal-panel :is(.terminal-round-title, .terminal-match-game-title) {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--history-edge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.game-layout .terminal-panel [data-team="your"] { --history-team: var(--ui-team-your); }
+.game-layout .terminal-panel [data-team="opponent"] { --history-team: var(--ui-team-opponent); }
+.game-layout .terminal-panel :is(.terminal-play-row, .terminal-round-winner, .terminal-line) {
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 24%, var(--felt-edge));
+  border-inline-start: 3px solid var(--history-team, var(--ui-accent-fill));
+  background: color-mix(in srgb, var(--history-team, var(--ui-accent-fill)) 13%, var(--felt-edge));
+  box-shadow: none;
+  color: #fff;
+}
+.game-layout .terminal-panel .terminal-play-player { font-size: 12px; font-weight: 650; }
+.game-layout .terminal-panel .terminal-play-order {
+  border: 1px solid var(--history-edge);
+  background: var(--felt-center);
+  color: #fff;
+}
+.game-layout .terminal-panel .terminal-play-card {
+  min-height: 25px;
+  padding: 2px 5px;
+  border: 1px solid var(--ui-accent);
+  background: var(--card-paper);
+  color: var(--card-black);
+  font-size: 14px;
+}
+.game-layout .terminal-panel .terminal-play-card.is-red-suit { color: var(--card-red); }
+.game-layout .terminal-panel :is(.terminal-round-winner-label, .terminal-round-points, .terminal-round-winner strong,
+  .terminal-round-winner-team, .terminal-result-points, .terminal-hand-points, .terminal-hand-context) { color: #fff; }
+.game-layout .terminal-panel :is(.terminal-round-points, .terminal-result-points, .terminal-hand-points) { font-weight: 750; font-size: 12px; }
+.game-layout .terminal-panel :is(.terminal-game-winner, .terminal-match-winner) {
+  border-color: var(--ui-accent);
+  border-inline-start-color: var(--history-team, var(--ui-accent));
+  background: color-mix(in srgb, var(--ui-accent-fill) 25%, var(--felt-edge));
+}
+.game-layout .terminal-panel .terminal-hand-contract {
+  padding: 2px 6px;
+  border: 1px solid var(--ui-success);
+  background: color-mix(in srgb, var(--ui-success) 12%, var(--felt-edge));
+  color: #fff;
+}
+.game-layout .terminal-panel .terminal-hand-contract.is-failed {
+  border-color: var(--ui-danger);
+  background: color-mix(in srgb, var(--ui-danger) 12%, var(--felt-edge));
+  color: #fff;
+}
+.game-layout .terminal-panel .terminal-forfeit-result { border-color: var(--ui-danger); }
+.game-layout .terminal-panel .terminal-empty {
+  min-height: 76px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 26%, var(--felt-edge));
+  background: color-mix(in srgb, var(--felt-center) 40%, var(--felt-edge));
+  color: #fff;
+  font-size: 12px;
+}
+.game-layout .terminal-panel .terminal-lines {
+  scrollbar-color: var(--ui-accent) var(--felt-edge);
+  scrollbar-gutter: stable;
+}
+.game-layout .terminal-panel .terminal-lines::-webkit-scrollbar-thumb { border-radius: 0; background: var(--ui-accent); }
+.game-layout .terminal-panel .terminal-lines::-webkit-scrollbar-track { background: var(--felt-edge); }
+@media (max-width: 380px) {
+  .game-layout .terminal-panel { padding: 8px; }
+  .game-layout .terminal-panel .terminal-section { padding: 7px; }
+  .game-layout .terminal-panel :is(.terminal-round-group, .terminal-match-game) { padding: 6px; }
+}

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, getHandRowOffsets, HAND_CAPACITY, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST } from "./handLayout";
 
 const REFLOW_DURATION_MS = 260;
 const CENTERING_DELAY_MS = 55;
@@ -40,9 +40,12 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       const columns = getHandColumns(nodes.length, Number(style.getPropertyValue("--hand-columns")) || HAND_CAPACITY);
       row.style.setProperty("--hand-grid-columns", String(columns));
       const rows = Math.max(1, Math.ceil(nodes.length / columns));
+      row.dataset.handRows = String(rows);
       spaces.forEach((space, index) => {
-        const display = index < rows * columns ? "" : "none";
+        const display = index < Math.max(1, nodes.length) ? "" : "none";
         if (space.style.display !== display) space.style.display = display;
+        // Measure the grid before mirroring the visible card positions below.
+        space.style.removeProperty("transform");
       });
       const first = spaces[0]?.getBoundingClientRect();
       if (!first?.width || !first.height) return;
@@ -68,10 +71,21 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
         return remaining;
       }) : [];
       const positions = getCenteredHandPositions(nodes.length, columns, preferredRows);
+      const rowSizes = [...new Set(positions.map(position => position.row))]
+        .map(row => positions.filter(position => position.row === row).length);
+      const availableWidth = bounds.width - row.clientLeft * 2
+        - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+      const offsets = getHandRowOffsets(rowSizes, first.width, columnPitch, availableWidth);
       const targets = positions.map(position => ({
-        left: first.left - bounds.left - row.clientLeft + position.column * columnPitch,
+        left: first.left - bounds.left - row.clientLeft + position.column * columnPitch + (offsets[position.row] || 0),
         top: first.top - bounds.top - row.clientTop + position.row * rowPitch
       }));
+      const slotBounds = spaces.slice(0, nodes.length).map(space => space.getBoundingClientRect());
+      slotBounds.forEach((slot, index) => {
+        const dx = bounds.left + row.clientLeft + targets[index].left - slot.left;
+        const dy = bounds.top + row.clientTop + targets[index].top - slot.top;
+        spaces[index].style.transform = `translate(${dx}px, ${dy}px)`;
+      });
       // The grid's height change triggers ResizeObserver; preserve an active reflow
       // when its card sizes and local destinations have already been synchronized.
       if (!animate && sameSize && previous.keys.join("\0") === keys.join("\0") && nodes.every((node, index) =>
@@ -87,6 +101,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       animationsRef.current.clear();
       nodes.forEach((node, index) => {
         node.style.width = `${first.width}px`;
+        node.style.height = `${first.height}px`;
         node.style.left = `${targets[index].left}px`;
         node.style.top = `${targets[index].top}px`;
         node.style.visibility = "visible";
@@ -126,8 +141,6 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
           };
         });
       }
-      const rowSizes = [...new Set(positions.map(position => position.row))]
-        .map(row => positions.filter(position => position.row === row).length);
       previousRef.current = { keys, columns, width: first.width, height: first.height, rowSizes };
     };
 

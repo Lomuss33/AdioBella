@@ -29,6 +29,18 @@ export function getCenteredHandPositions(cardCount: number, columns: number, pre
   return positions;
 }
 
+/** Stagger each row within its own free space, retaining a clear edge inset. */
+export function getHandRowOffsets(rowSizes: readonly number[], cardWidth: number, columnPitch: number, availableWidth: number) {
+  if (rowSizes.length !== 2 || rowSizes.some(size => size <= 0)) return rowSizes.map(() => 0);
+  return rowSizes.map((size, row) => {
+    const footprint = cardWidth + (size - 1) * columnPitch;
+    // Keep at least 35% of each row's centered side margin clear.
+    const sideMargin = Math.max(0, (availableWidth - footprint) / 2);
+    const offset = Math.min(64, cardWidth * .75, sideMargin * .65);
+    return row === 0 ? offset : -offset;
+  });
+}
+
 /** A confirmed play must not close the same gap again after its optimistic hide. */
 export function getHandRemoval(previous: readonly string[], current: readonly string[], rowSizes: readonly number[] = [previous.length]) {
   if (previous.length !== current.length + 1) return null;

@@ -47,3 +47,13 @@ test("can mount the hand after the player becomes available", () => {
   rerender(<PlayerHand player={player} pendingType="PLAY_CARD" onPlayCard={() => {}} />);
   expect(screen.getByRole("group", { name: "Your hand" })).toBeInTheDocument();
 });
+
+test("reserves the full dealt hand during trump selection and enables cards only for play", () => {
+  const { container, rerender } = render(<PlayerHand player={player} pendingType="CHOOSE_TRUMP" onPlayCard={() => {}} />);
+  expect(container.querySelector(".card-fan-row")).toHaveAttribute("data-layout-count", "8");
+  expect(screen.getAllByRole("button").every(button => (button as HTMLButtonElement).disabled)).toBe(true);
+  const dealt = { ...player, hand: Array.from({ length: 8 }, (_, i) => ({ ...player.hand[i % 2], label: `card-${i}` })), handSize: 8 };
+  rerender(<PlayerHand player={dealt} pendingType="PLAY_CARD" onPlayCard={() => {}} />);
+  expect(container.querySelector(".card-fan-row")).toHaveAttribute("data-layout-count", "8");
+  expect(screen.getAllByRole("button").every(button => !(button as HTMLButtonElement).disabled)).toBe(true);
+});

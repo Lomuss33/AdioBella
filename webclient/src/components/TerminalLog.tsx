@@ -45,12 +45,14 @@ function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { eve
   return (
     <details className="terminal-panel" open>
       <summary className="terminal-header">
-        <div className="terminal-heading">
-          <h2>{t("Game history")}</h2>
-          <span className={`terminal-status${matchComplete ? " is-complete" : " is-live"}`}>
-            <span className="terminal-status-dot" aria-hidden="true" />
-            {matchComplete ? t("Match complete") : t("Live feed")}
+        <div className={`terminal-heading${matchComplete ? " is-complete" : " is-live"}`}>
+          <span className="terminal-heading-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 6v12M11 5h8M11 12h6M11 19h8" />
+              <path d="m6 3 2 2-2 2-2-2Zm0 7 2 2-2 2-2-2Zm0 7 2 2-2 2-2-2Z" />
+            </svg>
           </span>
+          <h2>{t(matchComplete ? "Game history" : "Live game history")}</h2>
         </div>
         <span className="terminal-disclosure" aria-hidden="true" />
       </summary>

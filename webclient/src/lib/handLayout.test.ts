@@ -1,4 +1,26 @@
-import { getCenteredHandPositions, getHandColumns, getHandRemoval, HAND_CAPACITY } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, getHandRowOffsets, HAND_CAPACITY } from "./handLayout";
+
+test.each([[3, 3], [4, 4], [4, 3], [3, 4], [3, 2]])("staggers %i + %i cards within each row's safe edges", (top, bottom) => {
+  for (const available of [180, 280, 460, 800]) {
+    const sizes = [top, bottom];
+    const offsets = getHandRowOffsets(sizes, 60, 63, available);
+    expect(offsets[0]).toBeGreaterThanOrEqual(0);
+    expect(offsets[1]).toBeLessThanOrEqual(0);
+    for (const [row, size] of sizes.entries()) {
+      const sideMargin = Math.max(0, (available - (60 + (size - 1) * 63)) / 2);
+      expect(Math.abs(offsets[row])).toBeLessThanOrEqual(Math.min(45, sideMargin * .65) + 1e-8);
+    }
+  }
+  const offsets = getHandRowOffsets([top, bottom], 60, 63, 460);
+  expect(offsets[0]).toBeGreaterThan(0);
+  expect(offsets[1]).toBeLessThan(0);
+});
+
+test("does not stagger one row or push a full-width row past the edges", () => {
+  expect(getHandRowOffsets([6], 60, 63, 460)).toEqual([0]);
+  expect(getHandRowOffsets([4, 4], 60, 63, 249)).toEqual([0, -0]);
+  expect(getHandRowOffsets([4, 3], 60, 63, 249)).toEqual([0, -20.475]);
+});
 
 test("uses all seven tracks for seven cards while preserving the four-column phone limit", () => {
   expect(getHandColumns(7, 8)).toBe(7);

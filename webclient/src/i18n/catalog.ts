@@ -450,6 +450,8 @@ export const messages = {
     "Noch offen",
     "Čeka se"
   ],
+  "player.trumpCaller": ["Caller", "Ansager", "Birao"],
+  "player.trumpCallerDescription": ["Chose the trump suit", "Hat Trumpf gewählt", "Birao adut"],
   "trump": [
     "trump",
     "Trumpf",
@@ -599,6 +601,11 @@ export const messages = {
     "Game history",
     "Spielverlauf",
     "Tijek igre"
+  ],
+  "Live game history": [
+    "Live game history",
+    "Spielverlauf in Echtzeit",
+    "Tijek igre uživo"
   ],
   "Game Terminal": [
     "Game Terminal",

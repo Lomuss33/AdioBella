@@ -9,7 +9,7 @@ import ScoreBar from "./ScoreBar";
 import SeatPanel from "./SeatPanel";
 import TrickPile from "./TrickPile";
 import { fitTableCards, placeTrickCards, type CardLayoutMode } from "../lib/tableCardSizing";
-import { getHandColumns, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST } from "../lib/handLayout";
+import { getHandColumns, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST, type HandLayoutChange } from "../lib/handLayout";
 
 interface TableLayoutProps {
   snapshot: GameSnapshot | null;
@@ -47,7 +47,8 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     if (!arena || !pool || !trickCards || !shell || !handRow || !handArea || !status || !bottom || !play) return;
     let frame = 0;
     let previousMode: CardLayoutMode | undefined;
-    const syncHandSize = () => {
+    let rollbackMode: CardLayoutMode | undefined;
+    const syncHandSize = (event?: Event) => {
       const handStyle = getComputedStyle(handRow);
       const poolStyle = getComputedStyle(pool);
       const arenaStyle = getComputedStyle(arena);
@@ -59,6 +60,11 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       const table = shell.getBoundingClientRect();
       const arenaBounds = arena.getBoundingClientRect();
       if (!row.width || !field.width) return;
+      const change: HandLayoutChange | undefined = event instanceof CustomEvent ? event.detail : undefined;
+      // Rejected plays restore the original mode as well as the hand's row split.
+      const restoredMode = change === "restore" ? rollbackMode : undefined;
+      if (change === "remove") rollbackMode = previousMode;
+      else if (change === "reset" || change === "restore") rollbackMode = undefined;
       const handInsets = px(handStyle.paddingTop) + px(handStyle.paddingBottom);
       const handChrome = handArea.getBoundingClientRect().height - row.height;
       const gap = px(poolStyle.getPropertyValue("--trick-card-gap")) || 4;
@@ -72,7 +78,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         trickWidth: field.width - px(poolStyle.paddingLeft) - px(poolStyle.paddingRight) - 4,
         maxCardWidth: px(poolStyle.getPropertyValue("--trick-card-max")) || 120,
         aspectRatio: ratio, handGap: px(handStyle.columnGap), handRowGap: px(handStyle.rowGap), trickGap: gap,
-        previous: previousMode
+        previous: restoredMode ?? previousMode
       };
       const beside = bottomStyle.display === "contents";
       const space = beside

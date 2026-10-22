@@ -1,6 +1,7 @@
 export const HAND_CAPACITY = 8;
 export const HAND_LAYOUT_REQUEST = "belot-hand-layout-request";
 export const HAND_LAYOUT_APPLIED = "belot-hand-layout-applied";
+export type HandLayoutChange = "remove" | "restore" | "reset";
 
 /** Use the available columns for the cards still in hand, with no empty end tracks. */
 export function getHandColumns(cardCount: number, columnLimit: number) {
@@ -41,13 +42,23 @@ export function getHandRowOffsets(rowSizes: readonly number[], cardWidth: number
   });
 }
 
+/** Accept skipped plays only when all surviving cards retain their order. */
+export function getRemovedHandIndices(previous: readonly string[], current: readonly string[]) {
+  if (previous.length <= current.length) return null;
+  let next = 0;
+  const removed: number[] = [];
+  previous.forEach((key, index) => {
+    if (key === current[next]) next++;
+    else removed.push(index);
+  });
+  return next === current.length ? removed : null;
+}
+
 /** A confirmed play must not close the same gap again after its optimistic hide. */
 export function getHandRemoval(previous: readonly string[], current: readonly string[], rowSizes: readonly number[] = [previous.length]) {
-  if (previous.length !== current.length + 1) return null;
-  const index = previous.findIndex((key, position) => key !== current[position]);
-  if (index < 0 || previous.filter((_, position) => position !== index).some((key, position) => key !== current[position])) {
-    return null;
-  }
+  const removed = getRemovedHandIndices(previous, current);
+  if (removed?.length !== 1) return null;
+  const index = removed[0];
   let rowStart = 0;
   const rowSize = rowSizes.find(size => {
     if (index < rowStart + size) return true;

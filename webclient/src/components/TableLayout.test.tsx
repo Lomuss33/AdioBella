@@ -77,3 +77,27 @@ test("synchronizes a newly mounted hand and a trump panel layout change immediat
   rerender(table(player, false));
   expectHandFits(container);
 });
+
+test("restores the original two-row split when rejecting a play at a mode boundary", () => {
+  const geometry = vi.mocked(HTMLElement.prototype.getBoundingClientRect).getMockImplementation()!;
+  vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
+    const rect = geometry.call(this);
+    // Five cards fit either mode at the same size. A fourth card favors one row.
+    return this.classList.contains("card-fan-row") ? new DOMRect(rect.x, rect.y, 331.25, rect.height) : rect;
+  });
+  const { container, rerender } = render(table(player));
+  const arena = () => container.querySelector<HTMLElement>(".table-arena")!;
+  const five = { ...player, hand: player.hand.slice(1), handSize: 5 };
+  rerender(table(five));
+  expect(arena().dataset.handRows).toBe("2");
+  const originalPositions = [...container.querySelectorAll<HTMLElement>(".hand-card-slot")]
+    .map(card => ({ left: card.style.left, top: card.style.top }));
+
+  rerender(table({ ...five, hand: five.hand.slice(1), handSize: 4 }));
+  expect(arena().dataset.handRows).toBe("1");
+  rerender(table(five));
+
+  expect(arena().dataset.handRows).toBe("2");
+  expect([...container.querySelectorAll<HTMLElement>(".hand-card-slot")]
+    .map(card => ({ left: card.style.left, top: card.style.top }))).toEqual(originalPositions);
+});

@@ -55,8 +55,8 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border: 1px solid var(--ui-line);
   border-radius: 50%;
   background: var(--ui-solid);

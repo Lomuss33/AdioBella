@@ -1,4 +1,4 @@
-import { getCenteredHandPositions, getHandColumns, getHandRemoval, getHandRowOffsets, HAND_CAPACITY } from "./handLayout";
+import { getCenteredHandPositions, getHandColumns, getHandRemoval, getHandRowOffsets, getRemovedHandIndices, HAND_CAPACITY } from "./handLayout";
 
 test.each([[3, 3], [4, 4], [4, 3], [3, 4], [3, 2]])("staggers %i + %i cards within each row's safe edges", (top, bottom) => {
   for (const available of [180, 280, 460, 800]) {
@@ -90,4 +90,20 @@ test("does not treat confirmation, reordering, a restored card, or a new deal as
   expect(getHandRemoval(["a", "c"], ["a", "b", "c"])).toBeNull();
   expect(getHandRemoval(["a", "b", "c"], ["x", "y"])).toBeNull();
   expect(getHandRemoval(["a"], [])).toEqual({ index: 0, side: "center" });
+});
+
+test("identifies every ordered subset of a hand, including several skipped plays", () => {
+  const hand = ["a", "b", "c", "d", "e", "f", "g", "h"];
+  for (let mask = 0; mask < 1 << hand.length; mask++) {
+    const survivors = hand.filter((_, index) => mask & 1 << index);
+    const removed = hand.flatMap((_, index) => mask & 1 << index ? [] : [index]);
+    expect(getRemovedHandIndices(hand, survivors)).toEqual(removed.length ? removed : null);
+  }
+});
+
+test("batch removal detection rejects reordered, duplicated, replaced and added cards", () => {
+  const hand = ["a", "b", "c", "d"];
+  for (const next of [["c", "a"], ["a", "a"], ["a", "x", "d"], [...hand, "e"]]) {
+    expect(getRemovedHandIndices(hand, next)).toBeNull();
+  }
 });

@@ -9,6 +9,8 @@
 .game-popup[data-popup-layout="panel"],
 .game-popup[data-popup-layout="page"] {
   width: 100vw;
+  /* The overlay also contains gestures over its non-scrolling margins. */
+  overscroll-behavior: contain;
 }
 .belot-dialog.game-popup[data-popup-layout="panel"] {
   --popup-action-height: var(--dialog-action-height);

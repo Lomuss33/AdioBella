@@ -3,6 +3,8 @@ import { StrictMode } from "react";
 import { DEAL_HIGHLIGHT_MS } from "../lib/useNewlyDealtCards";
 import PlayerHand from "./PlayerHand";
 import type { PlayerView } from "../types";
+import { PlaybackProvider } from "./PlaybackContext";
+import type { PlaybackSettings } from "../lib/playback";
 
 const player: PlayerView = {
   id: "south",
@@ -182,4 +184,26 @@ test("cleans up its one expiry timer and remains correct in Strict Mode", () => 
   expect(vi.getTimerCount()).toBe(1);
   unmount();
   expect(vi.getTimerCount()).toBe(0);
+});
+
+test.each([
+  { start: "normal", next: "fast", elapsed: 1500, remaining: 650 },
+  { start: "fast", next: "normal", elapsed: 400, remaining: 2000 }
+] as const)("preserves the dealt-card highlight's progress when switching $start to $next", ({ start, next, elapsed, remaining }) => {
+  vi.useFakeTimers();
+  const hand = (player: PlayerView, pendingType: string, speed: PlaybackSettings["speed"]) => (
+    <PlaybackProvider value={{ settings: { skipAnimations: false, speed }, onChange: () => {} }}>
+      <PlayerHand player={player} pendingType={pendingType} trumpSuit={pendingType === "CHOOSE_TRUMP" ? null : "HEARTS"} onPlayCard={() => {}} />
+    </PlaybackProvider>
+  );
+  const { container, rerender } = render(hand(opening, "CHOOSE_TRUMP", start));
+  rerender(hand(completed, "PLAY_CARD", start));
+  act(() => vi.advanceTimersByTime(elapsed));
+  rerender(hand(completed, "PLAY_CARD", next));
+  expect(vi.getTimerCount()).toBe(1);
+  expect(container.querySelector<HTMLElement>(".card-fan-row")?.style.getPropertyValue("--hand-deal-duration")).toBe(`${DEAL_HIGHLIGHT_MS}ms`);
+  act(() => vi.advanceTimersByTime(remaining - 1));
+  expect(marked(container)).toHaveLength(2);
+  act(() => vi.advanceTimersByTime(1));
+  expect(marked(container)).toHaveLength(0);
 });

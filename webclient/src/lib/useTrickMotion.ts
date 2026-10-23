@@ -1,11 +1,17 @@
 import { useLayoutEffect, useRef } from "react";
 import type { AnimatedTrickState } from "../types";
 import { CARD_MOTION, collectionMotionTiming } from "./cardAnimationConfig";
+import { usePlayback } from "../components/PlaybackContext";
+import { playbackRate } from "./playback";
 
 type Rect = Pick<DOMRect, "left" | "top" | "width" | "height">;
 
 /** Move the visible card itself. Its resting face is always underneath the animation. */
 export function useTrickMotion(animation: AnimatedTrickState | null | undefined, keys: string[]) {
+  const { settings } = usePlayback();
+  const rate = playbackRate(settings.speed);
+  const playbackRef = useRef({ skipAnimations: settings.skipAnimations, rate });
+  playbackRef.current = { skipAnimations: settings.skipAnimations, rate };
   const ref = useRef<HTMLDivElement>(null);
   const known = useRef(new Set<string>());
   const running = useRef(new Map<HTMLElement, Animation>());
@@ -16,7 +22,7 @@ export function useTrickMotion(animation: AnimatedTrickState | null | undefined,
     const pool = ref.current;
     if (!pool) return;
     const table = pool.closest(".table-arena");
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const reduced = playbackRef.current.skipAnimations || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const cards = [...pool.querySelectorAll<HTMLElement>(".trick-card-stack > .playing-card-shell")];
     // Release retained collection effects when the empty-table phase unmounts
     // their faces, including when a new segment starts immediately afterwards.
@@ -27,6 +33,7 @@ export function useTrickMotion(animation: AnimatedTrickState | null | undefined,
       running.current.get(card)?.cancel();
       if (reduced || !card.animate) return;
       const motion = card.animate(frames, { duration, delay, fill: "backwards", easing });
+      motion.playbackRate = playbackRef.current.rate;
       running.current.set(card, motion);
       motion.onfinish = () => {
         if (motion.effect?.getTiming().fill !== "both" && running.current.get(card) === motion) running.current.delete(card);
@@ -84,6 +91,15 @@ export function useTrickMotion(animation: AnimatedTrickState | null | undefined,
   }, [keyOrder, animation?.phase]);
 
   useLayoutEffect(() => {
+    if (settings.skipAnimations) {
+      running.current.forEach(motion => motion.cancel());
+      running.current.clear();
+    } else running.current.forEach(motion => {
+      if (motion.playState === "running" || motion.playState === "paused") motion.playbackRate = rate;
+    });
+  }, [settings.skipAnimations, rate]);
+
+  useLayoutEffect(() => {
     const pool = ref.current;
     if (!pool) return;
     let size = `${pool.clientWidth}:${pool.clientHeight}`;
@@ -101,6 +117,7 @@ export function useTrickMotion(animation: AnimatedTrickState | null | undefined,
           { transform: card.style.transform }
         ], { duration: Math.max(CARD_MOTION.minimumRetargetMs, remaining), easing: CARD_MOTION.flightEasing, fill: "backwards" });
         running.current.set(card, next);
+        next.playbackRate = playbackRef.current.rate;
         next.onfinish = () => { if (running.current.get(card) === next) running.current.delete(card); };
       });
     };

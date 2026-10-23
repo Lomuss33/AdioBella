@@ -244,6 +244,10 @@ class BelotMatchFacadeTest {
 
         snapshot = facade.getSnapshot();
         assertEquals(20, snapshot.score().teamOneMeldPoints());
+        assertEquals(1, snapshot.score().meldDeclarations().size());
+        assertEquals("south", snapshot.score().meldDeclarations().get(0).playerId());
+        assertEquals(20, snapshot.score().meldDeclarations().get(0).belaPoints());
+        assertEquals(0, snapshot.score().meldDeclarations().get(0).meldPoints());
     }
 
     @Test
@@ -264,9 +268,143 @@ class BelotMatchFacadeTest {
     }
 
     private static void invokeApplyMelds(BelotMatchFacade facade) throws Exception {
-        Method applyMelds = BelotMatchFacade.class.getDeclaredMethod("applyMelds");
+        Method applyMelds = BelotMatchFacade.class.getDeclaredMethod("setupMeldFlow");
         applyMelds.setAccessible(true);
         applyMelds.invoke(facade);
+        if (facade.getSnapshot().pendingAction().type() == ActionType.REPORT_MELDS) {
+            facade.reportMelds(true);
+        }
+    }
+
+    @Test
+    void everyTrumpBeatsEveryPlainCardRegardlessOfRank() throws Exception {
+        Class<?> cardClass = Class.forName("com.belot.engine.api.BelotMatchFacade$Card");
+        Class<?> suitClass = Class.forName("com.belot.engine.api.BelotMatchFacade$Suit");
+        Method strength = cardClass.getDeclaredMethod("strength", suitClass, suitClass);
+        strength.setAccessible(true);
+        for (String trump : List.of("S", "H", "D", "C")) {
+            Object trumpSuit = suitForCode(trump);
+            for (String lead : List.of("S", "H", "D", "C")) {
+                if (lead.equals(trump)) continue;
+                Object leadSuit = suitForCode(lead);
+                for (String trumpRank : List.of("7", "8", "9", "10", "J", "Q", "K", "A")) {
+                    for (String rank : List.of("7", "8", "9", "10", "J", "Q", "K", "A")) {
+                        assertTrue((int) strength.invoke(createCard(trumpRank + trump), leadSuit, trumpSuit)
+                                > (int) strength.invoke(createCard(rank + lead), leadSuit, trumpSuit));
+                    }
+                }
+            }
+        }
+    }
+
+    private static Object suitForCode(String code) throws Exception {
+        String name = switch (code) {
+            case "S" -> "SPADES"; case "H" -> "HEARTS"; case "D" -> "DIAMONDS"; default -> "CLUBS";
+        };
+        return enumValue("com.belot.engine.api.BelotMatchFacade$Suit", name);
+    }
+
+    @Test
+    void nextGameAndForfeitTransitionsPreserveCompletedResults() {
+        for (int target : List.of(1, 3, 5)) {
+            BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
+            facade.updateLobbySettings(Difficulty.NORMAL, Map.of(), null, null, target, GameLength.SHORT);
+            for (int game = 1; game <= target; game++) {
+                facade.startMatch();
+                assertEquals(game, facade.getSnapshot().score().gameNumber());
+                facade.forfeitGame();
+                GameSnapshot snapshot = facade.getSnapshot();
+                assertEquals(game, snapshot.score().teamTwoMatchScore());
+                assertEquals(501, snapshot.score().teamTwoGamePoints());
+                assertEquals(game == target ? "MATCH_COMPLETE" : "BETWEEN_GAMES", snapshot.phase());
+                assertThrows(IllegalArgumentException.class, facade::forfeitGame);
+            }
+        }
+        BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
+        facade.startMatch();
+        facade.forfeitGame();
+        GameSnapshot before = facade.getSnapshot();
+        facade.forfeitMatch();
+        assertTrue(facade.getSnapshot().matchComplete());
+        assertEquals(before.score().teamTwoGamePoints(), facade.getSnapshot().score().teamTwoGamePoints());
+        assertEquals(List.of("MATCH_FORFEIT", "MATCH_WIN"), facade.getEventsAfter(before.lastEventSequence())
+                .stream().map(event -> event.payload().get("eventKind")).toList());
+    }
+
+    @Test
+    void zeroPointTrickStillUnlocksDeclaredMeldPoints() throws Exception {
+        BelotMatchFacade facade = new BelotMatchFacade(new Random(7));
+        setTrumpAndDeclarer(facade, "HEARTS", "YOURS");
+        setPlayerHand(facade, 0, "8C", "AH");
+        setPlayerHand(facade, 1, "7C", "7H");
+        setPlayerHand(facade, 2, "7D", "7S");
+        setPlayerHand(facade, 3, "8D", "8S");
+        setReadyForPlay(facade, 0);
+        Field teamField = getState(facade).getClass().getDeclaredField("teamOne");
+        teamField.setAccessible(true);
+        setIntField(teamField.get(getState(facade)), "meldPoints", 20);
+        facade.playCard(0);
+        assertEquals(20, facade.getSnapshot().score().teamOneGamePoints());
+    }
+
+    @Test
+    void completeMatchesConserveCardsPointsAndTrickWinnersAtEveryDifficulty() {
+        List<String> plain = List.of("SEVEN", "EIGHT", "NINE", "JACK", "QUEEN", "KING", "TEN", "ACE");
+        List<String> trumpRanks = List.of("SEVEN", "EIGHT", "QUEEN", "KING", "TEN", "ACE", "NINE", "JACK");
+        List<TrumpChoice> suits = List.of(TrumpChoice.SPADES, TrumpChoice.HEARTS, TrumpChoice.DIAMONDS, TrumpChoice.CLUBS);
+        for (Difficulty difficulty : Difficulty.values()) for (int seed = 1; seed <= 16; seed++) {
+            BelotMatchFacade facade = new BelotMatchFacade(new Random(seed), difficulty);
+            facade.updateLobbySettings(difficulty, Map.of(), null, null, 1, GameLength.SHORT);
+            facade.startMatch();
+            int steps = 0;
+            while (!facade.getSnapshot().matchComplete() && steps++ < 1000) {
+                PendingAction action = facade.getSnapshot().pendingAction();
+                switch (action.type()) {
+                    case CHOOSE_TRUMP -> facade.chooseTrump(seed % 2 == 1 && action.legalTrumpChoices().contains("SKIP")
+                            ? TrumpChoice.SKIP : suits.get((seed + steps) % 4));
+                    case REPORT_MELDS -> facade.reportMelds(seed % 3 != 0);
+                    case ACKNOWLEDGE_MELDS -> facade.acknowledgeMelds();
+                    case PLAY_CARD -> {
+                        int index = action.legalCardIndices().get((seed + steps) % action.legalCardIndices().size());
+                        facade.playCard(index, action.belaEligibleCardIndices().contains(index));
+                    }
+                    default -> throw new AssertionError("Stalled at " + action.type());
+                }
+            }
+            assertTrue(facade.getSnapshot().matchComplete(), "seed " + seed);
+            String trump = "";
+            List<GameEvent> trick = new java.util.ArrayList<>();
+            java.util.Set<String> hand = new java.util.HashSet<>();
+            int tricks = 0, points = 0, played = 0;
+            for (GameEvent event : facade.getEventsAfter(0)) {
+                Map<String, String> payload = event.payload();
+                switch (payload.get("eventKind")) {
+                    case "TRUMP_CHOSEN" -> trump = payload.get("trump");
+                    case "PLAY_CARD" -> { trick.add(event); hand.add(payload.get("card")); played++; }
+                    case "TRICK_WIN" -> {
+                        assertEquals(4, trick.size());
+                        String lead = trick.get(0).payload().get("suit");
+                        GameEvent winner = trick.get(0);
+                        int best = -1;
+                        for (GameEvent play : trick) {
+                            String suit = play.payload().get("suit"), rank = play.payload().get("rank");
+                            int strength = suit.equals(trump) ? 100 + trumpRanks.indexOf(rank)
+                                    : suit.equals(lead) ? 10 + plain.indexOf(rank) : 0;
+                            if (strength > best) { best = strength; winner = play; }
+                        }
+                        assertEquals(winner.payload().get("playerId"), payload.get("winnerPlayerId"));
+                        tricks++; points += Integer.parseInt(payload.get("trickPoints")); trick.clear();
+                    }
+                    case "HAND_PASSED", "HAND_FAILED" -> {
+                        assertEquals(32, played); assertEquals(32, hand.size());
+                        assertEquals(8, tricks); assertEquals(162, points);
+                        played = 0; tricks = 0; points = 0; hand.clear();
+                    }
+                    default -> { }
+                }
+            }
+            assertTrue(hand.isEmpty());
+        }
     }
 
     private static void invokeFinishGame(BelotMatchFacade facade) throws Exception {
@@ -297,12 +435,19 @@ class BelotMatchFacadeTest {
         Field gameNumberField = stateClass.getDeclaredField("gameNumber");
         gameNumberField.setAccessible(true);
         gameNumberField.setInt(state, 1);
+        Field callerField = stateClass.getDeclaredField("declarerPlayerIndex");
+        callerField.setAccessible(true);
+        callerField.set(state, "YOURS".equals(declarerSide) ? 0 : 1);
+        Field trumpField = stateClass.getDeclaredField("trumpSuit");
+        trumpField.setAccessible(true);
+        trumpField.set(state, enumValue("com.belot.engine.api.BelotMatchFacade$Suit", "HEARTS"));
 
         Field teamOneField = stateClass.getDeclaredField("teamOne");
         teamOneField.setAccessible(true);
         Object teamOne = teamOneField.get(state);
         setIntField(teamOne, "gameScore", teamOneGameScore);
         setIntField(teamOne, "trickPoints", teamOneHandPoints);
+        setIntField(teamOne, "tricksWon", teamOneHandPoints > 0 ? 1 : 0);
         setIntField(teamOne, "meldPoints", 0);
 
         Field teamTwoField = stateClass.getDeclaredField("teamTwo");
@@ -310,6 +455,7 @@ class BelotMatchFacadeTest {
         Object teamTwo = teamTwoField.get(state);
         setIntField(teamTwo, "gameScore", teamTwoGameScore);
         setIntField(teamTwo, "trickPoints", teamTwoHandPoints);
+        setIntField(teamTwo, "tricksWon", teamTwoHandPoints > 0 ? 1 : 0);
         setIntField(teamTwo, "meldPoints", 0);
     }
 

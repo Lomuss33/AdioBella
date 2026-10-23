@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from "react";
 import type { GameEvent } from "../types";
 import { seatSide, teamSide } from "../lib/teamSide";
+import HistoryScrollbar from "./HistoryScrollbar";
 
 const compactRanks: Record<string, string> = {
   SEVEN: "7", EIGHT: "8", NINE: "9", TEN: "10", JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"
@@ -62,7 +63,8 @@ function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { eve
           <div className="terminal-subheader">
             <h3 id="round-feed-heading">{t("Round Feed")}</h3>
             <span className="terminal-count">{countText("rounds", roundGroups.length)}</span>
-            {rounds.readingOlder ? <button type="button" className="terminal-latest" aria-controls="round-feed-history" onClick={rounds.latest}>{t("Latest")}</button> : null}
+            <button type="button" className="terminal-latest" aria-controls="round-feed-history" onClick={rounds.latest}
+              disabled={!rounds.readingOlder} aria-hidden={!rounds.readingOlder}>{t("Latest")}</button>
             <button type="button" className="terminal-feed-order" aria-controls="round-feed-history"
               aria-pressed={!newestRoundFirst}
               aria-label={t(newestRoundFirst ? "Show oldest first" : "Show newest first")}
@@ -74,7 +76,8 @@ function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { eve
               <span>{t(newestRoundFirst ? "Newest" : "Oldest")}</span>
             </button>
           </div>
-          <div id="round-feed-history" ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" role="region" tabIndex={0} aria-label={t("Round history")}>
+          <div className="terminal-feed-window">
+          <div id="round-feed-history" ref={rounds.ref} onScroll={rounds.capture} className="terminal-lines" role="region" aria-label={t("Round history")}>
             {roundGroups.length === 0 ? <div className="terminal-empty">{t("No round events yet.")}</div> : null}
             {visibleRounds.map((group) => (
               <section key={group.key} className="terminal-round-group">
@@ -109,14 +112,19 @@ function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { eve
               </section>
             ))}
           </div>
+          <HistoryScrollbar paneRef={rounds.ref} controls="round-feed-history" label={t("Round history")}
+            revision={visibleRounds} onPositionChange={rounds.capture} />
+          </div>
         </section>
         <section className="terminal-section" aria-labelledby="match-feed-heading">
           <div className="terminal-subheader">
             <h3 id="match-feed-heading">{t("Match Feed")}</h3>
             <span className="terminal-count">{countText("results", matchResultCount)}</span>
-            {matches.readingOlder ? <button type="button" className="terminal-latest" aria-controls="match-feed-history" onClick={matches.latest}>{t("Latest")}</button> : null}
+            <button type="button" className="terminal-latest" aria-controls="match-feed-history" onClick={matches.latest}
+              disabled={!matches.readingOlder} aria-hidden={!matches.readingOlder}>{t("Latest")}</button>
           </div>
-          <div id="match-feed-history" ref={matches.ref} onScroll={matches.capture} className="terminal-lines" role="region" tabIndex={0} aria-label={t("Match history")}>
+          <div className="terminal-feed-window">
+          <div id="match-feed-history" ref={matches.ref} onScroll={matches.capture} className="terminal-lines" role="region" aria-label={t("Match history")}>
             {matchGroups.length === 0 ? <div className="terminal-empty">{t("No hand or game results yet.")}</div> : null}
             {matchGroups.map((group) => (
               <section key={group.key} className="terminal-match-game">
@@ -124,6 +132,9 @@ function TerminalLog({ events, matchComplete, yourTeamName, currentMove }: { eve
                 {group.events.map((event) => <MatchFeedRow key={event.sequence} event={event} yourTeamName={yourTeamName} />)}
               </section>
             ))}
+          </div>
+          <HistoryScrollbar paneRef={matches.ref} controls="match-feed-history" label={t("Match history")}
+            revision={matchGroups} onPositionChange={matches.capture} />
           </div>
         </section>
       </div>
@@ -143,7 +154,7 @@ interface RoundGroup {
 function useFeedScroll(items: readonly unknown[], newestFirst = true) {
   const { locale } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
-  const anchor = useRef<{ key: string; offset: number } | null>(null);
+  const anchor = useRef<{ key: string; offset: number; height: number } | null>(null);
   const pinnedToLatest = useRef(true);
   const previousDirection = useRef(newestFirst);
   const [readingOlder, setReadingOlder] = useState(false);
@@ -157,13 +168,51 @@ function useFeedScroll(items: readonly unknown[], newestFirst = true) {
     const top = pane.getBoundingClientRect().top;
     const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
       .find((element) => element.getBoundingClientRect().bottom > top);
-    anchor.current = row ? { key: row.dataset.historyKey!, offset: row.getBoundingClientRect().top - top } : null;
+    const bounds = row?.getBoundingClientRect();
+    anchor.current = row && bounds ? { key: row.dataset.historyKey!, offset: bounds.top - top, height: bounds.height } : null;
   }, [newestFirst]);
+  useEffect(() => {
+    const pane = ref.current;
+    const surface = pane?.parentElement;
+    if (!pane || !surface) return;
+    const scrollDown = (delta: number, event: Event) => {
+      const page = document.scrollingElement ?? document.documentElement;
+      const atPageBottom = page.scrollHeight - page.clientHeight - page.scrollTop <= 1;
+      const remaining = pane.scrollHeight - pane.clientHeight - pane.scrollTop;
+      if (!event.cancelable || delta <= 0 || !atPageBottom || remaining <= 1) return;
+      event.preventDefault();
+      pane.scrollTop += Math.min(delta * 0.15, remaining);
+      capture();
+    };
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? pane.clientHeight : 1;
+      scrollDown(event.deltaY * unit, event);
+    };
+    let touchY: number | null = null;
+    const touchStart = (event: TouchEvent) => {
+      touchY = event.touches.length === 1 ? event.touches[0].clientY : null;
+    };
+    const touchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) { touchY = null; return; }
+      const nextY = event.touches[0].clientY;
+      if (touchY !== null) scrollDown(touchY - nextY, event);
+      touchY = nextY;
+    };
+    surface.addEventListener("wheel", wheel, { passive: false });
+    surface.addEventListener("touchstart", touchStart, { passive: true });
+    surface.addEventListener("touchmove", touchMove, { passive: false });
+    return () => {
+      surface.removeEventListener("wheel", wheel);
+      surface.removeEventListener("touchstart", touchStart);
+      surface.removeEventListener("touchmove", touchMove);
+    };
+  }, [capture]);
   useEffect(() => {
     window.addEventListener("belot:before-language-change", capture);
     return () => window.removeEventListener("belot:before-language-change", capture);
   }, [capture]);
-  useLayoutEffect(() => {
+  const restore = useCallback(() => {
     const pane = ref.current;
     if (!pane || pane.clientHeight === 0) return;
     if (previousDirection.current !== newestFirst) {
@@ -181,10 +230,27 @@ function useFeedScroll(items: readonly unknown[], newestFirst = true) {
     if (saved) {
       const row = [...pane.querySelectorAll<HTMLElement>("[data-history-key]")]
         .find((element) => element.dataset.historyKey === saved.key);
-      if (row) pane.scrollTop += row.getBoundingClientRect().top - pane.getBoundingClientRect().top - saved.offset;
+      if (row) {
+        const bounds = row.getBoundingClientRect();
+        // Preserve progress through a partially visible entry when wrapping
+        // changes its height; a fixed negative offset could hide it entirely.
+        const offset = saved.offset < 0 && saved.height > 0 ? saved.offset * bounds.height / saved.height : saved.offset;
+        pane.scrollTop += bounds.top - pane.getBoundingClientRect().top - offset;
+      }
     }
     capture();
-  }, [items, locale, capture, newestFirst]);
+  }, [capture, newestFirst]);
+  useLayoutEffect(() => {
+    restore();
+    const pane = ref.current;
+    if (!pane) return;
+    // Width changes, font changes and reopening collapsed history can reflow
+    // entries without adding an event. Keep the same entry and reading offset.
+    const observer = new ResizeObserver(restore);
+    observer.observe(pane);
+    for (const child of pane.children) observer.observe(child);
+    return () => observer.disconnect();
+  }, [items, locale, restore]);
   const latest = () => {
     if (ref.current) ref.current.scrollTop = newestFirst ? 0 : ref.current.scrollHeight;
     pinnedToLatest.current = true;
@@ -254,15 +320,30 @@ function MatchFeedRow({ event, yourTeamName }: { event: GameEvent; yourTeamName?
   return (
     <div data-history-key={`event-${event.sequence}`} data-team={eventSide(event, yourTeamName)} className={matchRowClassName(event)}>
       {handSummary ? (
-        <span className="terminal-hand-summary">
-          <span className="terminal-hand-context-row">
-            <span className="terminal-hand-context">{handSummary.context}</span>
+        <div className="terminal-hand-summary">
+          <div className="terminal-hand-context-row">
+            <strong className="terminal-hand-number">{t("history.hand", { number: event.payload.handNumber ?? "—" })}</strong>
             <span className={`terminal-hand-contract${event.payload.eventKind === "HAND_FAILED" ? " is-failed" : " is-passed"}`}>
+              <span aria-hidden="true">{event.payload.eventKind === "HAND_FAILED" ? "×" : "✓"} </span>
               {event.payload.eventKind === "HAND_FAILED" ? t("Contract failed") : t("Contract fulfilled")}
             </span>
-          </span>
-          <strong className="terminal-hand-points">{handSummary.points}</strong>
-        </span>
+          </div>
+          <div className="terminal-hand-scoreboard" aria-label={t("history.awarded")}>
+            {handSummary.scores.map((score, index) => (
+              <div key={index} className="terminal-hand-score" data-team={teamSide(score.team, yourTeamName)}
+                data-leading={score.points > handSummary.scores[1 - index].points || undefined}>
+                <span className="terminal-hand-team">{score.team}</span>
+                <strong className="terminal-hand-score-value">+{score.points}</strong>
+                <span className="terminal-hand-score-unit">{t("Points")}</span>
+              </div>
+            ))}
+          </div>
+          <dl className="terminal-hand-details">
+            <div><dt>{t("history.dealer")}</dt><dd>{handSummary.dealer}</dd></div>
+            <div><dt>{t("Trump")}</dt><dd><span className="terminal-hand-trump-mark" aria-hidden="true">{compactSuits[event.payload.trump]}</span>{handSummary.suit}<span className="terminal-hand-caller">{handSummary.trumpPlayer}</span></dd></div>
+            <div className="terminal-hand-meld"><dt>{t("Melds")}</dt><dd>{handSummary.meldOutcome}</dd></div>
+          </dl>
+        </div>
       ) : (
         <span>
           {eventDescription(event)}
@@ -299,7 +380,11 @@ function buildMatchFeed(events: GameEvent[]): MatchGroup[] {
       group = { key: `match-game-${gameNumber}`, gameNumber, events: [] };
       groups.set(gameNumber, group);
     }
-    group.events.push(event);
+    const isHand = eventKind === "HAND_PASSED" || eventKind === "HAND_FAILED";
+    const handNumber = group.events.filter(item => ["HAND_PASSED", "HAND_FAILED"].includes(item.payload.eventKind)).length + 1;
+    group.events.push(isHand && !event.payload.handNumber
+      ? { ...event, payload: { ...event.payload, handNumber: String(handNumber) } }
+      : event);
   }
 
   return [...groups.values()].reverse().map((group) => ({ ...group, events: group.events.reverse() }));

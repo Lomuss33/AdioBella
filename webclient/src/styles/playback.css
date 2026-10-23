@@ -1,0 +1,52 @@
+/* Three compact pairs keep playback tools beside the existing table controls. */
+.table-arena .table-console > .arena-controls { grid-template-columns: repeat(3, max-content); }
+.table-arena .table-console .table-playback-controls {
+  display: grid;
+  grid-template-columns: 26px;
+  grid-template-rows: repeat(2, 26px);
+  align-content: center;
+  gap: 2px;
+}
+.table-arena .table-console .arena-controls .playback-toggle {
+  color: var(--console-accent-ink);
+  transition: background-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+.table-arena .table-console .arena-controls .playback-toggle[aria-pressed="true"] {
+  color: var(--ui-text);
+  background: color-mix(in srgb, var(--ui-accent-fill) 30%, var(--material-leather));
+  box-shadow: inset 0 -2px 0 var(--ui-accent);
+}
+.table-arena .table-console .arena-controls .playback-speed {
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.03em;
+}
+@container table-arena (width < 420px) {
+  .table-arena .table-console .match-data-card.table-console-information {
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-rows: auto auto;
+    padding-inline-end: 16px;
+  }
+  .table-arena .table-console :is(.table-console-current, .match-summary) { padding-inline-end: 0; }
+  .table-arena .table-console :is(.table-utilities, .match-corner-controls) {
+    grid-template-columns: 26px;
+    grid-template-rows: repeat(2, 26px);
+  }
+}
+html[data-skip-animations="true"] .table-arena *,
+html[data-skip-animations="true"] .table-arena *::before,
+html[data-skip-animations="true"] .table-arena *::after {
+  animation: none !important;
+  transition: none !important;
+}
+/* Keep the new-card cue useful when motion is skipped. */
+html[data-skip-animations="true"] .table-arena .hand-card-slot.is-newly-dealt .playing-card-face::before { opacity: .9; }
+html[data-skip-animations="true"] .table-arena .hand-card-slot.is-newly-dealt .playing-card-face::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .table-arena .table-console .arena-controls .playback-toggle { transition: none; }
+}
+@media (forced-colors: active) {
+  .table-arena .table-console .arena-controls .playback-toggle[aria-pressed="true"] { outline: 1px solid Highlight; outline-offset: -2px; }
+}

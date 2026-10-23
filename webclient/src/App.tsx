@@ -7,15 +7,19 @@ import { resolveNames } from "./i18n/defaultNames";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
 import ConfirmPopup from "./components/ConfirmPopup";
+import SessionStatus from "./components/SessionStatus";
 import TableLayout from "./components/TableLayout";
 import { CardStyleProvider } from "./components/CardStyleContext";
-import { preloadDeckArtwork } from "./lib/cardArtwork";
+import { preloadDeckArtwork, usePreparedCardStyle } from "./lib/cardArtwork";
 import TerminalLog from "./components/TerminalLog";
 import CurrentMove from "./components/CurrentMove";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
 import { HttpError } from "./lib/serverGateway";
 import { buildAnimatedTrickTimeline } from "./lib/trickAnimation";
 import { CARD_TIMING } from "./lib/cardAnimationConfig";
+import { PlaybackClock } from "./lib/PlaybackClock";
+import { playbackRate, type PlaybackSettings } from "./lib/playback";
+import { PlaybackProvider } from "./components/PlaybackContext";
 import type {
   AnimatedTrickState,
   GameEvent,
@@ -42,10 +46,20 @@ function App() {
   const [initialPreferences] = useState(loadPreferences);
   const [showBook, setShowBook] = useState<"welcome" | "rules" | null>(null);
   const [visual, setVisual] = useState<VisualSettings>(initialPreferences.visual);
+  const paintedCardStyle = usePreparedCardStyle(visual.cardStyle);
+  const [playback, setPlayback] = useState<PlaybackSettings>(initialPreferences.playback);
+  const playbackRef = useRef(playback);
+  const [animationClock] = useState(() => new PlaybackClock(playbackRate(initialPreferences.playback.speed)));
+  const [selectionClock] = useState(() => new PlaybackClock(playbackRate(initialPreferences.playback.speed)));
+  const finishSelectionRef = useRef<(() => void) | null>(null);
   const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
   const gateway = getGameGateway();
   const persistSession = shouldPersistSession();
   const bootstrapStartedRef = useRef(false);
+  const bootstrapPendingRef = useRef(false);
+  const [connecting, setConnecting] = useState(true);
+  const commandPendingRef = useRef(false);
+  const [commandPending, setCommandPending] = useState(false);
   const previousLocaleRef = useRef(locale);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
@@ -63,7 +77,6 @@ function App() {
   const lastSequenceRef = useRef(0);
   const subscriptionRef = useRef<{ close(): void } | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
-  const animationTimeoutsRef = useRef<number[]>([]);
   const animationRunIdRef = useRef(0);
   const animatedTrickRef = useRef<AnimatedTrickState | null>(null);
   const deferredSessionRef = useRef<SessionResponse | null>(null);
@@ -89,11 +102,18 @@ function App() {
   useEffect(() => {
     animatedTrickRef.current = animatedTrick;
   }, [animatedTrick]);
-  useEffect(() => { preloadDeckArtwork(visual.cardStyle); }, [visual.cardStyle]);
 
   useEffect(() => {
-    savePreferences({ version: 1, namesVersion: initialPreferences.namesVersion, game: gameSettings, players: playerNameDrafts, teams: teamNameDrafts, visual });
-  }, [gameSettings, playerNameDrafts, teamNameDrafts, visual]);
+    savePreferences({ version: 1, namesVersion: initialPreferences.namesVersion, game: gameSettings, players: playerNameDrafts, teams: teamNameDrafts, visual, playback });
+  }, [gameSettings, playerNameDrafts, teamNameDrafts, visual, playback]);
+  useLayoutEffect(() => {
+    document.documentElement.dataset.skipAnimations = String(playback.skipAnimations);
+    document.documentElement.dataset.playbackSpeed = playback.speed;
+    return () => {
+      delete document.documentElement.dataset.skipAnimations;
+      delete document.documentElement.dataset.playbackSpeed;
+    };
+  }, [playback]);
   useEffect(() => {
     if (previousLocaleRef.current === locale) return;
     previousLocaleRef.current = locale;
@@ -102,13 +122,13 @@ function App() {
     }
   }, [locale]);
   useLayoutEffect(() => {
-    document.documentElement.dataset.cardStyle = visual.cardStyle;
+    document.documentElement.dataset.cardStyle = paintedCardStyle;
     document.documentElement.dataset.gameAccent = visual.accent;
     document.documentElement.dataset.tableTheme = gameSettings.tableTheme;
     for (const [key, value] of Object.entries({ ...tableVariables(gameSettings.tableTheme), ...accentVariables(visual.accent) })) {
       document.documentElement.style.setProperty(key, value);
     }
-  }, [visual, gameSettings.tableTheme]);
+  }, [visual, paintedCardStyle, gameSettings.tableTheme]);
   useEffect(() => {
     writeStorage(THEME_KEY, gameSettings.tableTheme);
     syncThemeColorMeta(tablePalettes[gameSettings.tableTheme].backdrop);
@@ -139,34 +159,49 @@ function App() {
   }, [sessionId]);
 
   async function bootstrapSession() {
+    if (bootstrapPendingRef.current) return;
+    bootstrapPendingRef.current = true;
+    setConnecting(true);
+    setErrorMessage(null);
     try {
+      // Fetch the session concurrently, but never paint a saved non-original
+      // deck's first hand before its complete artwork is ready.
+      const artworkReady = preloadDeckArtwork(initialPreferences.visual.cardStyle);
       if (persistSession) {
         const existingSessionId = readStorage(SESSION_KEY);
         if (existingSessionId) {
           try {
-            const restoredSession = await loadSession(existingSessionId, true);
+            const restoredSession = await loadSession(existingSessionId, true, artworkReady);
             setSessionId(existingSessionId);
             return;
-          } catch {
+          } catch (error) {
+            // A transient failure must never replace a recoverable match.
+            if (!isMissingSessionError(error)) throw error;
             removeStorage(SESSION_KEY);
           }
         }
       }
 
       const response = await createConfiguredSession();
+      await artworkReady;
       applyFreshSession(response);
     } catch (error) {
       setErrorMessage(errorCode(error));
+    } finally {
+      bootstrapPendingRef.current = false;
+      setConnecting(false);
     }
   }
 
-  async function loadSession(id: string, includeHistory = false) {
+  async function loadSession(id: string, includeHistory = false, artworkReady?: Promise<void>) {
     const generation = sessionGenerationRef.current;
     const response = await gateway.getSession(id);
+    if (artworkReady) await artworkReady;
     if (generation !== sessionGenerationRef.current) return response;
     applySession(response);
     if (includeHistory) {
-      await syncEvents(id, 0);
+      try { await syncEvents(id, 0); }
+      catch { if (generation === sessionGenerationRef.current) setErrorMessage("error.refresh"); }
     }
     return response;
   }
@@ -198,27 +233,64 @@ function App() {
 
   function clearAnimationTimeline() {
     animationRunIdRef.current += 1;
-    for (const timeoutId of animationTimeoutsRef.current) {
-      window.clearTimeout(timeoutId);
-    }
-    animationTimeoutsRef.current = [];
+    animationClock.clear();
+    finishSelectionRef.current?.();
+    selectionClock.clear();
   }
 
   function queueAnimation(runId: number, ms: number, callback: () => void) {
-    const timeoutId = window.setTimeout(() => {
+    animationClock.schedule(ms, () => {
       if (animationRunIdRef.current !== runId) {
         return;
       }
       callback();
-    }, ms);
-    animationTimeoutsRef.current.push(timeoutId);
+    });
+  }
+
+  function handlePlaybackChange(patch: Partial<PlaybackSettings>) {
+    const next = { ...playbackRef.current, ...patch };
+    playbackRef.current = next;
+    setPlayback(next);
+    animationClock.setRate(playbackRate(next.speed));
+    selectionClock.setRate(playbackRate(next.speed));
+    if (next.skipAnimations) finishSelectionRef.current?.();
+    if (next.skipAnimations && animatedTrickRef.current) {
+      clearAnimationTimeline();
+      pendingAnimationQueueRef.current = [];
+      flushDeferredSession();
+    }
+  }
+
+  function waitForCardSelection() {
+    if (playbackRef.current.skipAnimations) return Promise.resolve();
+    return new Promise<void>(resolve => {
+      finishSelectionRef.current = selectionClock.schedule(CARD_TIMING.selectionMs, () => {
+        finishSelectionRef.current = null;
+        resolve();
+      });
+    });
+  }
+
+  function beginCommand() {
+    if (commandPendingRef.current || pendingPlayRef.current || animatedTrickRef.current) return false;
+    commandPendingRef.current = true;
+    setCommandPending(true);
+    return true;
+  }
+
+  function endCommand() {
+    commandPendingRef.current = false;
+    setCommandPending(false);
   }
 
   async function handleStartMatch(openGuide = false) {
     if (!sessionId) {
       return;
     }
+    if (!beginCommand()) return;
     try {
+      // Starting immediately after a deck change must not deal its fallback faces.
+      await preloadDeckArtwork(visual.cardStyle);
       const previousSequence = lastSequenceRef.current;
       if (snapshot?.pendingAction.type === "START_MATCH") {
         await persistLobbySettingsIfNeeded(sessionId);
@@ -232,6 +304,8 @@ function App() {
         return;
       }
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -239,6 +313,7 @@ function App() {
     if (!sessionId) {
       return;
     }
+    if (!beginCommand()) return;
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.chooseTrump(sessionId, choice);
@@ -249,11 +324,13 @@ function App() {
         return;
       }
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
   async function submitCardPlay(handIndex: number, callBela = false) {
-    if (!sessionId || !snapshot || pendingPlayRef.current || (selectedHandIndex !== null && pendingBelaChoiceIndex == null) || animatedTrick !== null) {
+    if (!sessionId || !snapshot || commandPendingRef.current || pendingPlayRef.current || (selectedHandIndex !== null && pendingBelaChoiceIndex == null) || animatedTrick !== null) {
       return;
     }
 
@@ -266,7 +343,8 @@ function App() {
       setSelectedHandIndex(handIndex);
       setPendingBelaChoiceIndex(null);
       const [response] = await Promise.all([
-        gateway.playCard(sessionId, handIndex, callBela), delay(CARD_TIMING.selectionMs)
+        gateway.playCard(sessionId, handIndex, callBela),
+        waitForCardSelection()
       ]);
       if (generation !== sessionGenerationRef.current) return;
       // An accepted play remains authoritative even if its optional history fetch fails.
@@ -280,7 +358,7 @@ function App() {
       }
       if (generation !== sessionGenerationRef.current) return;
       appendHistory(history);
-      const trickAnimations = buildAnimatedTrickTimeline(currentSnapshot, response.snapshot, history);
+      const trickAnimations = playbackRef.current.skipAnimations ? [] : buildAnimatedTrickTimeline(currentSnapshot, response.snapshot, history);
       if (trickAnimations.length > 0) {
         const origin = document.querySelectorAll<HTMLElement>(".card-fan-row .hand-card-slot")[handIndex]
           ?.querySelector(".playing-card-shell")?.getBoundingClientRect();
@@ -312,12 +390,15 @@ function App() {
       animatedTrickRef.current = null;
       setAnimatedTrick(null);
     } finally {
-      if (generation === sessionGenerationRef.current) pendingPlayRef.current = false;
+      if (generation === sessionGenerationRef.current) {
+        pendingPlayRef.current = false;
+        finishSelectionRef.current?.();
+      }
     }
   }
 
   function handleCardClick(handIndex: number) {
-    if (!snapshot || selectedHandIndex !== null || animatedTrick !== null) {
+    if (!snapshot || commandPendingRef.current || selectedHandIndex !== null || animatedTrick !== null) {
       return;
     }
 
@@ -335,6 +416,7 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.reportMelds(sessionId, declare);
@@ -345,6 +427,8 @@ function App() {
         return;
       }
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -353,6 +437,7 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.acknowledgeMelds(sessionId);
@@ -363,6 +448,8 @@ function App() {
         return;
       }
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -371,6 +458,7 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.forfeitGame(sessionId);
@@ -388,6 +476,8 @@ function App() {
         return;
       }
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -396,6 +486,7 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       const previousSequence = lastSequenceRef.current;
       const response = await gateway.forfeitMatch(sessionId);
@@ -409,7 +500,10 @@ function App() {
       applySession(response);
       await syncEvents(sessionId, previousSequence);
     } catch (error) {
+      if (await recoverMissingSession(error)) return;
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -418,10 +512,13 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       await openFreshSessionWithCurrentSetup(true);
     } catch (error) {
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -430,10 +527,13 @@ function App() {
       return;
     }
 
+    if (!beginCommand()) return;
     try {
       await openFreshSessionWithCurrentSetup(false);
     } catch (error) {
       setErrorMessage(errorCode(error));
+    } finally {
+      endCommand();
     }
   }
 
@@ -712,9 +812,13 @@ function App() {
       removeStorage(SESSION_KEY);
     }
 
-    const response = await createConfiguredSession();
-    applyFreshSession(response);
-    setErrorMessage("error.freshSession");
+    try {
+      const response = await createConfiguredSession();
+      applyFreshSession(response);
+      setErrorMessage("error.freshSession");
+    } catch (creationError) {
+      setErrorMessage(errorCode(creationError));
+    }
     return true;
   }
 
@@ -726,7 +830,10 @@ function App() {
 
   function applyFreshSession(response: SessionResponse) {
     applySession(response, { forceCommit: true });
-    void syncEvents(response.sessionId, 0);
+    const generation = sessionGenerationRef.current;
+    void syncEvents(response.sessionId, 0).catch(() => {
+      if (generation === sessionGenerationRef.current) setErrorMessage("error.refresh");
+    });
   }
 
   async function persistLobbySettingsIfNeeded(id: string) {
@@ -771,7 +878,7 @@ function App() {
 
   const playersBySeat = indexPlayers(snapshot?.players ?? []);
   const highlightedSeat = animatedTrick && ["highlight", "collecting"].includes(animatedTrick.phase) ? animatedTrick.winnerSeat : null;
-  const handLocked = selectedHandIndex !== null || animatedTrick !== null || pendingBelaChoiceIndex !== null;
+  const handLocked = commandPending || selectedHandIndex !== null || animatedTrick !== null || pendingBelaChoiceIndex !== null;
   const southPlayer = playersBySeat.SOUTH;
   const belaChoiceCard =
     pendingBelaChoiceIndex != null && southPlayer?.hand[pendingBelaChoiceIndex]
@@ -779,7 +886,7 @@ function App() {
       : null;
   const gameCompleteSummary = sessionResetting ? null : latestGameCompleteSummary(snapshot, events);
   const matchCompleteSummary = sessionResetting ? null : latestMatchCompleteSummary(snapshot, events);
-  const canQuitMatch = snapshot !== null && !snapshot.matchComplete && !handLocked;
+  const canQuitMatch = snapshot !== null && snapshot.phase !== "READY_TO_START" && !snapshot.matchComplete && !handLocked;
   const canForfeitGame =
     snapshot !== null &&
     snapshot.score.gameNumber > 0 &&
@@ -792,6 +899,7 @@ function App() {
   const isTableAction = isChoosingTrump || snapshot?.pendingAction.type === "REPORT_MELDS";
   const actionPanel = (
     <ActionPanel
+      busy={commandPending || (selectedHandIndex !== null && pendingBelaChoiceIndex === null)}
       pendingAction={snapshot?.pendingAction}
       errorMessage={errorMessage}
       playerNames={playerNameDrafts}
@@ -820,7 +928,8 @@ function App() {
   );
 
   return (
-    <CardStyleProvider value={visual.cardStyle}>
+    <PlaybackProvider value={{ settings: playback, onChange: handlePlaybackChange }}>
+    <CardStyleProvider value={paintedCardStyle}>
     <main className="app-shell game-layout">
       <div className={`table-stage ${snapshot?.pendingAction.type === "START_MATCH" ? "table-stage-setup" : ""}`}>
         <TableLayout
@@ -842,6 +951,8 @@ function App() {
           onOpenBook={() => setShowBook("welcome")}
         />
         {!isTableAction ? actionPanel : null}
+        {!snapshot && !sessionResetting ? <SessionStatus pending={connecting} error={errorMessage}
+          onRetry={() => void bootstrapSession()} /> : null}
       </div>
       <section className="after-table">
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}
@@ -855,6 +966,7 @@ function App() {
       }} /> : null}
     </main>
     </CardStyleProvider>
+    </PlaybackProvider>
   );
 }
 
@@ -1013,10 +1125,6 @@ function latestMatchCompleteSummary(snapshot: GameSnapshot | null, events: GameE
     finalGameByForfeit: latestGame?.payload.byForfeit === "true",
     gameNumber: snapshot.score.gameNumber
   };
-}
-
-function delay(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function syncThemeColorMeta(color: string) {

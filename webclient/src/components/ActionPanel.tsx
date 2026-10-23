@@ -30,6 +30,7 @@ import { capitalizeInsertedNameWords } from "../lib/nameCapitalization";
 import { teamSide } from "../lib/teamSide";
 
 interface ActionPanelProps {
+  busy?: boolean;
   pendingAction?: PendingAction;
   errorMessage: string | null;
   playerNames: PlayerNameDrafts;
@@ -65,6 +66,7 @@ const TRUMP_CHOICE_ORDER: Record<TrumpChoice, number> = {
 };
 
 function ActionPanel({
+  busy = false,
   pendingAction,
   errorMessage,
   playerNames,
@@ -147,7 +149,7 @@ function ActionPanel({
       ref={dialogRef}
       className={`${isStart ? "belot-dialog-setup" : "belot-dialog-floating-actions"} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isNextGame ? "belot-dialog-game-result" : ""} ${isBelaChoice ? "belot-dialog-bela" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds ? "belot-dialog-meld-choice" : ""} ${isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
-      aria-modal={false}
+      aria-modal={!isTableAction}
       onCancel={(event) => event.preventDefault()}
     >
       <PopupCard style={isAcknowledgeMelds
@@ -254,45 +256,46 @@ function ActionPanel({
                 <MatchCompleteSummaryPanel summary={matchCompleteSummary} yourTeam={humanTeam} />
               ) : null}
             </PopupContent>
-            <PopupActions className={isTrumpChoice ? "trump-controls" : ""}>
+            <PopupActions aria-busy={busy} className={isTrumpChoice ? "trump-controls" : ""}>
               {isStart ? (
                 <>
-                {onStartWithGuide ? <button type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
+                {onStartWithGuide ? <button disabled={busy} type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Z" /></svg>
                   {t("How to play")}
                 </button> : null}
-                <button type="button" className="action-button action-button-primary" onClick={onStart}>{t("Start the match")}<span aria-hidden="true">→</span>
+                <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onStart}>{t("Start the match")}<span aria-hidden="true">→</span>
                 </button>
                 </>
               ) : null}
               {isMatchComplete ? (
                 <>
-                  <button type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
-                  <button type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Rematch")}</button>
+                  <button disabled={busy} type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
+                  <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Rematch")}</button>
                 </>
               ) : null}
               {isNextGame ? (
-                <button type="button" className="action-button action-button-primary" onClick={onStart}>{t("Deal the next game")}</button>
+                <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onStart}>{t("Deal the next game")}</button>
               ) : null}
               {isReportMelds ? (
                 <>
-                  <button type="button" className="action-button" onClick={() => onReportMelds(false)}>{t("Pass")}</button>
-                  <button type="button" className="action-button action-button-primary" onClick={() => onReportMelds(true)}>{t("Declare melds")}</button>
+                  <button disabled={busy} type="button" className="action-button" onClick={() => onReportMelds(false)}>{t("Pass")}</button>
+                  <button disabled={busy} type="button" className="action-button action-button-primary" onClick={() => onReportMelds(true)}>{t("Declare melds")}</button>
                 </>
               ) : null}
               {isAcknowledgeMelds ? (
-                <button type="button" className="action-button action-button-primary" onClick={onAcknowledgeMelds}>{t("Continue")}</button>
+                <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onAcknowledgeMelds}>{t("Continue")}</button>
               ) : null}
               {isBelaChoice ? (
                 <>
-                  <button type="button" className="action-button" onClick={onPlayWithoutBela}>{t("Play only")}</button>
-                  <button type="button" className="action-button action-button-primary" onClick={onPlayWithBela}>{t("Play + Bela")}</button>
+                  <button disabled={busy} type="button" className="action-button" onClick={onPlayWithoutBela}>{t("Play only")}</button>
+                  <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onPlayWithBela}>{t("Play + Bela")}</button>
                 </>
               ) : null}
               {isTrumpChoice
                 ? [...(pendingAction?.legalTrumpChoices ?? [])].sort((a, b) => TRUMP_CHOICE_ORDER[a] - TRUMP_CHOICE_ORDER[b]).map((choice) =>
                     choice === "SKIP" ? (
                       <button
+                        disabled={busy}
                         key={choice}
                         type="button"
                         className="suit-choice-button suit-choice-skip"
@@ -306,7 +309,7 @@ function ActionPanel({
                         <span className="suit-choice-label">{t("skip")}</span>
                       </button>
                     ) : (
-                      <SuitChoiceButton key={choice} choice={choice} onChoose={onChooseTrump} />
+                      <SuitChoiceButton disabled={busy} key={choice} choice={choice} onChoose={onChooseTrump} />
                     )
                   )
                 : null}

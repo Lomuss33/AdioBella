@@ -1,4 +1,5 @@
 import TableUtilities from "./TableUtilities";
+import PlaybackControls from "./PlaybackControls";
 import { t } from "../i18n";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { AnimatedTrickState, GameSnapshot, PlayerView, Seat } from "../types";
@@ -210,6 +211,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
             controls={
               <div className="arena-controls">
                 <TableUtilities onOpenBook={onOpenBook} />
+                <PlaybackControls />
                 <MatchCornerControls canForfeitGame={canForfeitGame} canQuitMatch={canQuitMatch}
                   onForfeitGame={onForfeitGame} onQuitMatch={onQuitMatch} />
               </div>

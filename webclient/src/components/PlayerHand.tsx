@@ -1,10 +1,12 @@
-import type { CSSProperties } from "react";
+import { useLayoutEffect, type CSSProperties } from "react";
 import { t } from "../i18n";
 import type { PlayerView } from "../types";
 import { HAND_CAPACITY } from "../lib/handLayout";
 import { useHandReflow } from "../lib/useHandReflow";
 import { DEAL_HIGHLIGHT_MS, useNewlyDealtCards } from "../lib/useNewlyDealtCards";
 import PlayingCard from "./PlayingCard";
+import { usePlayback } from "./PlaybackContext";
+import { playbackRate } from "../lib/playback";
 
 interface PlayerHandProps {
   player?: PlayerView;
@@ -20,7 +22,6 @@ interface PlayerHandProps {
 }
 
 const HAND_SPACES = Array.from({ length: HAND_CAPACITY }, (_, index) => index);
-// Keep the CSS finish and the cleanup timer on the same clock.
 const DEAL_HIGHLIGHT_STYLE = { "--hand-deal-duration": `${DEAL_HIGHLIGHT_MS}ms` } as CSSProperties;
 
 function PlayerHand({
@@ -35,6 +36,8 @@ function PlayerHand({
   showTrumpCaller,
   onPlayCard
 }: PlayerHandProps) {
+  const { settings } = usePlayback();
+  const rate = playbackRate(settings.speed);
   const choosingCard = pendingType === "PLAY_CARD" && !locked;
   const handCards = (player?.hand ?? []).map((card, handIndex) => ({
     card, handIndex, key: `card-${card.suit}-${card.rank}-${card.label}`
@@ -42,6 +45,13 @@ function PlayerHand({
   const visibleCards = handCards.filter(slot => slot.handIndex !== hiddenIndex);
   const rowRef = useHandReflow(player?.id, visibleCards.map(slot => slot.key));
   const newlyDealt = useNewlyDealtCards(player?.id, handCards.map(slot => slot.key), trumpSuit, pendingType);
+
+  useLayoutEffect(() => {
+    // Keep the same CSS animation and its elapsed time when speed changes.
+    rowRef.current?.getAnimations?.({ subtree: true }).forEach(motion => {
+      if ("animationName" in motion && String(motion.animationName).startsWith("hand-dealt-")) motion.playbackRate = rate;
+    });
+  }, [newlyDealt, rate, rowRef]);
 
   if (!player) return null;
 

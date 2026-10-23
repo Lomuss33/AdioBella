@@ -18,6 +18,7 @@ import type {
 } from "../../types";
 import type { RandomSource } from "./random";
 import { BrowserRandom } from "./random";
+import { trickCardStrength as cardStrength } from "../trickRules";
 
 type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "REPORT_MELDS" | "ACKNOWLEDGE_MELDS" | "PLAY_CARD";
 type Phase = "READY_TO_START" | "BETWEEN_GAMES" | "TRUMP_SELECTION" | "TRICK_PLAY" | "MATCH_COMPLETE";
@@ -39,6 +40,7 @@ interface TeamState {
   matchWins: number;
   gameScore: number;
   trickPoints: number;
+  tricksWon: number;
   meldPoints: number;
 }
 
@@ -309,11 +311,12 @@ export class BelotMatchFacade {
 
     this.clearValidation();
 
+    const gameInProgress = this.state.phase !== "BETWEEN_GAMES";
     const forfeitingTeam = this.state.teamOne;
     const winningTeam = this.state.teamTwo;
-    winningTeam.gameScore = Math.max(winningTeam.gameScore, this.state.gameTargetPoints);
+    if (gameInProgress) winningTeam.gameScore = Math.max(winningTeam.gameScore, this.state.gameTargetPoints);
     winningTeam.matchWins = this.state.matchTargetWins;
-    this.clearCurrentHandState();
+    if (gameInProgress) this.clearCurrentHandState();
 
     this.log("INFO", `${forfeitingTeam.name} forfeited the match. ${winningTeam.name} won by forfeit.`, {
       eventKind: "MATCH_FORFEIT",
@@ -322,14 +325,16 @@ export class BelotMatchFacade {
       winningScore: String(winningTeam.gameScore),
       gameNumber: String(this.state.gameNumber)
     });
-    this.log("INFO", `${winningTeam.name} won the game.`, {
-      eventKind: "GAME_WIN",
-      winner: winningTeam.name,
-      winningScore: String(winningTeam.gameScore),
-      matchWins: String(winningTeam.matchWins),
-      gameNumber: String(this.state.gameNumber),
-      byForfeit: "true"
-    });
+    if (gameInProgress) {
+      this.log("INFO", `${winningTeam.name} won the game.`, {
+        eventKind: "GAME_WIN",
+        winner: winningTeam.name,
+        winningScore: String(winningTeam.gameScore),
+        matchWins: String(winningTeam.matchWins),
+        gameNumber: String(this.state.gameNumber),
+        byForfeit: "true"
+      });
+    }
 
     this.state.phase = "MATCH_COMPLETE";
     this.state.pendingType = "NONE";
@@ -404,8 +409,7 @@ export class BelotMatchFacade {
       gameTargetPoints: this.state.gameTargetPoints,
       teamOneMeldPoints: this.state.teamOne.meldPoints,
       teamTwoMeldPoints: this.state.teamTwo.meldPoints,
-      meldDeclarations: this.visibleMeldSets()
-        .map((meldSet) => this.toMeldDeclarationView(meldSet))
+      meldDeclarations: this.meldDeclarations()
     };
 
     return {
@@ -555,6 +559,7 @@ export class BelotMatchFacade {
     const winner = this.playerAt(winningPlay.playerIndex);
     let trickPoints = currentTrick.cards.reduce((total, play) => total + cardPoints(play.card, this.state.trumpSuit), 0);
     winner.team.trickPoints += trickPoints;
+    winner.team.tricksWon += 1;
 
     const lastTrick = this.state.players.every((player) => player.hand.length === 0);
     let lastTrickBonus = 0;
@@ -898,7 +903,7 @@ export class BelotMatchFacade {
   }
 
   private teamHandPoints(team: TeamState) {
-    return team.trickPoints === 0 ? 0 : team.trickPoints + team.meldPoints;
+    return team.tricksWon === 0 ? 0 : team.trickPoints + team.meldPoints;
   }
 
   private belaEligibleCardIndices(player: PlayerState) {
@@ -1071,20 +1076,17 @@ export class BelotMatchFacade {
     };
   }
 
-  private toMeldDeclarationView(meldSet: MeldSet): MeldDeclarationView {
-    return {
-      playerId: meldSet.player.id,
-      playerName: meldSet.player.name,
-      teamName: meldSet.player.team.name,
-      meldPoints: meldSet.totalPoints,
-      belaPoints: 0,
-      labels: meldSet.melds.map((meld) => meld.label),
-      melds: meldSet.melds.map((meld) => this.toMeldCombinationView(meld))
-    };
-  }
-
-  private visibleMeldSets() {
-    return this.state.lastWinningMeldSets;
+  private meldDeclarations(): MeldDeclarationView[] {
+    return this.state.players.flatMap(player => {
+      const meldSet = this.state.lastWinningMeldSets.find(set => set.player === player);
+      if (!meldSet && !player.belaCalled) return [];
+      return [{
+        playerId: player.id, playerName: player.name, teamName: player.team.name,
+        meldPoints: meldSet?.totalPoints ?? 0, belaPoints: player.belaCalled ? 20 : 0,
+        labels: meldSet?.melds.map(meld => meld.label) ?? [],
+        melds: meldSet?.melds.map(meld => this.toMeldCombinationView(meld)) ?? []
+      }];
+    });
   }
 
   private advanceTrumpTurn() {
@@ -1158,8 +1160,10 @@ export class BelotMatchFacade {
     this.state.pendingMeldWinner = null;
     this.state.firstTrickAnnounced = false;
     this.state.teamOne.trickPoints = 0;
+    this.state.teamOne.tricksWon = 0;
     this.state.teamOne.meldPoints = 0;
     this.state.teamTwo.trickPoints = 0;
+    this.state.teamTwo.tricksWon = 0;
     this.state.teamTwo.meldPoints = 0;
 
     for (const player of this.state.players) {
@@ -1217,6 +1221,7 @@ function createMatchState(difficulty: Difficulty): MatchState {
     matchWins: 0,
     gameScore: 0,
     trickPoints: 0,
+    tricksWon: 0,
     meldPoints: 0
   };
   const enemyTeam: TeamState = {
@@ -1225,6 +1230,7 @@ function createMatchState(difficulty: Difficulty): MatchState {
     matchWins: 0,
     gameScore: 0,
     trickPoints: 0,
+    tricksWon: 0,
     meldPoints: 0
   };
 
@@ -1316,54 +1322,10 @@ function cardPoints(card: Card, trumpSuit: Suit | null) {
   }
 }
 
-function cardStrength(card: Card, leadSuitValue: Suit | null, trumpSuit: Suit | null) {
-  if (card.suit === trumpSuit) {
-    switch (card.rank) {
-      case "JACK":
-        return 80;
-      case "NINE":
-        return 70;
-      case "ACE":
-        return 60;
-      case "TEN":
-        return 50;
-      case "KING":
-        return 40;
-      case "QUEEN":
-        return 30;
-      case "EIGHT":
-        return 20;
-      case "SEVEN":
-        return 10;
-    }
-  }
-
-  if (card.suit === leadSuitValue) {
-    switch (card.rank) {
-      case "ACE":
-        return 60;
-      case "TEN":
-        return 50;
-      case "KING":
-        return 40;
-      case "QUEEN":
-        return 30;
-      case "JACK":
-        return 20;
-      case "NINE":
-        return 15;
-      case "EIGHT":
-        return 10;
-      case "SEVEN":
-        return 5;
-    }
-  }
-
-  return 0;
-}
-
 function trumpSelectionScore(card: Card, candidateTrump: Suit) {
-  const base = cardPoints(card, candidateTrump) + cardStrength(card, candidateTrump, candidateTrump);
+  // Keep bidding weights independent of the trick comparison tier.
+  const strength = cardStrength(card, candidateTrump, candidateTrump) - (card.suit === candidateTrump ? 100 : 0);
+  const base = cardPoints(card, candidateTrump) + strength;
   if (card.suit === candidateTrump && card.rank === "JACK") {
     return base + 30;
   }

@@ -1,5 +1,5 @@
 import { t, number, countText } from "../i18n";
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { GameSnapshot } from "../types";
 import MeldDetails from "./MeldDetails";
@@ -10,7 +10,6 @@ export default function MatchDataCard({ snapshot, children, informationLabel }: 
   informationLabel: string;
 }) {
   const [showMelds, setShowMelds] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const score = snapshot?.score;
   const gameTitle = t(score?.difficulty === "HARD" ? "gameHeading.hard" : score?.difficulty === "EASY" ? "gameHeading.easy" : "gameHeading.normal", { count: score?.gameNumber || "—" });
   const difficulty = t(score?.difficulty === "HARD" ? "hard" : score?.difficulty === "EASY" ? "easy" : "normal");
@@ -21,14 +20,13 @@ export default function MatchDataCard({ snapshot, children, informationLabel }: 
   return (
     <>
       <button
-        ref={triggerRef}
         type="button"
         className="match-data-card table-console-information"
         aria-haspopup="dialog"
         aria-expanded={showMelds}
         aria-label={`${t("Meld details")}: ${informationLabel}, ${gameTitle}, ${summary}`}
         title={t("Meld details")}
-        onClick={() => setShowMelds(true)}
+        onClick={event => { event.currentTarget.focus({ preventScroll: true }); setShowMelds(true); }}
       >
         {children}
         <span className="match-summary">
@@ -57,7 +55,7 @@ export default function MatchDataCard({ snapshot, children, informationLabel }: 
       {showMelds && createPortal(
         <MeldDetails melds={score?.meldDeclarations ?? []}
           yourTeam={snapshot?.players.find(player => player.seat === "SOUTH")?.team}
-          onClose={() => { setShowMelds(false); triggerRef.current?.focus(); }} />,
+          onClose={() => setShowMelds(false)} />,
         document.body
       )}
     </>

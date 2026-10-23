@@ -16,6 +16,7 @@ test("restores appearance, names and next-match settings after a reload", () => 
   preferences.game.difficulty = "HARD";
   preferences.game.tableTheme = "DARK_BLUE";
   preferences.visual = { cardStyle: "modern", accent: "graphite" };
+  preferences.playback = { skipAnimations: true, speed: "fast" };
   expect(savePreferences(preferences)).toBe(true);
   expect(loadPreferences()).toEqual(preferences);
 });
@@ -29,6 +30,13 @@ test("recovers from malformed or invalid stored settings", () => {
   expect(preferences.game.matchTargetWins).toBe(3);
   expect(preferences.players.SOUTH).toHaveLength(24);
   expect(preferences.visual.accent).toBe("oxblood");
+});
+
+test("defaults older and malformed playback choices to normal animations", () => {
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ version: 1, playback: { skipAnimations: "true", speed: "invalid" } }));
+  expect(loadPreferences().playback).toEqual({ skipAnimations: false, speed: "normal" });
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ version: 1 }));
+  expect(loadPreferences().playback).toEqual({ skipAnimations: false, speed: "normal" });
 });
 
 test("persists and restores the added accent and felt choices", () => {

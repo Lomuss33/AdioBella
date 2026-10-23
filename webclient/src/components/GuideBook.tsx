@@ -17,7 +17,7 @@ export default function GuideBook(props: GuideProps) {
   } as const;
   return <PopupDialog ref={dialogRef} layout="page" className="guide-dialog" aria-labelledby={id} onCancel={event => { event.preventDefault(); props.onClose(); }}>
     <PopupCard className="guide-book">
-      <header className="guide-heading"><div><h2 id={id}>{t('book.title')}</h2></div>
+      <header className="guide-heading"><div><h2 id={id} tabIndex={-1} data-popup-initial-focus>{t('book.title')}</h2></div>
         <button type="button" className="table-square-button" onClick={props.onClose} aria-label={t('book.close')}>×</button>
       </header>
       <nav className="guide-chapters" aria-label={t('book.open')}>

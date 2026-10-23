@@ -42,6 +42,36 @@ test("keeps both Bela choices usable with the selected card in the shared compac
   expect(props.onPlayWithBela).toHaveBeenCalledOnce();
 });
 
+test("keeps the partnership total and each player's evidence distinct in a shared meld review", () => {
+  const props = resultProps();
+  props.matchCompleteSummary = null;
+  props.yourTeamName = "Your team";
+  const teamName = "A long winning partnership name";
+  const players = ["Jelačić", "Maximilian Aleksandar Zvonimir"].map((playerName, index) => ({
+    playerId: `player-${index}`, playerName, teamName, totalPoints: index ? 50 : 20,
+    melds: [{ kind: "SEQUENCE", label: `Sequence of ${index ? 4 : 3}`, points: index ? 50 : 20, comparisonValue: 3,
+      cards: ["JACK", "QUEEN", "KING", "ACE"].slice(0, index ? 4 : 3).map(rank => ({
+        rank, suit: "DIAMONDS", label: `${rank}_DIAMONDS`, faceUp: true, playable: false
+      })) }]
+  }));
+  props.pendingAction = {
+    type: "ACKNOWLEDGE_MELDS", actingPlayerId: "SOUTH", legalCardIndices: [], legalTrumpChoices: [],
+    belaEligibleCardIndices: [], availableMelds: [], meldWinner: { teamName, players },
+    validationMessage: null, prompt: ""
+  };
+  render(<ActionPanel {...props} />);
+  const dialog = screen.getByRole("dialog", { name: "Winning melds" });
+  const total = within(dialog).getByLabelText("70 points");
+  expect(total.closest("[data-team]")).toHaveAttribute("data-team", "opponent");
+  expect(total.parentElement).toHaveTextContent(teamName);
+  for (const [index, player] of players.entries()) {
+    const region = within(dialog).getByRole("region", { name: player.playerName });
+    expect(region).toHaveAttribute("data-team", "opponent");
+    expect(within(region).getByLabelText(`${player.totalPoints} points`)).toBeInTheDocument();
+    expect(within(region).getAllByRole("img")).toHaveLength(index ? 4 : 3);
+  }
+});
+
 test.each([true, false])("keeps trump choices usable without the redundant instruction (skip: %s)", async canSkip => {
   const props = resultProps();
   props.matchCompleteSummary = null;

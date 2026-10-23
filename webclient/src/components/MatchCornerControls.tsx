@@ -17,7 +17,8 @@ function MatchCornerControls({
       <button
         type="button"
         className="action-button match-corner-button match-corner-button-warning"
-        onClick={onForfeitGame}
+        onClick={event => { event.currentTarget.focus({ preventScroll: true }); onForfeitGame(); }}
+        aria-haspopup="dialog"
         disabled={!canForfeitGame}
         title={t("End the current game and concede")}
       >
@@ -29,7 +30,8 @@ function MatchCornerControls({
       <button
         type="button"
         className="action-button match-corner-button match-corner-button-danger"
-        onClick={onQuitMatch}
+        onClick={event => { event.currentTarget.focus({ preventScroll: true }); onQuitMatch(); }}
+        aria-haspopup="dialog"
         disabled={!canQuitMatch}
         title={t("Leave the current match")}
       >

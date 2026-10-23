@@ -61,6 +61,63 @@ const baseSession: SessionResponse = {
   }
 };
 
+test("temporary restore failures preserve the saved match and retry without creating another session", async () => {
+  window.localStorage.setItem("belot-session-id", "saved-match");
+  let offline = true;
+  const saved = { ...baseSession, sessionId: "saved-match" };
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    if (offline) throw new TypeError("Network unavailable");
+    return { ok: true, json: async () => String(input).includes("/events") ? [] : saved };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  const retry = await screen.findByRole("button", { name: "Try again" });
+  expect(window.localStorage.getItem("belot-session-id")).toBe("saved-match");
+  expect(fetchMock.mock.calls.some(([input]) => String(input) === "/api/sessions")).toBe(false);
+  offline = false;
+  await userEvent.click(retry);
+  expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
+  expect(window.localStorage.getItem("belot-session-id")).toBe("saved-match");
+  expect(fetchMock.mock.calls.some(([input]) => String(input) === "/api/sessions")).toBe(false);
+});
+
+test("optional history failure does not discard a successfully restored session", async () => {
+  window.localStorage.setItem("belot-session-id", "saved-match");
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input).includes("/events")) throw new TypeError("History unavailable");
+    return { ok: true, json: async () => ({ ...baseSession, sessionId: "saved-match" }) };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
+  expect(window.localStorage.getItem("belot-session-id")).toBe("saved-match");
+  expect(fetchMock.mock.calls.some(([input]) => String(input) === "/api/sessions")).toBe(false);
+});
+
+test("trump commands disable conflicting controls and submit only once while awaiting the server", async () => {
+  window.localStorage.setItem("belot-session-id", "session-1");
+  const choosing: SessionResponse = { ...baseSession, snapshot: { ...baseSession.snapshot,
+    phase: "TRUMP_SELECTION", score: { ...baseSession.snapshot.score, gameNumber: 1 },
+    pendingAction: { ...baseSession.snapshot.pendingAction, type: "CHOOSE_TRUMP", legalTrumpChoices: ["HEARTS", "SPADES", "SKIP"] }
+  } };
+  let finish!: (response: unknown) => void;
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input).endsWith("/trump")) return new Promise(resolve => { finish = resolve; });
+    return { ok: true, json: async () => String(input).includes("/events") ? [] : choosing };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  const hearts = await screen.findByRole("button", { name: "hearts" });
+  fireEvent.click(hearts);
+  fireEvent.click(hearts);
+  expect(hearts).toBeDisabled();
+  expect(screen.getByRole("button", { name: "spades" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Quit match" })).toBeDisabled();
+  expect(fetchMock.mock.calls.filter(([input]) => String(input).endsWith("/trump"))).toHaveLength(1);
+  await act(async () => { finish({ ok: true, json: async () => choosing }); });
+  await waitFor(() => expect(hearts).toBeEnabled());
+});
+
 beforeEach(() => {
   window.localStorage.clear();
   Object.defineProperty(globalThis, "EventSource", {
@@ -572,6 +629,199 @@ function cardPlayFixture() {
     payload: { eventKind: "PLAY_CARD", playerId: "south", playerSeat: "SOUTH", playerName: "You", card: "AH", rank: "ACE", suit: "HEARTS" } }];
   return { before, after, history };
 }
+
+test("a saved imported deck is fully prepared before the first hand or its trick animation paints", async () => {
+  const { before, after, history } = cardPlayFixture();
+  localStorage.setItem("belot-preferences-v1", JSON.stringify({ version: 1, visual: { cardStyle: "french" } }));
+  const images: { onload: (() => void) | null; finishDecode: () => void }[] = [];
+  vi.stubGlobal("Image", class {
+    src = "";
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    finishDecode!: () => void;
+    decode = () => new Promise<void>(resolve => { this.finishDecode = resolve; });
+    constructor() { images.push(this); }
+  });
+  let played = false;
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) { played = true; return { ok: true, json: async () => after }; }
+    return { ok: true, json: async () => url.includes("/events") ? played ? history : [] : before };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+  expect(images).toHaveLength(33);
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  await act(async () => {
+    images.forEach(image => image.onload?.());
+    images.slice(0, -1).forEach(image => image.finishDecode());
+  });
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  await act(async () => { images.at(-1)!.finishDecode(); });
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  expect(card).toHaveAttribute("data-card-style", "french");
+  expect(card.querySelector(".playing-card-corner")).not.toBeInTheDocument();
+  expect(card.querySelector(".playing-card-imported-art")).toBeInTheDocument();
+  await userEvent.click(card);
+  const trickCard = await screen.findByRole("img", { name: "You: ace of hearts" });
+  expect(trickCard).toHaveAttribute("data-card-style", "french");
+  expect(trickCard.querySelector(".playing-card-corner")).not.toBeInTheDocument();
+  expect(trickCard.querySelector(".playing-card-imported-art")).toHaveAttribute("decoding", "sync");
+});
+
+test("starting during a deck change waits for that deck while the previous artwork stays intact", async () => {
+  const { before } = cardPlayFixture();
+  const images: { onload: (() => void) | null; finishDecode: () => void }[] = [];
+  vi.stubGlobal("Image", class {
+    src = "";
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    finishDecode!: () => void;
+    decode = () => new Promise<void>(resolve => { this.finishDecode = resolve; });
+    constructor() { images.push(this); }
+  });
+  let started = false;
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/start")) started = true;
+    return { ok: true, json: async () => url.includes("/events") ? [] : started ? before : baseSession };
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  render(<App />);
+  await screen.findByRole("button", { name: "Start the match" });
+  // Prepare the first chosen deck, then leave its replacement loading.
+  await userEvent.click(screen.getByRole("button", { name: "Next card style" }));
+  await act(async () => {
+    images.forEach(image => { image.onload?.(); image.finishDecode(); });
+  });
+  images.length = 0;
+  await userEvent.click(screen.getByRole("button", { name: "Next card style" }));
+  expect(images).toHaveLength(33);
+  expect(document.documentElement).toHaveAttribute("data-card-style", "french");
+  await userEvent.click(screen.getByRole("button", { name: "Start the match" }));
+  expect(started).toBe(false);
+  expect(document.querySelectorAll('.playing-card-face[data-card-style="italian"]')).toHaveLength(0);
+  await act(async () => {
+    images.forEach(image => { image.onload?.(); image.finishDecode(); });
+  });
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  expect(started).toBe(true);
+  expect(card).toHaveAttribute("data-card-style", "italian");
+  expect(card.querySelector(".playing-card-center,.playing-card-corner")).not.toBeInTheDocument();
+  expect(document.documentElement).toHaveAttribute("data-card-style", "italian");
+});
+
+test("persists both playback controls and restores them after mounting again", async () => {
+  const { before } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? [] : before
+  })));
+  const first = render(<App />);
+  await screen.findByRole("button", { name: "ace of hearts" });
+  await userEvent.click(screen.getByRole("button", { name: "Skip animations" }));
+  await userEvent.click(screen.getByRole("button", { name: "Fast speed" }));
+  expect(screen.getByRole("button", { name: "Skip animations" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: "Fast speed" })).toHaveTextContent("2×");
+  expect(JSON.parse(localStorage.getItem("belot-preferences-v1")!).playback).toEqual({ skipAnimations: true, speed: "fast" });
+  first.unmount();
+  render(<App />);
+  await screen.findByRole("button", { name: "ace of hearts" });
+  expect(screen.getByRole("button", { name: "Skip animations" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: "Fast speed" })).toHaveAttribute("aria-pressed", "true");
+  expect(document.documentElement).toHaveAttribute("data-skip-animations", "true");
+});
+
+test("skips an active sequence immediately and never replays its old timers", async () => {
+  const { before, after, history } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  vi.useFakeTimers();
+  fireEvent.click(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.selectionMs); });
+  expect(document.querySelector(".trick-cards-animated")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Skip animations" }));
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Skip animations" }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+});
+
+test("changes an in-flight play and the following pause to fast speed without restarting", async () => {
+  const { before, after, history } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  vi.useFakeTimers();
+  fireEvent.click(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.selectionMs + CARD_TIMING.leadPlayMs / 2); });
+  fireEvent.click(screen.getByRole("button", { name: "Fast speed" }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.leadPlayMs / 4 - 1); });
+  expect(document.querySelector(".trick-points-chip")).toHaveTextContent("0");
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(document.querySelector(".trick-points-chip")).toHaveTextContent("11");
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.unfinishedTrickHoldMs / 2 - 1); });
+  expect(document.querySelector(".trick-cards-animated")).toBeInTheDocument();
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+});
+
+test("skips the selection delay immediately once a play has been accepted", async () => {
+  const { before, after, history } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  vi.useFakeTimers();
+  fireEvent.click(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(20); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(card);
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Skip animations" })); });
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+});
+
+test("changes speed during selection without restarting its delay", async () => {
+  const { before, after, history } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  vi.useFakeTimers();
+  fireEvent.click(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.selectionMs / 2); });
+  fireEvent.click(screen.getByRole("button", { name: "Fast speed" }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.selectionMs / 4 - 1); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  expect(document.querySelector(".phase-placing")).toBeInTheDocument();
+});
+
+test("plays directly to the confirmed state when animation skipping is already enabled", async () => {
+  const { before, after, history } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  await userEvent.click(screen.getByRole("button", { name: "Skip animations" }));
+  await userEvent.click(card);
+  await waitFor(() => expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument());
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+});
 
 test("holds the full trick, clears it for the complete rest, then starts the queued lead without revealing the old snapshot", async () => {
   const { before, after, history } = cardPlayFixture();

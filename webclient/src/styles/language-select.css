@@ -15,7 +15,7 @@
   max-width: calc(100vw - 24px);
   max-height: min(240px, calc(100dvh - 24px));
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
   padding: 4px;
   border: 1px solid color-mix(in srgb, var(--ui-text) 16%, transparent);
   border-radius: 12px;

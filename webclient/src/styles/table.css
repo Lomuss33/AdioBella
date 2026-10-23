@@ -159,7 +159,7 @@ html:has(.app-shell.game-layout) { scrollbar-gutter: stable; }
 }
 @media (min-width: 1400px) and (min-height: 650px) {
   .app-shell.game-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); max-width: 2200px; margin-inline: auto;  --game-text: var(--ui-text);  --game-muted: var(--ui-muted);  --game-line: var(--ui-line); }
-  .game-layout .after-table { position: sticky; top: 4px; max-height: calc(100svh - 8px); overflow-y: auto; scrollbar-width: thin; }
+  .game-layout .after-table { position: sticky; top: 4px; }
 }
 /* Fit the header, play area and hand into one visible viewport. */
 .table-arena .arena-header { min-height: 0; }

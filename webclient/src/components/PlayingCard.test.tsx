@@ -5,7 +5,7 @@ import { CardStyleProvider } from "./CardStyleContext";
 
 afterEach(() => vi.unstubAllGlobals());
 
-test("keeps a complete face until artwork has decoded and shares it across card mounts", async () => {
+test("uses only the selected artwork after decoding and shares it across card mounts", async () => {
   let finishDecode!: () => void;
   const images: FakeImage[] = [];
   class FakeImage {
@@ -26,14 +26,30 @@ test("keeps a complete face until artwork has decoded and shares it across card 
   expect(face).not.toHaveClass("has-imported-art");
   await act(async () => { finishDecode(); });
   expect(face).toHaveClass("has-imported-art");
-  expect(face.querySelector(".playing-card-corner")).toHaveTextContent("J");
+  expect(face.querySelector(".playing-card-corner")).not.toBeInTheDocument();
+  expect(face.querySelector(".playing-card-center")).not.toBeInTheDocument();
+  expect(face.querySelector("img")).toHaveAttribute("decoding", "sync");
+  expect(face.querySelector("img")).toHaveAttribute("loading", "eager");
   fireEvent.error(face.querySelector("img")!);
-  expect(face.querySelector("img")).toHaveStyle({ visibility: "hidden" });
+  expect(face.querySelector("img")).not.toBeInTheDocument();
+  expect(face).not.toHaveClass("has-imported-art");
   expect(face.querySelector(".playing-card-center")).toHaveTextContent("♥");
   unmount();
   const second = render(view);
   expect(second.container.querySelector(".playing-card-face")).toHaveClass("has-imported-art");
+  expect(second.container.querySelector(".playing-card-corner")).not.toBeInTheDocument();
+  expect(second.container.querySelector(".playing-card-center")).not.toBeInTheDocument();
   expect(images).toHaveLength(1);
+});
+
+test("the original style remains a native face without loading imported artwork", () => {
+  const image = vi.fn();
+  vi.stubGlobal("Image", image);
+  const { container } = render(<CardStyleProvider value="original"><PlayingCard
+    card={{ rank: "ACE", suit: "CLUBS", label: "AC", faceUp: true, playable: false }} /></CardStyleProvider>);
+  expect(container.querySelector(".playing-card-center")).toHaveTextContent("♣");
+  expect(container.querySelector("img")).not.toBeInTheDocument();
+  expect(image).not.toHaveBeenCalled();
 });
 
 test("an unavailable deck image leaves the correct rank and suit visible", async () => {

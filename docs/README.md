@@ -14,6 +14,7 @@
 | Review UI/UX changes and follow-up work | [UI and UX improvement plan](ui-ux-plan.md) (historical notes; current visuals unverified) |
 | Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |
 | Maintain English, German, and Croatian support | [Localization design and implementation](localization-plan.md) |
+| Review scrolling, gestures, popup locks and keyboard focus | [Scrolling and focus audit](scrolling-audit.md) |
 | Review and integrate contributions | [Maintainer guide](../MAINTAINER.md) |
 
 ## Structure

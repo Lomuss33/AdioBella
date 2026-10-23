@@ -41,6 +41,14 @@ export function handSettlementDescription(event: GameEvent) {
     : t("No melds");
 
   return {
+    dealer: p.dealerPlayerName ?? t("player"),
+    trumpPlayer: p.trumpPlayerName ?? t("player"),
+    suit: tr(suit ?? p.trump ?? "trump"),
+    meldOutcome,
+    scores: [
+      { team: p.teamOneName ?? t("team"), points: Number(p.teamOnePoints ?? 0) },
+      { team: p.teamTwoName ?? t("team"), points: Number(p.teamTwoPoints ?? 0) }
+    ],
     context: t("handSettlementContext", {
       dealer: p.dealerPlayerName ?? t("player"),
       trumpPlayer: p.trumpPlayerName ?? t("player"),

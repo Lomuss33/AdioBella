@@ -1,5 +1,13 @@
 import { guideMessages } from "./guide";
 export const messages = {
+  "session.retry": ["Try again", "Erneut versuchen", "Pokušaj ponovno"],
+  "playback.controls": ["Playback controls", "Wiedergabesteuerung", "Kontrole prikaza"],
+  "playback.skipAnimations": ["Skip animations", "Animationen überspringen", "Preskoči animacije"],
+  "playback.animationsSkipped": ["Animations skipped · Click to turn animations on", "Animationen übersprungen · Zum Einschalten klicken", "Animacije preskočene · Klikni za uključivanje animacija"],
+  "playback.animationsOn": ["Animations on · Click to skip animations", "Animationen an · Zum Überspringen klicken", "Animacije uključene · Klikni za preskakanje animacija"],
+  "playback.fastSpeed": ["Fast speed", "Schnelles Tempo", "Brzi prikaz"],
+  "playback.speedNormal": ["Speed: Normal · Click for fast", "Tempo: Normal · Für schnell klicken", "Brzina: Normalna · Klikni za brzi prikaz"],
+  "playback.speedFast": ["Speed: Fast · Click for normal", "Tempo: Schnell · Für normal klicken", "Brzina: Brza · Klikni za normalni prikaz"],
   "console.tableInformation": ["Table information", "Tischinformationen", "Informacije o stolu"],
   "console.yourTurn": ["Your turn", "Du bist dran", "Tvoj potez"],
   "console.currentMove": ["Current move", "Aktueller Zug", "Trenutni potez"],
@@ -687,6 +695,9 @@ export const messages = {
     "Geber: {dealer} · Trumpf: {trumpPlayer} ({suit}) · Meldungen: {meldOutcome}",
     "Dijelio: {dealer} · Adut: {trumpPlayer} ({suit}) · Zvanja: {meldOutcome}"
   ],
+  "history.hand": ["Hand {number}", "Runde {number}", "Dijeljenje {number}"],
+  "history.dealer": ["Dealer", "Geber", "Dijelio"],
+  "history.awarded": ["Points earned", "Erhaltene Punkte", "Osvojeni bodovi"],
   "meldAwardSummary": [
     "{team} +{points}",
     "{team} +{points}",

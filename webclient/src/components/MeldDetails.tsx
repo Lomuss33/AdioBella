@@ -53,7 +53,7 @@ export default function MeldDetails({ melds, yourTeam, onClose }: {
           </div>
         </PopupContent>
         <PopupActions>
-          <button type="button" className="action-button action-button-primary" autoFocus onClick={onClose}>{t("Back to table")}</button>
+          <button type="button" className="action-button action-button-primary" onClick={onClose}>{t("Back to table")}</button>
         </PopupActions>
       </PopupCard>
     </PopupDialog>

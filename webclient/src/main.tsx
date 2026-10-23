@@ -28,6 +28,7 @@ import "./styles/dialog-actions.css";
 import "./styles/meld-details.css";
 import "./styles/popup-panels.css";
 import "./styles/card-motion.css";
+import "./styles/playback.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

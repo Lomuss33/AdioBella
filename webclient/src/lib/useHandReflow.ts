@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { getCenteredHandPositions, getHandColumns, getRemovedHandIndices, getHandRowOffsets, HAND_CAPACITY, HAND_LAYOUT_APPLIED, HAND_LAYOUT_REQUEST, type HandLayoutChange } from "./handLayout";
 import { getHandReflowDelays, getHandReflowDuration } from "./handMotion";
+import { usePlayback } from "../components/PlaybackContext";
+import { playbackRate } from "./playback";
 
 interface PreviousHand {
   keys: string[];
@@ -11,6 +13,10 @@ interface PreviousHand {
 }
 
 export function useHandReflow(playerId: string | undefined, cardKeys: readonly string[]) {
+  const { settings } = usePlayback();
+  const rate = playbackRate(settings.speed);
+  const playbackRef = useRef({ skipAnimations: settings.skipAnimations, rate });
+  playbackRef.current = { skipAnimations: settings.skipAnimations, rate };
   const rowRef = useRef<HTMLDivElement>(null);
   const previousRef = useRef<PreviousHand | null>(null);
   const rollbackRef = useRef<PreviousHand | null>(null);
@@ -76,7 +82,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
         : first.height + (parseFloat(style.rowGap) || 0);
       const sameSize = previous?.columns === columns
         && Math.abs(previous.width - first.width) < .02 && Math.abs(previous.height - first.height) < .02;
-      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const reducedMotion = playbackRef.current.skipAnimations || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       const rearranged = previous && previous.keys.every(key => keys.includes(key))
         && previous.keys.join("\0") !== keyOrder;
       const shouldAnimate = (animate && (removed !== null || restoringCards || rearranged) || continuing) && !reducedMotion;
@@ -158,6 +164,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
             fill: "backwards"
           });
           animationsRef.current.set(key, animation);
+          animation.playbackRate = playbackRef.current.rate;
           animation.onfinish = () => {
             if (animationsRef.current.get(key) === animation) animationsRef.current.delete(key);
           };
@@ -172,6 +179,15 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
     synchronizeRef.current = synchronize;
     synchronize(true);
   }, [playerId, cardOrder]);
+
+  useLayoutEffect(() => {
+    if (settings.skipAnimations) {
+      animationsRef.current.forEach(animation => animation.cancel());
+      animationsRef.current.clear();
+    } else animationsRef.current.forEach(animation => {
+      if (animation.playState === "running" || animation.playState === "paused") animation.playbackRate = rate;
+    });
+  }, [settings.skipAnimations, rate]);
 
   useLayoutEffect(() => {
     const row = rowRef.current;

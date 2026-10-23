@@ -6,6 +6,8 @@ import { CARD_TIMING } from "../lib/cardAnimationConfig";
 import { trickLeader } from "../lib/trickLeader";
 import { seatSide } from "../lib/teamSide";
 import { useTrickMotion } from "../lib/useTrickMotion";
+import { usePlayback } from "./PlaybackContext";
+import { playbackRate } from "../lib/playback";
 
 interface TrickPileProps {
   trick: TrickView;
@@ -15,6 +17,8 @@ interface TrickPileProps {
 }
 
 function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps) {
+  const { settings } = usePlayback();
+  const rate = playbackRate(settings.speed);
   const renderedCards = toRenderedTrickCards(animatedTrick ?? null, trick.cards);
   const cardsRef = useTrickMotion(animatedTrick, renderedCards.map(cardKey));
   const staticPoints = renderedCards.reduce((total, playedCard) => total + cardPoints(playedCard.card, trumpSuit ?? null), 0);
@@ -25,8 +29,8 @@ function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps
 
   return (
     <div className="trick-pool-shell" style={{
-      "--trick-collect-duration": `${animatedTrick?.resolution?.collectDurationMs ?? CARD_TIMING.collectionMs}ms`,
-      "--trick-points-pulse-duration": `${CARD_TIMING.pointsPulseMs}ms`
+      "--trick-collect-duration": `${(animatedTrick?.resolution?.collectDurationMs ?? CARD_TIMING.collectionMs) / rate}ms`,
+      "--trick-points-pulse-duration": `${CARD_TIMING.pointsPulseMs / rate}ms`
     } as CSSProperties}>
       {children}
       <div className="trick-pool">

@@ -25,7 +25,7 @@ export default function ConfirmPopup({ kind, onCancel, onConfirm }: {
           </div>
         </PopupContent>
         <PopupActions>
-          <button type="button" className="action-button action-button-primary action-button-safe" autoFocus onClick={onCancel}>{t("Keep playing")}</button>
+          <button type="button" className="action-button action-button-primary action-button-safe" data-popup-initial-focus onClick={onCancel}>{t("Keep playing")}</button>
           <button type="button" className="action-button action-button-danger" onClick={onConfirm}>{kind === "game" ? t("Forfeit game") : t("Quit match")}</button>
         </PopupActions>
       </PopupCard>

@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { HAND_CAPACITY } from "./handLayout";
+import { usePlayback } from "../components/PlaybackContext";
+import { playbackRate } from "./playback";
+import { PlaybackClock } from "./PlaybackClock";
 
 export const DEAL_HIGHLIGHT_MS = 2800;
 const NO_CARDS: readonly string[] = [];
@@ -7,6 +10,9 @@ interface HandCards { playerId: string; keys: readonly string[] }
 
 /** Remember the opening six: sorting the completed hand must not change which two shine. */
 export function useNewlyDealtCards(playerId: string | undefined, cardKeys: readonly string[], trumpSuit: string | null | undefined, pendingType: string | undefined) {
+  const { settings } = usePlayback();
+  const rate = playbackRate(settings.speed);
+  const [clock] = useState(() => new PlaybackClock(rate));
   const openingRef = useRef<HandCards | null>(null);
   const queuedRef = useRef<HandCards | null>(null);
   const ownerRef = useRef(playerId);
@@ -60,11 +66,13 @@ export function useNewlyDealtCards(playerId: string | undefined, cardKeys: reado
     }
   }, [playerId, cardOrder, trumpSuit, pendingType, highlight]);
 
+  useEffect(() => { clock.setRate(rate); }, [clock, rate]);
+
   useEffect(() => {
     if (!highlight) return;
-    const timer = window.setTimeout(() => setHighlight(null), DEAL_HIGHLIGHT_MS);
-    return () => window.clearTimeout(timer);
-  }, [highlight]);
+    clock.schedule(DEAL_HIGHLIGHT_MS, () => setHighlight(null));
+    return () => clock.clear();
+  }, [highlight, clock]);
 
   return highlight && highlight.playerId === playerId ? highlight.keys : NO_CARDS;
 }

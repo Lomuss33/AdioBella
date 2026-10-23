@@ -206,11 +206,12 @@ public final class BelotMatchFacade {
 
         clearValidation();
 
+        boolean gameInProgress = state.phase != Phase.BETWEEN_GAMES;
         TeamState forfeitingTeam = state.teamOne;
         TeamState winningTeam = state.teamTwo;
-        winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
+        if (gameInProgress) winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
         winningTeam.matchWins = state.matchTargetWins;
-        clearCurrentHandState();
+        if (gameInProgress) clearCurrentHandState();
 
         log("INFO", forfeitingTeam.name + " forfeited the match. " + winningTeam.name + " won by forfeit.", Map.of(
                 "eventKind", "MATCH_FORFEIT",
@@ -219,14 +220,16 @@ public final class BelotMatchFacade {
                 "winningScore", String.valueOf(winningTeam.gameScore),
                 "gameNumber", String.valueOf(state.gameNumber)
         ));
-        log("INFO", winningTeam.name + " won the game.", Map.of(
-                "eventKind", "GAME_WIN",
-                "winner", winningTeam.name,
-                "winningScore", String.valueOf(winningTeam.gameScore),
-                "matchWins", String.valueOf(winningTeam.matchWins),
-                "gameNumber", String.valueOf(state.gameNumber),
-                "byForfeit", "true"
-        ));
+        if (gameInProgress) {
+            log("INFO", winningTeam.name + " won the game.", Map.of(
+                    "eventKind", "GAME_WIN",
+                    "winner", winningTeam.name,
+                    "winningScore", String.valueOf(winningTeam.gameScore),
+                    "matchWins", String.valueOf(winningTeam.matchWins),
+                    "gameNumber", String.valueOf(state.gameNumber),
+                    "byForfeit", "true"
+            ));
+        }
 
         state.phase = Phase.MATCH_COMPLETE;
         state.pendingType = ActionType.NONE;
@@ -311,9 +314,7 @@ public final class BelotMatchFacade {
                 state.gameTargetPoints,
                 state.teamOne.meldPoints,
                 state.teamTwo.meldPoints,
-                visibleMeldSets().stream()
-                        .map(this::toMeldDeclarationView)
-                        .toList()
+                meldDeclarations()
         );
 
         return new GameSnapshot(
@@ -443,6 +444,7 @@ public final class BelotMatchFacade {
         PlayerState winner = playerAt(winningPlay.playerIndex);
         int trickPoints = state.currentTrick.cards.stream().mapToInt(play -> play.card.points(state.trumpSuit)).sum();
         winner.team.trickPoints += trickPoints;
+        winner.team.tricksWon += 1;
 
         boolean lastTrick = state.players.stream().allMatch(player -> player.hand.isEmpty());
         int lastTrickBonus = 0;
@@ -932,20 +934,20 @@ public final class BelotMatchFacade {
         );
     }
 
-    private MeldDeclarationView toMeldDeclarationView(MeldSet meldSet) {
-        return new MeldDeclarationView(
-                meldSet.player().id,
-                meldSet.player().name,
-                meldSet.player().team.name,
-                meldSet.totalPoints(),
-                0,
-                meldSet.melds().stream().map(MeldCombination::label).toList(),
-                meldSet.melds().stream().map(this::toMeldCombinationView).toList()
-        );
-    }
-
-    private List<MeldSet> visibleMeldSets() {
-        return state.lastWinningMeldSets;
+    private List<MeldDeclarationView> meldDeclarations() {
+        return state.players.stream().flatMap(player -> {
+            MeldSet meldSet = state.lastWinningMeldSets.stream()
+                    .filter(set -> set.player() == player).findFirst().orElse(null);
+            if (meldSet == null && !player.belaCalled) {
+                return java.util.stream.Stream.empty();
+            }
+            return java.util.stream.Stream.of(new MeldDeclarationView(
+                    player.id, player.name, player.team.name,
+                    meldSet == null ? 0 : meldSet.totalPoints(), player.belaCalled ? 20 : 0,
+                    meldSet == null ? List.of() : meldSet.melds().stream().map(MeldCombination::label).toList(),
+                    meldSet == null ? List.of() : meldSet.melds().stream().map(this::toMeldCombinationView).toList()
+            ));
+        }).toList();
     }
 
     private MeldSetView toMeldSetView(MeldSet meldSet) {
@@ -1139,8 +1141,9 @@ public final class BelotMatchFacade {
         }
 
         private int strength(Suit leadSuit, Suit trumpSuit) {
+            // Trump and plain-card ranges must never overlap.
             if (suit == trumpSuit) {
-                return switch (rank) {
+                return 100 + switch (rank) {
                     case JACK -> 80;
                     case NINE -> 70;
                     case ACE -> 60;
@@ -1169,7 +1172,9 @@ public final class BelotMatchFacade {
         }
 
         private int trumpSelectionScore(Suit candidateTrump) {
-            int base = points(candidateTrump) + strength(candidateTrump, candidateTrump);
+            // Preserve bidding weights when changing the trick comparison tier.
+            int strength = strength(candidateTrump, candidateTrump) - (suit == candidateTrump ? 100 : 0);
+            int base = points(candidateTrump) + strength;
             if (suit == candidateTrump && rank == Rank.JACK) {
                 return base + 30;
             }
@@ -1192,6 +1197,7 @@ public final class BelotMatchFacade {
         private int matchWins;
         private int gameScore;
         private int trickPoints;
+        private int tricksWon;
         private int meldPoints;
 
         private TeamState(TeamSide side, String name) {
@@ -1201,11 +1207,12 @@ public final class BelotMatchFacade {
 
         private void resetHandState() {
             trickPoints = 0;
+            tricksWon = 0;
             meldPoints = 0;
         }
 
         private int totalHandPoints() {
-            return trickPoints == 0 ? 0 : trickPoints + meldPoints;
+            return tricksWon == 0 ? 0 : trickPoints + meldPoints;
         }
     }
 

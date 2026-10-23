@@ -8,17 +8,21 @@ type PopupLayout = "panel" | "table" | "page";
  */
 export const PopupDialog = forwardRef<HTMLDialogElement, ComponentPropsWithoutRef<"dialog"> & {
   layout: PopupLayout;
-}>(({ layout, className = "", ...props }, ref) => (
-  <dialog {...props} ref={ref} className={`belot-dialog game-popup ${className}`.trim()}
-    data-popup-layout={layout} aria-modal={false} />
-));
+}>(function PopupDialog({ layout, className = "", ...props }, ref) {
+  return (
+    <dialog {...props} ref={ref} className={`belot-dialog game-popup ${className}`.trim()}
+      data-popup-layout={layout} aria-modal={props["aria-modal"] ?? layout !== "table"} />
+  );
+});
 
 export function PopupCard({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={`popup-card ${className}`.trim()} />;
 }
 
 export const PopupContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className = "", ...props }, ref) => <div {...props} ref={ref} className={`popup-content ${className}`.trim()} />
+  function PopupContent({ className = "", ...props }, ref) {
+    return <div {...props} ref={ref} className={`popup-content ${className}`.trim()} />;
+  }
 );
 
 export function PopupActions({ className = "", ...props }: HTMLAttributes<HTMLElement>) {

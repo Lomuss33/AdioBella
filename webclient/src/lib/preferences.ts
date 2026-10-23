@@ -1,5 +1,6 @@
 import { TABLE_THEMES } from "./appearanceTheme";
 import type { GameSettingsDrafts, PlayerNameDrafts, TeamNameDrafts } from "../types";
+import type { PlaybackSettings } from "./playback";
 
 export type CardStyle = "original" | "modern" | "heritage" | "italian" | "german" | "french" | "four-color";
 export const CARD_STYLES: readonly CardStyle[] = ["original", "french", "italian", "german", "modern", "heritage", "four-color"];
@@ -14,7 +15,7 @@ function restoreAccent(value: unknown): AccentColor {
   return choice(legacyAccents[value] ?? value, ACCENT_COLORS, "oxblood");
 }
 export interface VisualSettings { cardStyle: CardStyle; accent: AccentColor; }
-export interface Preferences { version: 1; namesVersion?: 2; game: GameSettingsDrafts; players: PlayerNameDrafts; teams: TeamNameDrafts; visual: VisualSettings; }
+export interface Preferences { version: 1; namesVersion?: 2; game: GameSettingsDrafts; players: PlayerNameDrafts; teams: TeamNameDrafts; visual: VisualSettings; playback: PlaybackSettings; }
 export const PREFERENCES_KEY = "belot-preferences-v1";
 export function readStorage(key: string) { try { return localStorage.getItem(key); } catch { return null; } }
 export function writeStorage(key: string, value: string) { try { localStorage.setItem(key, value); return true; } catch { return false; } }
@@ -26,6 +27,7 @@ export function loadPreferences(): Preferences {
   let saved: Record<string, unknown> = {};
   try { const parsed = record(JSON.parse(readStorage(PREFERENCES_KEY) ?? "{}")); if (parsed.version === 1) saved = parsed; } catch { /* Start with valid defaults. */ }
   const game = record(saved.game), players = record(saved.players), teams = record(saved.teams), visual = record(saved.visual);
+  const playback = record(saved.playback);
   // Older clients saved the entire engine default set as if it were user input.
   // Only migrate that exact untouched set; ambiguous/custom saved sets stay intact.
   const legacyDefaults = saved.namesVersion !== 2 && isLegacyDefaultNames(players, teams);
@@ -40,7 +42,8 @@ export function loadPreferences(): Preferences {
     },
     players: { SOUTH: legacyDefaults ? "" : name(players.SOUTH, 24), NORTH: legacyDefaults ? "" : name(players.NORTH, 24), WEST: legacyDefaults ? "" : name(players.WEST, 24), EAST: legacyDefaults ? "" : name(players.EAST, 24) },
     teams: { yourTeam: legacyDefaults ? "" : name(teams.yourTeam, 30), enemyTeam: legacyDefaults ? "" : name(teams.enemyTeam, 30) },
-    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: restoreAccent(visual.accent) }
+    visual: { cardStyle: visual.cardStyle === "classic" ? "original" : choice(visual.cardStyle, CARD_STYLES, "original"), accent: restoreAccent(visual.accent) },
+    playback: { skipAnimations: playback.skipAnimations === true, speed: choice(playback.speed, ["normal", "fast"], "normal") }
   };
 }
 function isLegacyDefaultNames(players: { SOUTH?: unknown; NORTH?: unknown; WEST?: unknown; EAST?: unknown }, teams: { yourTeam?: unknown; enemyTeam?: unknown }) {

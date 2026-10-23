@@ -37,7 +37,8 @@
   user-select: none;
 }
 
-/* A painted face stays underneath decoded art, including after cache eviction. */
+/* Imported artwork is the only face layer. Keep its paper opaque, but never
+   paint the original deck's ranks/pips underneath a different chosen deck. */
 .playing-card-face.has-imported-art {
   border: 0;
   border-radius: 7% / 4%;

@@ -19,6 +19,9 @@ import type {
   TrumpChoice
 } from "../types";
 import PlayingCard from "./PlayingCard";
+import MeldSetSection from "./MeldSetSection";
+import MeldSummary from "./MeldSummary";
+import { PopupDialog, PopupCard, PopupContent, PopupActions, PopupSection } from "./GamePopup";
 import SuitChoiceButton from "./SuitChoiceButton";
 import { usePopupDialog } from "../lib/usePopupDialog";
 import { useMeldReviewLayout } from "../lib/useMeldReviewLayout";
@@ -139,16 +142,17 @@ function ActionPanel({
             : t("Call Bela with this card or play it quietly.");
 
   return (
-    <dialog
+    <PopupDialog
+      layout={isStart ? "page" : isTableAction ? "table" : "panel"}
       ref={dialogRef}
-      className={`belot-dialog ${isStart ? "belot-dialog-setup" : ""} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds ? "belot-dialog-meld-choice" : ""} ${isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${isReportMelds || isAcknowledgeMelds || isTrumpChoice ? "belot-dialog-floating-actions" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
+      className={`${isStart ? "belot-dialog-setup" : "belot-dialog-floating-actions"} ${isMatchComplete ? "belot-dialog-match-result" : ""} ${isNextGame ? "belot-dialog-game-result" : ""} ${isBelaChoice ? "belot-dialog-bela" : ""} ${isTrumpChoice ? "belot-dialog-trump" : ""} ${isReportMelds ? "belot-dialog-meld-choice" : ""} ${isAcknowledgeMelds ? "belot-dialog-meld-action" : ""} ${canSkipTrump ? "belot-dialog-trump-can-skip" : ""}`}
       aria-label={isStart ? t("Start the match") : title}
       aria-modal={false}
       onCancel={(event) => event.preventDefault()}
     >
-      <div className="popup-card" style={isAcknowledgeMelds
+      <PopupCard style={isAcknowledgeMelds
         ? { "--meld-max-columns": meldColumns } as CSSProperties : undefined}>
-            <div ref={contentRef} tabIndex={-1} className="popup-content">
+            <PopupContent ref={contentRef} tabIndex={-1}>
               <div className={`action-popup-header ${isStart ? "action-popup-header-start" : ""}`}>
                 {isMatchComplete ? <div className="match-result-emblem" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -249,8 +253,8 @@ function ActionPanel({
               {isMatchComplete ? (
                 <MatchCompleteSummaryPanel summary={matchCompleteSummary} yourTeam={humanTeam} />
               ) : null}
-            </div>
-            <div className={`popup-footer action-controls ${isTrumpChoice ? "trump-controls" : ""}`}>
+            </PopupContent>
+            <PopupActions className={isTrumpChoice ? "trump-controls" : ""}>
               {isStart ? (
                 <>
                 {onStartWithGuide ? <button type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
@@ -306,9 +310,9 @@ function ActionPanel({
                     )
                   )
                 : null}
-            </div>
-      </div>
-    </dialog>
+            </PopupActions>
+      </PopupCard>
+    </PopupDialog>
   );
 }
 
@@ -331,7 +335,7 @@ function matchCompleteSubtitle(summary: MatchCompleteSummary | null) {
 function GameCompleteSummaryPanel({ summary, yourTeam }: { summary: GameCompleteSummary; yourTeam: string }) {
   return (
     <div className="game-complete-grid">
-      <section className="game-complete-box" aria-label={t("Match and game settings")}>
+      <PopupSection className="game-complete-box" aria-label={t("Match and game settings")}>
         <div className="game-complete-box-title">{t("Settings")}</div>
         <div className="game-complete-box-row">
           <span>{t("Match length")}</span>
@@ -343,8 +347,8 @@ function GameCompleteSummaryPanel({ summary, yourTeam }: { summary: GameComplete
           <span>{t("Game length")}</span>
           <strong>{countText("points", summary.nextGameTargetPoints)}</strong>
         </div>
-      </section>
-      <section className="game-complete-box" aria-label={t("Current standings")}>
+      </PopupSection>
+      <PopupSection className="game-complete-box" aria-label={t("Current standings")}>
         <div className="game-complete-box-title">{t("Standings")}</div>
         <div className="game-complete-score-rows">
           <div className="game-complete-score-row game-complete-score-row-winner" data-team={teamSide(summary.winnerName, yourTeam)}>
@@ -360,7 +364,7 @@ function GameCompleteSummaryPanel({ summary, yourTeam }: { summary: GameComplete
             </strong>
           </div>
         </div>
-      </section>
+      </PopupSection>
     </div>
   );
 }
@@ -369,18 +373,18 @@ function MatchCompleteSummaryPanel({ summary, yourTeam }: { summary: MatchComple
   return (
     <div className="match-result-summary">
       <div className="match-result-scoreboard" role="group" aria-label={t("Final match score")}>
-        <div className="match-result-team match-result-team-winner" data-team={teamSide(summary.winnerName, yourTeam)} role="group" aria-label={summary.winnerName}>
+        <PopupSection className="match-result-team match-result-team-winner" team={teamSide(summary.winnerName, yourTeam)} role="group" aria-label={summary.winnerName}>
           <span className="match-result-place">{t("Match winner")}</span>
           <h3 className="match-result-name">{summary.winnerName}</h3>
           <strong className="match-result-score">{number(summary.winnerMatchWins)}</strong>
           <span className="match-result-unit">{t("Games won")}</span>
-        </div>
-        <div className="match-result-team" data-team={teamSide(summary.loserName, yourTeam)} role="group" aria-label={summary.loserName}>
+        </PopupSection>
+        <PopupSection className="match-result-team" team={teamSide(summary.loserName, yourTeam)} role="group" aria-label={summary.loserName}>
           <span className="match-result-place">{t("Runner-up")}</span>
           <h3 className="match-result-name">{summary.loserName}</h3>
           <strong className="match-result-score">{number(summary.loserMatchWins)}</strong>
           <span className="match-result-unit">{t("Games won")}</span>
-        </div>
+        </PopupSection>
       </div>
       <dl className="match-result-details">
         <div>
@@ -421,59 +425,6 @@ function MeldChoiceSection({ meldSet }: { meldSet: MeldSetView | null }) {
   </div>;
 }
 
-function MeldSetSection({ meldSet, yourTeam, showTeam = false }: { meldSet: MeldSetView | null; yourTeam: string; showTeam?: boolean }) {
-  if (!meldSet) {
-    return <p className="panel-caption">{t("No melds available.")}</p>;
-  }
-
-  return (
-    <section className="meld-popup-stack meld-popup-player-block" data-team={teamSide(meldSet.teamName, yourTeam)} data-meld-count={meldSet.melds.length} aria-label={meldSet.playerName}>
-      {showTeam ? (
-        <div className="meld-team-summary">
-          <div className="meld-team-identity">
-            <span>{t("team")}</span>
-            <strong>{meldSet.teamName}</strong>
-          </div>
-        </div>
-      ) : null}
-      <div className="meld-player-summary">
-        <div className="meld-player-identity">
-          <span>{t("player")}</span>
-          <strong>{meldSet.playerName}</strong>
-        </div>
-        <div className="meld-player-total" aria-label={countText("points", meldSet.totalPoints)}>
-          <strong>{number(meldSet.totalPoints)}</strong>
-          <span>{t("points")}</span>
-        </div>
-      </div>
-      <div className="meld-combination-list">
-        <span className="meld-combination-list-label">{t("Combinations")}</span>
-        {meldSet.melds.length > 0 ? meldSet.melds.map((meld) => (
-          <section key={`${meld.kind}-${meld.label}-${meld.points}`} className="meld-combination-block" aria-label={`${meldDescription(meld)}, ${countText("points", meld.points)}`}>
-            <div className="meld-combination-heading">
-              <div className="meld-combination-name">
-                <strong>{meldDescription(meld)}</strong>
-              </div>
-              <span className="meld-combination-points">+{countText("points", meld.points)}</span>
-            </div>
-            <div className="meld-card-row" data-card-count={meld.cards.length}>
-              {getMeldCardRows(meld.cards).map((cards, row) => (
-                <div key={row} className="meld-card-line" style={{ "--meld-card-count": cards.length } as CSSProperties}>
-                  {cards.map(card => (
-                    <PlayingCard key={`${card.label}-${card.suit}-${card.rank}`} card={card} disabled />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
-        )) : (
-          <p className="meld-details-note">{t("No melds available.")}</p>
-        )}
-      </div>
-    </section>
-  );
-}
-
 function MeldWinnerSection({ meldWinner, yourTeam }: { meldWinner: MeldWinnerView | null; yourTeam: string }) {
   if (!meldWinner) {
     return <p className="panel-caption">{t("No melds this game.")}</p>;
@@ -482,16 +433,9 @@ function MeldWinnerSection({ meldWinner, yourTeam }: { meldWinner: MeldWinnerVie
 
   return (
     <div className="meld-popup-stack meld-winner-stack">
-      <div className="meld-winner-team-summary" data-team={teamSide(meldWinner.teamName, yourTeam)}>
-        <div className="meld-team-identity">
-          <span>{t("Winning team")}</span>
-          <strong>{meldWinner.teamName}</strong>
-        </div>
-        <div className="meld-player-total" aria-label={countText("points", combinedPoints)}>
-          <strong>{number(combinedPoints)}</strong>
-          <span>{t("points")}</span>
-        </div>
-      </div>
+      <PopupSection as="div" className="meld-winner-team-summary" team={teamSide(meldWinner.teamName, yourTeam)}>
+        <MeldSummary kind="team" caption={t("Winning team")} name={meldWinner.teamName} points={combinedPoints} />
+      </PopupSection>
       <div className="meld-winner-players">
         {meldWinner.players.map((meldSet) => (
           <MeldSetSection key={`${meldSet.playerId}-${meldSet.totalPoints}`} meldSet={meldSet} yourTeam={yourTeam} />

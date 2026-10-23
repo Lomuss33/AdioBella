@@ -37,12 +37,11 @@
   user-select: none;
 }
 
-/* Imported artwork already contains its own card edge and paper. Keep it as
-   the single card surface instead of stacking a second CSS card behind it. */
+/* A painted face stays underneath decoded art, including after cache eviction. */
 .playing-card-face.has-imported-art {
   border: 0;
   border-radius: 7% / 4%;
-  background: transparent;
+  background: linear-gradient(180deg, #fff9ef 0%, #eee5d6 100%);
   box-shadow: 0 .22rem .55rem rgba(0, 0, 0, .18);
 }
 

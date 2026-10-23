@@ -15,7 +15,6 @@ import "./styles/table-panels.css";
 import "./styles/table-status.css";
 import "./styles/setup-typography.css";
 import "./styles/match-result.css";
-import "./styles/meld-details.css";
 import "./styles/trump-choice.css";
 import "./styles/meld-review.css";
 import "./styles/meld-choice.css";
@@ -24,6 +23,11 @@ import "./styles/text-roles.css";
 import "./styles/team-cues.css";
 import "./styles/language-select.css";
 import "./styles/terminal.css";
+import "./styles/hand-deal.css";
+import "./styles/dialog-actions.css";
+import "./styles/meld-details.css";
+import "./styles/popup-panels.css";
+import "./styles/card-motion.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <App />

@@ -26,6 +26,22 @@ function resultProps(): ComponentProps<typeof ActionPanel> {
   };
 }
 
+test("keeps both Bela choices usable with the selected card in the shared compact popup", async () => {
+  const props = resultProps();
+  props.matchCompleteSummary = null;
+  props.pendingBelaChoiceCard = { rank: "QUEEN", suit: "SPADES", label: "QUEEN_SPADES", faceUp: true, playable: true };
+  render(<ActionPanel {...props} />);
+  const dialog = screen.getByRole("dialog", { name: "Bela" });
+  expect(dialog).toHaveClass("belot-dialog-bela", "belot-dialog-floating-actions");
+  expect(within(dialog).getAllByRole("img")).toHaveLength(1);
+  const user = userEvent.setup();
+  await user.click(within(dialog).getByRole("button", { name: "Play only" }));
+  expect(props.onPlayWithoutBela).toHaveBeenCalledOnce();
+  expect(props.onPlayWithBela).not.toHaveBeenCalled();
+  await user.click(within(dialog).getByRole("button", { name: "Play + Bela" }));
+  expect(props.onPlayWithBela).toHaveBeenCalledOnce();
+});
+
 test.each([true, false])("keeps trump choices usable without the redundant instruction (skip: %s)", async canSkip => {
   const props = resultProps();
   props.matchCompleteSummary = null;

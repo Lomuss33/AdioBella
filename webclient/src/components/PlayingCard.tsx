@@ -4,6 +4,7 @@ import { toCardPresentation } from "../lib/cardPresentation";
 import { deckCardAsset } from "../lib/deckAssets";
 import { SuitMark, type CardSuit } from "./SuitMark";
 import { useCardStyle } from "./CardStyleContext";
+import { useCardArtwork } from "../lib/cardArtwork";
 
 interface PlayingCardProps {
   card: CardView;
@@ -31,6 +32,7 @@ function PlayingCard({
   const presentation = toCardPresentation(card);
   const deck = useCardStyle();
   const importedArtwork = deckCardAsset(deck, card);
+  const artworkReady = useCardArtwork(importedArtwork);
   const accessibleName = `${ownerName ? `${ownerName}: ` : ""}${cardDescription(card)}`;
   const shellClassName = [
     "playing-card-shell",
@@ -45,18 +47,8 @@ function PlayingCard({
     .join(" ");
 
   const face = (
-    <div className={`playing-card-face ${presentation.className}${importedArtwork ? " has-imported-art" : ""}`} data-card-style={deck}>
-      {importedArtwork ? (
-        <>
-          <img className="playing-card-imported-art" src={importedArtwork} alt="" draggable={false} aria-hidden="true" />
-          {card.faceUp && card.rank && card.suit && (deck === "italian" || deck === "german") && (
-            <span className="playing-card-center-index" aria-hidden="true">
-              <span>{presentation.rankText}</span>
-              <SuitMark suit={card.suit as CardSuit} />
-            </span>
-          )}
-        </>
-      ) : presentation.hidden ? (
+    <div className={`playing-card-face ${presentation.className}${importedArtwork && artworkReady ? " has-imported-art" : ""}`} data-card-style={deck}>
+      {presentation.hidden ? (
         <div className="playing-card-back-mark" aria-hidden="true" />
       ) : (
         <>
@@ -71,6 +63,17 @@ function PlayingCard({
           </span>
         </>
       )}
+      {importedArtwork && artworkReady ? (
+        <>
+          <img className="playing-card-imported-art" src={importedArtwork} onError={event => { event.currentTarget.style.visibility = "hidden"; }} alt="" draggable={false} aria-hidden="true" />
+          {card.faceUp && card.rank && card.suit && (deck === "italian" || deck === "german") && (
+            <span className="playing-card-center-index" aria-hidden="true">
+              <span>{presentation.rankText}</span>
+              <SuitMark suit={card.suit as CardSuit} />
+            </span>
+          )}
+        </>
+      ) : null}
     </div>
   );
 

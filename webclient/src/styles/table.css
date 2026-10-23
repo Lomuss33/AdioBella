@@ -629,12 +629,13 @@ html:has(.app-shell.game-layout) { scrollbar-gutter: stable; }
   display: inline-block;
 }
 .table-arena .trick-points-chip .trick-points-plus {
+  color: var(--team-color, var(--ui-gold-light));
   position: absolute;
   inset-block-start: 0;
   inset-inline-end: calc(100% + .08em);
 }
 .table-arena .arena-play > .trick-pool-shell > .trick-points-chip.pulse {
-  animation: table-trick-points-pulse 260ms ease;
+  animation: table-trick-points-pulse var(--trick-points-pulse-duration, 260ms) ease;
 }
 .table-arena .arena-play > .trick-pool-shell > .trick-points-chip.collect-north {
   transform: translate(-50%, calc(-100% - 1.25rem));

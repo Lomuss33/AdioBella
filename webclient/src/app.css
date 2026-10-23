@@ -685,34 +685,7 @@ button {
   filter: drop-shadow(0 0 0.5rem rgba(214, 186, 116, 0.32));
 }
 
-.trick-cards-animated.phase-collecting .trick-card-stack {
-  transition: transform 520ms ease, opacity 520ms ease, filter 280ms ease;
-}
 
-.trick-cards-animated.phase-collecting .trick-card-stack:not(.winning-stack) {
-  opacity: 0;
-}
-
-.trick-cards-animated.phase-collecting .winning-stack {
-  opacity: 1;
-  filter: drop-shadow(0 0 0.7rem rgba(214, 186, 116, 0.4));
-}
-
-.trick-cards-animated.phase-collecting.winner-north .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% + var(--trick-north-offset-x, 0px)), calc(-50% - var(--trick-offset-y)));
-}
-
-.trick-cards-animated.phase-collecting.winner-south .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% + var(--trick-south-offset-x, 0px)), calc(-50% + var(--trick-offset-y)));
-}
-
-.trick-cards-animated.phase-collecting.winner-west .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% - var(--trick-offset-x)), -50%);
-}
-
-.trick-cards-animated.phase-collecting.winner-east .trick-card-stack:not(.winning-stack) {
-  transform: translate(calc(-50% + var(--trick-offset-x)), -50%);
-}
 
 .player-hand-area .card-fan-row {
   display: grid;
@@ -917,26 +890,6 @@ button {
   opacity: 1;
 }
 
-.trick-card-stack.animated-play.play-enter {
-  opacity: 0;
-}
-
-.trick-card-stack.animated-play.trick-seat-south.play-enter {
-  transform: translate(calc(-50% + var(--trick-south-offset-x, 0px)), calc(-50% + var(--trick-entry-offset-y))) scale(1.05);
-}
-
-.trick-card-stack.animated-play.trick-seat-west.play-enter {
-  transform: translate(calc(-50% - var(--trick-entry-offset-x)), -50%) scale(1.02);
-}
-
-.trick-card-stack.animated-play.trick-seat-north.play-enter {
-  transform: translate(calc(-50% + var(--trick-north-offset-x, 0px)), calc(-50% - var(--trick-entry-offset-y))) scale(1.02);
-}
-
-.trick-card-stack.animated-play.trick-seat-east.play-enter {
-  transform: translate(calc(-50% + var(--trick-entry-offset-x)), -50%) scale(1.02);
-}
-
 .seat-winner-glow {
   box-shadow:
     0 0 0 1px rgba(214, 186, 116, 0.42),
@@ -956,12 +909,12 @@ button {
   color: #f8edc7;
   font-weight: 700;
   font-size: 0.88rem;
-  transition: transform 520ms ease, opacity 520ms ease;
+  transition: transform var(--trick-collect-duration, 560ms) ease, opacity var(--trick-collect-duration, 560ms) ease;
   z-index: 3;
 }
 
 .trick-points-chip.pulse {
-  animation: points-chip-pulse 260ms ease;
+  animation: points-chip-pulse var(--trick-points-pulse-duration, 260ms) ease;
 }
 
 .trick-points-chip.collect-north {

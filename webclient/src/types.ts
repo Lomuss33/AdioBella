@@ -175,6 +175,7 @@ export interface GameSettingsDrafts {
 }
 
 export interface AnimatedPlayStep {
+  origin?: { left: number; top: number; width: number; height: number };
   seat: Seat;
   playerId: string;
   playerName: string;
@@ -193,6 +194,8 @@ export interface TrickResolutionStep {
   highlightDurationMs: number;
   collectStartMs: number;
   collectDurationMs: number;
+  /** Clear table and score marker; keep input locked until this rest ends. */
+  restDurationMs: number;
   lastTrickBonus: number;
 }
 
@@ -201,7 +204,7 @@ export interface AnimatedTrickState {
   plays: AnimatedPlayStep[];
   visiblePlayCount: number;
   enteringPlayIndex: number | null;
-  phase: "placing" | "highlight" | "collecting";
+  phase: "placing" | "highlight" | "collecting" | "resting";
   winnerSeat: Seat | null;
   winnerPlayerId: string | null;
   winningCardKey: string | null;

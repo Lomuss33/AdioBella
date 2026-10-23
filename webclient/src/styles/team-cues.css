@@ -1,8 +1,6 @@
 /* Team pigments identify surfaces and markers; all copy stays white. */
 .belot-dialog.belot-dialog-setup .team-settings-row[data-team],
-.table-arena :is(.game-data-section, .seat-panel, .player-hand-area)[data-team],
-.belot-dialog :is(.match-result-team, .meld-details-player, .meld-popup-player-block,
-  .meld-winner-team-summary, .game-complete-score-row)[data-team] {
+.table-arena :is(.game-data-section, .seat-panel, .player-hand-area)[data-team] {
   background-image: linear-gradient(135deg,
     color-mix(in srgb, var(--team-identity) 20%, transparent),
     color-mix(in srgb, var(--team-identity) 6%, transparent));
@@ -10,9 +8,7 @@
 }
 
 /* Solid inlays carry identity without lighting up the panel. */
-.belot-dialog.belot-dialog-setup .team-settings-row[data-team],
-.belot-dialog :is(.match-result-team, .meld-details-player, .meld-popup-player-block,
-  .meld-winner-team-summary)[data-team] {
+.belot-dialog.belot-dialog-setup .team-settings-row[data-team] {
   border-top-color: var(--team-identity);
   box-shadow: inset 0 2px 0 var(--team-identity);
 }

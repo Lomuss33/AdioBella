@@ -1,132 +1,76 @@
-/* A reading dialog: fixed heading/actions, with only declarations scrolling. */
-.belot-dialog-melds .popup-card {
-  width: min(100%, 680px);
-  border-color: var(--ui-line);
-  background: var(--ui-dialog);
-  border-radius: 16px;
+/* History reuses the live meld review's evidence, team inlays and footer finish. */
+.belot-dialog.belot-dialog-melds {
+  background: rgb(3 7 6 / 72%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: auto;
 }
-.belot-dialog-melds .popup-card[data-declaration-count="0"],
-.belot-dialog-melds .popup-card[data-declaration-count="1"] { width: min(100%, 480px); }
-.belot-dialog-melds .meld-details-heading {
-  padding: 20px 20px 16px;
-  gap: 16px;
-  align-items: flex-start;
-  border-bottom: 1px solid var(--ui-line);
+.belot-dialog.belot-dialog-melds .popup-card {
+  max-height: 100%;
+  border-radius: 0;
+  overflow: visible;
 }
-.belot-dialog-melds .meld-details-heading > div { min-width: 0; }
-.belot-dialog-melds .meld-details-heading h2 {
-  font: 650 22px/1.2 "Segoe UI", system-ui, sans-serif;
-  letter-spacing: -.025em;
-  text-align: left;
-  text-wrap: pretty;
+.belot-dialog.belot-dialog-melds .popup-card > .meld-details-content {
+  display: block;
+  flex: 0 1 auto;
+  padding: 10px 12px 6px;
 }
-.belot-dialog-melds .meld-details-heading p { margin-top: 6px; font-size: 13px; line-height: 1.45; }
-.belot-dialog-melds .meld-details-close {
+.belot-dialog.belot-dialog-melds .meld-details-heading {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  align-items: center;
+  min-height: 32px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0 36px;
+  border: 0;
+}
+.belot-dialog.belot-dialog-melds .meld-details-heading .action-popup-title {
+  width: 100%;
+  font-size: clamp(18px, 2.8vw, 24px);
+  line-height: 1.15;
+  text-align: center;
+}
+.belot-dialog-melds .meld-details-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.belot-dialog.belot-dialog-melds .meld-details-close {
+  position: absolute;
+  inset: 0 0 auto auto;
   display: grid;
   place-items: center;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
   padding: 0;
-  border-radius: 10px;
+  border: 1px solid var(--material-seam);
+  border-radius: 5px;
+  background: var(--material-leather);
+  color: var(--ui-text);
   font: 24px/1 system-ui;
+  cursor: pointer;
 }
 .belot-dialog-melds .meld-details-close:hover { background: var(--ui-selected); border-color: var(--ui-accent); }
 .belot-dialog-melds .meld-details-close:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
-.belot-dialog-melds .meld-details-content {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 16px 20px;
-}
-.belot-dialog-melds .meld-details-player {
-  padding: 16px;
-  border: 1px solid var(--ui-line);
-  border-top: 2px solid var(--section-accent);
-  border-radius: 10px;
-  background: var(--ui-control);
-}
-.belot-dialog-melds .meld-details-player-heading { gap: 16px; align-items: flex-start; }
-.belot-dialog-melds .meld-details-identity {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: baseline;
-  gap: 4px 8px;
-  text-align: left;
-}
-.belot-dialog-melds .meld-details-field-label {
-  color: var(--ui-muted);
-  font-size: 12px;
-  line-height: 1.4;
-  text-transform: capitalize;
-}
-.belot-dialog-melds .meld-details-identity > small { margin-top: 0; }
-.belot-dialog-melds .meld-details-player-heading h3 {
-  margin: 0;
-  color: var(--ui-text);
-  font: 650 16px/1.35 "Segoe UI", system-ui, sans-serif;
-  overflow-wrap: anywhere;
-}
-.belot-dialog-melds .meld-details-player-heading small { margin-top: 3px; font-size: 12px; line-height: 1.4; }
-.belot-dialog-melds .meld-details-player-heading .meld-details-total strong {
-  display: block;
-  color: var(--section-accent);
-  font: 700 28px/1 "Segoe UI", system-ui, sans-serif;
-  letter-spacing: -.04em;
-}
-.belot-dialog-melds .meld-details-total small { font-size: 11px; }
-.belot-dialog-melds .meld-details-breakdown {
-  display: flex;
+.belot-dialog-melds .meld-details-labels { margin: 0; padding-inline-start: 16px; font-size: 12px; }
+.belot-dialog-melds .meld-details-labels li::marker { color: var(--team-identity); }
+.belot-dialog-melds .meld-details-bela { padding-top: 5px; border-top: 1px solid var(--ui-line); font-size: 12px; }
+.belot-dialog-melds .meld-details-empty { padding: 16px 8px; gap: 8px; }
+.belot-dialog-melds .meld-details-empty p { margin: 0; font-size: 12px; }
+.belot-dialog.belot-dialog-melds .popup-footer {
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  margin: 16px 0 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--ui-line);
-  font-size: 12px;
-  line-height: 1.4;
-}
-.belot-dialog-melds .meld-details-breakdown > div { justify-content: flex-start; gap: 6px; }
-.belot-dialog-melds .meld-details-labels { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.5; }
-.belot-dialog-melds .meld-details-labels li {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--section-accent) 6%, transparent);
-}
-.belot-dialog-melds .meld-details-labels li::before { content: ""; flex: 0 0 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--section-accent); align-self: center; }
-.belot-dialog-melds .meld-details-labels li + li { margin-top: 5px; }
-.belot-dialog-melds .meld-details-note { font-size: 12px; line-height: 1.5; }
-.belot-dialog-melds .meld-details-empty { padding: 24px 12px; gap: 10px; }
-.belot-dialog-melds .popup-footer {
-  justify-content: flex-end;
-  padding: 12px 20px;
-  border-top: 1px solid var(--ui-line);
-  background: transparent;
-}
-.belot-dialog-melds .popup-footer .action-button {
-  flex: 0 1 auto;
-  width: auto;
-  min-width: 160px;
-  max-width: 100%;
-  min-height: 44px;
-  padding: 10px 20px;
-  border-radius: 9px;
-  font-size: 13px;
-}
-@media (min-width: 640px) {
-  .belot-dialog-melds .meld-details-content:has(> article:nth-of-type(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 540px) {
-  .belot-dialog-melds .meld-details-heading { padding: 16px 16px 14px; }
-  .belot-dialog-melds .meld-details-content { padding: 14px 16px; }
-  .belot-dialog-melds .meld-details-player { padding: 14px; }
-  .belot-dialog-melds .popup-footer { padding: 12px 16px; }
-  .belot-dialog-melds .popup-footer .action-button { width: 100%; flex-basis: 100%; }
+  padding: 6px 12px max(8px, env(safe-area-inset-bottom));
 }
 @media (max-height: 450px) {
-  .belot-dialog-melds .meld-details-heading { padding-block: 12px; }
-  .belot-dialog-melds .popup-footer { padding-block: 8px; }
+  .belot-dialog.belot-dialog-melds .meld-details-content { padding-block: 4px; }
+  .belot-dialog.belot-dialog-melds .meld-details-heading { margin-bottom: 4px; }
+  .belot-dialog.belot-dialog-melds .popup-footer { padding-block: 4px; }
 }

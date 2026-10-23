@@ -1,13 +1,15 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import type { SessionResponse } from "./types";
+import type { GameEvent, SessionResponse } from "./types";
+import { CARD_TIMING } from "./lib/cardAnimationConfig";
 
 class FakeEventSource {
+  static latest: FakeEventSource;
   public onmessage: ((event: MessageEvent<string>) => void) | null = null;
   public onerror: (() => void) | null = null;
 
-  constructor(_url: string) {}
+  constructor(_url: string) { FakeEventSource.latest = this; }
 
   close() {}
 }
@@ -325,9 +327,8 @@ test("renders trump suit options with lowercase labels", async () => {
 
   render(<App />);
 
-  expect(await screen.findByText("hearts")).toBeInTheDocument();
-  expect(await screen.findByText("clubs")).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "hearts" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "clubs" })).toBeEnabled();
 });
 
 test("browser mode bootstraps without backend requests", async () => {
@@ -546,4 +547,166 @@ test("renders a match-complete popup with rematch and settings actions", async (
   expect(within(dialog).getByText("1,001–854")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Rematch" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Settings" })).toBeEnabled();
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+function cardPlayFixture() {
+  const card = { suit: "HEARTS", rank: "ACE", label: "AH", faceUp: true, playable: true };
+  const before: SessionResponse = { ...baseSession, snapshot: { ...baseSession.snapshot,
+    phase: "TRICK_PLAY", trumpSuit: "HEARTS", lastEventSequence: 1,
+    players: baseSession.snapshot.players.map(p => p.seat === "SOUTH" ? { ...p, hand: [card], handSize: 1, currentTurn: true } : p),
+    pendingAction: { ...baseSession.snapshot.pendingAction, type: "PLAY_CARD", legalCardIndices: [0] }
+  } };
+  const played = { seat: "SOUTH" as const, playerId: "south", playerName: "You", card: { ...card, playable: false } };
+  const after: SessionResponse = { ...before, snapshot: { ...before.snapshot, lastEventSequence: 2,
+    players: before.snapshot.players.map(p => p.seat === "SOUTH" ? { ...p, hand: [], handSize: 0 } : p),
+    trick: { leadPlayerId: "south", cards: [played] }
+  } };
+  const history: GameEvent[] = [{ sequence: 2, type: "ACTION", message: "You played AH.", createdAt: "2026-10-23T12:00:00Z",
+    payload: { eventKind: "PLAY_CARD", playerId: "south", playerSeat: "SOUTH", playerName: "You", card: "AH", rank: "ACE", suit: "HEARTS" } }];
+  return { before, after, history };
+}
+
+test("holds the full trick, clears it for the complete rest, then starts the queued lead without revealing the old snapshot", async () => {
+  const { before, after, history } = cardPlayFixture();
+  const baseCards = (["WEST", "NORTH", "EAST"] as const).map((seat, index) => ({
+    seat, playerId: seat.toLowerCase(), playerName: seat,
+    card: { suit: "HEARTS", rank: ["JACK", "TEN", "KING"][index], label: ["JH", "10H", "KH"][index], faceUp: true, playable: false }
+  }));
+  before.snapshot.trick = { cards: baseCards, leadPlayerId: "west" };
+  const nextCard = { ...baseCards[0], card: { ...baseCards[0].card, rank: "SEVEN", label: "7H" } };
+  after.snapshot.lastEventSequence = 4;
+  after.snapshot.trick = { cards: [nextCard], leadPlayerId: "west" };
+  history.push({ ...history[0], sequence: 3, payload: { eventKind: "TRICK_WIN", winnerSeat: "WEST", winnerPlayerId: "west", trickPoints: "45" } });
+  history.push({ ...history[0], sequence: 4, payload: { eventKind: "PLAY_CARD", playerSeat: "WEST", playerId: "west", playerName: "WEST", card: "7H", suit: "HEARTS", rank: "SEVEN" } });
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? history : String(input).endsWith("/card") ? after : before
+  })));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  vi.useFakeTimers();
+  fireEvent.click(card);
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.selectionMs); });
+  expect(document.querySelectorAll(".trick-card-stack")).toHaveLength(4);
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.leadPlayMs); });
+  expect(document.querySelector(".phase-highlight")).toBeInTheDocument();
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.completedTrickHoldMs - 1); });
+  expect(document.querySelector(".phase-highlight")).toBeInTheDocument();
+  expect(document.querySelectorAll(".trick-card-stack")).toHaveLength(4);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(document.querySelector(".phase-collecting")).toBeInTheDocument();
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.collectionMs); });
+  expect(document.querySelector(".phase-resting")).toBeInTheDocument();
+  expect(document.querySelectorAll(".trick-card-stack")).toHaveLength(0);
+  expect(document.querySelector(".trick-points-chip")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Forfeit game" })).toBeDisabled();
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.clearTableRestMs - 1); });
+  expect(document.querySelectorAll(".trick-card-stack")).toHaveLength(0);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(document.querySelector(".phase-placing")).toBeInTheDocument();
+  expect(document.querySelectorAll(".trick-card-stack")).toHaveLength(1);
+  expect(screen.getByRole("img", { name: "WEST: seven of hearts" })).toBeInTheDocument();
+  await act(async () => { await vi.advanceTimersByTimeAsync(CARD_TIMING.leadPlayMs + CARD_TIMING.unfinishedTrickHoldMs); });
+  expect(document.querySelector(".trick-cards-animated")).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "WEST: seven of hearts" })).toBeInTheDocument();
+  expect(screen.queryByRole("img", { name: "You: ace of hearts" })).not.toBeInTheDocument();
+});
+
+test("keeps the selected face mounted through delayed play and event requests, then hands it directly to the trick", async () => {
+  const { before, after, history } = cardPlayFixture();
+  const play = deferred<Response>(), events = deferred<Response>();
+  let played = false;
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) { played = true; return play.promise; }
+    if (url.includes("/events")) return played ? events.promise : { ok: true, json: async () => [] };
+    return { ok: true, json: async () => before };
+  }));
+  render(<App />);
+  const handCard = await screen.findByRole("button", { name: "ace of hearts" });
+  await userEvent.click(handCard);
+  await act(async () => { await new Promise(r => setTimeout(r, 200)); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(handCard);
+  await act(async () => { play.resolve({ ok: true, json: async () => after } as Response); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(handCard);
+  await act(async () => { events.resolve({ ok: true, json: async () => history } as Response); });
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(document.querySelector(".play-enter")).not.toBeInTheDocument();
+});
+
+test("a rejected play leaves the same hand card visible and usable", async () => {
+  const { before } = cardPlayFixture();
+  const play = deferred<Response>();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) return play.promise;
+    return { ok: true, json: async () => url.includes("/events") ? [] : before };
+  }));
+  render(<App />);
+  const card = await screen.findByRole("button", { name: "ace of hearts" });
+  await userEvent.click(card);
+  await act(async () => { await new Promise(r => setTimeout(r, 200)); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(card);
+  await act(async () => { play.reject(new Error("temporary network error")); });
+  expect(screen.getByRole("button", { name: "ace of hearts" })).toBe(card);
+  expect(card).toBeEnabled();
+});
+
+test("commits the accepted play when history is unavailable instead of restoring the played card", async () => {
+  const { before, after } = cardPlayFixture();
+  let played = false;
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) { played = true; return { ok: true, json: async () => after }; }
+    if (url.includes("/events")) { if (played) throw new Error("history unavailable"); return { ok: true, json: async () => [] }; }
+    return { ok: true, json: async () => before };
+  }));
+  render(<App />);
+  await userEvent.click(await screen.findByRole("button", { name: "ace of hearts" }));
+  expect(await screen.findByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+});
+
+test("keeps the confirmed trick visible while a post-animation refresh is delayed", async () => {
+  const { before, after, history } = cardPlayFixture();
+  const refresh = deferred<Response>();
+  let played = false, refreshing = false;
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) { played = true; return { ok: true, json: async () => after }; }
+    if (url.includes("/events")) return { ok: true, json: async () => played ? history : [] };
+    if (url.endsWith("/session-1") && played) { refreshing = true; return refresh.promise; }
+    return { ok: true, json: async () => before };
+  }));
+  render(<App />);
+  await userEvent.click(await screen.findByRole("button", { name: "ace of hearts" }));
+  act(() => { FakeEventSource.latest.onmessage?.({ data: JSON.stringify(history[0]) } as MessageEvent<string>); });
+  await waitFor(() => expect(refreshing).toBe(true), { timeout: 1800 });
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+  await act(async () => { refresh.resolve({ ok: true, json: async () => before } as Response); });
+  expect(screen.getByRole("img", { name: "You: ace of hearts" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
+});
+
+test("a missing session during play opens the fresh table instead of leaving the pending hand blank", async () => {
+  const { before } = cardPlayFixture();
+  let expired = false;
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/card")) { expired = true; return { ok: false, status: 404, json: async () => ({ code: "SESSION_NOT_FOUND" }) }; }
+    if (url.includes("/events")) return { ok: true, json: async () => [] };
+    return { ok: true, json: async () => expired ? { ...baseSession, sessionId: "fresh-session" } : before };
+  }));
+  render(<App />);
+  await userEvent.click(await screen.findByRole("button", { name: "ace of hearts" }));
+  expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "ace of hearts" })).not.toBeInTheDocument();
 });

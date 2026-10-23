@@ -1,7 +1,11 @@
 import { cardKey, cardPoints, toRenderedTrickCards } from "../lib/trickAnimation";
 import type { AnimatedTrickState, TrickView } from "../types";
 import PlayingCard from "./PlayingCard";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { CARD_TIMING } from "../lib/cardAnimationConfig";
+import { trickLeader } from "../lib/trickLeader";
+import { seatSide } from "../lib/teamSide";
+import { useTrickMotion } from "../lib/useTrickMotion";
 
 interface TrickPileProps {
   trick: TrickView;
@@ -12,16 +16,23 @@ interface TrickPileProps {
 
 function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps) {
   const renderedCards = toRenderedTrickCards(animatedTrick ?? null, trick.cards);
+  const cardsRef = useTrickMotion(animatedTrick, renderedCards.map(cardKey));
   const staticPoints = renderedCards.reduce((total, playedCard) => total + cardPoints(playedCard.card, trumpSuit ?? null), 0);
-  const showPointsChip = animatedTrick?.pointsVisible || staticPoints > 0;
+  const showPointsChip = animatedTrick?.phase !== "resting" && (animatedTrick?.pointsVisible || staticPoints > 0);
   const pointsValue = animatedTrick ? animatedTrick.pointsDisplay : staticPoints;
+  const leadingSeat = animatedTrick && animatedTrick.phase !== "placing" && animatedTrick.winnerSeat
+    ? animatedTrick.winnerSeat : trickLeader(renderedCards, trumpSuit ?? null)?.seat;
 
   return (
-    <div className="trick-pool-shell">
+    <div className="trick-pool-shell" style={{
+      "--trick-collect-duration": `${animatedTrick?.resolution?.collectDurationMs ?? CARD_TIMING.collectionMs}ms`,
+      "--trick-points-pulse-duration": `${CARD_TIMING.pointsPulseMs}ms`
+    } as CSSProperties}>
       {children}
       <div className="trick-pool">
         <span className="trick-size-guide" aria-hidden="true" />
         <div
+          ref={cardsRef}
           className={[
             "trick-cards",
             animatedTrick ? "trick-cards-animated" : "",
@@ -42,7 +53,6 @@ function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps
                   "trick-card-stack",
                   `trick-seat-${playedCard.seat.toLowerCase()}`,
                   isAnimatedPlay ? "animated-play" : "",
-                  isAnimatedPlay && animatedTrick?.enteringPlayIndex === animatedPlayIndex ? "play-enter" : "",
                   animatedTrick?.winningCardKey === key && animatedTrick.phase !== "placing" ? "winning-stack" : ""
                 ]
                   .filter(Boolean)
@@ -66,6 +76,7 @@ function TrickPile({ trick, trumpSuit, animatedTrick, children }: TrickPileProps
       </div>
       {showPointsChip ? (
         <div
+          data-team={seatSide(leadingSeat)}
           className={[
             "trick-points-chip",
             animatedTrick?.pointsPulse ? "pulse" : "",

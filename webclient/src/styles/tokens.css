@@ -31,6 +31,7 @@
   --ui-danger-surface: rgb(120 55 49 / 16%);
   --ui-shadow: 0 12px 32px rgb(0 0 0 / 24%), inset 0 1px 0 var(--ui-highlight);
   --ui-blur: 12px;
+  --dialog-action-height: 68px;
   --card-paper: #fff9ef;
   --card-paper-edge: #eee5d6;
   --card-red: #992d35;
@@ -40,6 +41,9 @@
   --page-bottom: #080a10;
   --felt-center: #20252d;
   --felt-edge: #10141c;
+}
+@media (max-width: 360px), (max-height: 520px) {
+  :root { --dialog-action-height: 56px; }
 }
 /* Palette values are applied before paint by appearanceTheme.ts. */
 /* Setup, the table, history, and every portaled dialog share the same materials.

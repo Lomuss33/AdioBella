@@ -8,17 +8,7 @@ import type {
   Seat,
   TrickResolutionStep
 } from "../types";
-
-export const CARD_SELECTION_DELAY_MS = 140;
-export const PLAY_MOUNT_BUFFER_MS = 32;
-export const HUMAN_LAUNCH_DURATION_MS = 260;
-export const HUMAN_HOLD_AFTER_LAND_MS = 220;
-export const BOT_DROP_DURATION_MS = 210;
-export const BOT_DROP_STAGGER_MS = 150;
-export const WINNER_HIGHLIGHT_HOLD_MS = 650;
-export const POINTS_FINAL_PULSE_MS = 260;
-export const COLLECT_DURATION_MS = 520;
-export const POST_COLLECT_SETTLE_MS = 180;
+import { CARD_TIMING } from "./cardAnimationConfig";
 
 export function buildAnimatedTrick(
   previousSnapshot: GameSnapshot,
@@ -109,6 +99,10 @@ export function toRenderedTrickCards(animation: AnimatedTrickState | null, liveT
     return liveTrickCards;
   }
 
+  // Keep the animation active during the rest so a deferred snapshot cannot
+  // paint either the collected trick or the next lead early.
+  if (animation.phase === "resting") return [];
+
   return [...animation.baseCards, ...animation.plays.slice(0, animation.visiblePlayCount).map(toPlayedCardView)];
 }
 
@@ -121,8 +115,8 @@ function toAnimatedPlayStep(
   const startAtMs =
     stepIndex === 0
       ? 0
-      : HUMAN_LAUNCH_DURATION_MS + HUMAN_HOLD_AFTER_LAND_MS + (stepIndex - 1) * (BOT_DROP_DURATION_MS + BOT_DROP_STAGGER_MS);
-  const durationMs = stepIndex === 0 ? HUMAN_LAUNCH_DURATION_MS : BOT_DROP_DURATION_MS;
+      : CARD_TIMING.leadPlayMs + CARD_TIMING.leadPlayPauseMs + (stepIndex - 1) * (CARD_TIMING.followingPlayMs + CARD_TIMING.followingPlayPauseMs);
+  const durationMs = stepIndex === 0 ? CARD_TIMING.leadPlayMs : CARD_TIMING.followingPlayMs;
   const card = {
     suit: event.payload.suit ?? null,
     rank: event.payload.rank ?? null,
@@ -151,9 +145,10 @@ function toResolutionStep(event: GameEvent, plays: AnimatedPlayStep[]): TrickRes
     winnerPlayerId: event.payload.winnerPlayerId ?? event.payload.playerId ?? "",
     trickPoints: Number(event.payload.trickPoints ?? "0"),
     countUpStartMs: highlightStart,
-    highlightDurationMs: WINNER_HIGHLIGHT_HOLD_MS,
-    collectStartMs: highlightStart + WINNER_HIGHLIGHT_HOLD_MS,
-    collectDurationMs: COLLECT_DURATION_MS,
+    highlightDurationMs: CARD_TIMING.completedTrickHoldMs,
+    collectStartMs: highlightStart + CARD_TIMING.completedTrickHoldMs,
+    collectDurationMs: CARD_TIMING.collectionMs,
+    restDurationMs: CARD_TIMING.clearTableRestMs,
     lastTrickBonus: Number(event.payload.lastTrickBonus ?? "0")
   };
 }

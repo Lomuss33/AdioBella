@@ -56,13 +56,16 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       const rows = Math.max(1, Math.ceil(nodes.length / columns));
       row.dataset.handRows = String(rows);
       spaces.forEach((space, index) => {
-        const display = index < Math.max(1, nodes.length) ? "" : "none";
+        const display = index < Math.max(1, nodes.length) ? row.dataset.layoutReady ? "" : "block" : "none";
         if (space.style.display !== display) space.style.display = display;
         // Measure the grid before mirroring the visible card positions below.
         space.style.removeProperty("transform");
       });
       const first = spaces[0]?.getBoundingClientRect();
-      if (!first?.width || !first.height) return;
+      if (!first?.width || !first.height) {
+        if (!row.dataset.layoutReady) spaces.forEach(space => { space.style.display = ""; });
+        return;
+      }
 
       const bounds = row.getBoundingClientRect();
       const columnPitch = columns > 1
@@ -74,7 +77,9 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       const sameSize = previous?.columns === columns
         && Math.abs(previous.width - first.width) < .02 && Math.abs(previous.height - first.height) < .02;
       const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      const shouldAnimate = (animate && (removed !== null || restoringCards) || continuing) && !reducedMotion;
+      const rearranged = previous && previous.keys.every(key => keys.includes(key))
+        && previous.keys.join("\0") !== keyOrder;
+      const shouldAnimate = (animate && (removed !== null || restoringCards || rearranged) || continuing) && !reducedMotion;
 
       let rowStart = 0;
       const preferredRows = restoringCards && matchesRollback && rollback?.columns === columns ? rollback.rowSizes
@@ -119,6 +124,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
         node.style.top = `${targets[index].top}px`;
         node.style.visibility = "visible";
       });
+      row.dataset.layoutReady = "true";
 
       if (shouldAnimate && previous) {
         // Measure after the batch of position writes, avoiding a layout per card.
@@ -196,6 +202,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       animationsRef.current.clear();
       previousRef.current = null;
       rollbackRef.current = null;
+      delete row.dataset.layoutReady;
     };
   }, [playerId]);
 

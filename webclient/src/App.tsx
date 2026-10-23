@@ -9,18 +9,13 @@ import ActionPanel from "./components/ActionPanel";
 import ConfirmPopup from "./components/ConfirmPopup";
 import TableLayout from "./components/TableLayout";
 import { CardStyleProvider } from "./components/CardStyleContext";
+import { preloadDeckArtwork } from "./lib/cardArtwork";
 import TerminalLog from "./components/TerminalLog";
 import CurrentMove from "./components/CurrentMove";
 import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
 import { HttpError } from "./lib/serverGateway";
-import {
-  buildAnimatedTrickTimeline,
-  CARD_SELECTION_DELAY_MS,
-  HUMAN_HOLD_AFTER_LAND_MS,
-  PLAY_MOUNT_BUFFER_MS,
-  POST_COLLECT_SETTLE_MS,
-  POINTS_FINAL_PULSE_MS
-} from "./lib/trickAnimation";
+import { buildAnimatedTrickTimeline } from "./lib/trickAnimation";
+import { CARD_TIMING } from "./lib/cardAnimationConfig";
 import type {
   AnimatedTrickState,
   GameEvent,
@@ -74,6 +69,9 @@ function App() {
   const deferredSessionRef = useRef<SessionResponse | null>(null);
   const deferredRefreshSessionIdRef = useRef<string | null>(null);
   const pendingAnimationQueueRef = useRef<AnimatedTrickState[]>([]);
+  const pendingPlayRef = useRef(false);
+  const committedSessionRef = useRef<SessionResponse | null>(null);
+  const sessionGenerationRef = useRef(0);
 
   useEffect(() => {
     if (!bootstrapStartedRef.current) {
@@ -91,6 +89,7 @@ function App() {
   useEffect(() => {
     animatedTrickRef.current = animatedTrick;
   }, [animatedTrick]);
+  useEffect(() => { preloadDeckArtwork(visual.cardStyle); }, [visual.cardStyle]);
 
   useEffect(() => {
     savePreferences({ version: 1, namesVersion: initialPreferences.namesVersion, game: gameSettings, players: playerNameDrafts, teams: teamNameDrafts, visual });
@@ -162,7 +161,9 @@ function App() {
   }
 
   async function loadSession(id: string, includeHistory = false) {
+    const generation = sessionGenerationRef.current;
     const response = await gateway.getSession(id);
+    if (generation !== sessionGenerationRef.current) return response;
     applySession(response);
     if (includeHistory) {
       await syncEvents(id, 0);
@@ -171,7 +172,7 @@ function App() {
   }
 
   function scheduleSnapshotRefresh(id: string) {
-    if (animatedTrickRef.current) {
+    if (animatedTrickRef.current || pendingPlayRef.current) {
       deferredRefreshSessionIdRef.current = id;
       return;
     }
@@ -252,31 +253,53 @@ function App() {
   }
 
   async function submitCardPlay(handIndex: number, callBela = false) {
-    if (!sessionId || !snapshot || (selectedHandIndex !== null && pendingBelaChoiceIndex == null) || animatedTrick !== null) {
+    if (!sessionId || !snapshot || pendingPlayRef.current || (selectedHandIndex !== null && pendingBelaChoiceIndex == null) || animatedTrick !== null) {
       return;
     }
 
+    pendingPlayRef.current = true;
+    const generation = sessionGenerationRef.current;
+    clearScheduledRefresh();
     try {
       const previousSequence = lastSequenceRef.current;
       const currentSnapshot = snapshot;
-      const request = gateway.playCard(sessionId, handIndex, callBela);
       setSelectedHandIndex(handIndex);
       setPendingBelaChoiceIndex(null);
-      await delay(CARD_SELECTION_DELAY_MS);
-      setHiddenHandIndex(handIndex);
-
-      const response = await request;
-      const history = await gateway.getSessionEvents(sessionId, previousSequence);
+      const [response] = await Promise.all([
+        gateway.playCard(sessionId, handIndex, callBela), delay(CARD_TIMING.selectionMs)
+      ]);
+      if (generation !== sessionGenerationRef.current) return;
+      // An accepted play remains authoritative even if its optional history fetch fails.
+      let history: GameEvent[];
+      try { history = await gateway.getSessionEvents(sessionId, previousSequence); }
+      catch {
+        if (generation !== sessionGenerationRef.current) return;
+        applySession(response, { forceCommit: true });
+        setSelectedHandIndex(null);
+        return;
+      }
+      if (generation !== sessionGenerationRef.current) return;
       appendHistory(history);
       const trickAnimations = buildAnimatedTrickTimeline(currentSnapshot, response.snapshot, history);
       if (trickAnimations.length > 0) {
+        const origin = document.querySelectorAll<HTMLElement>(".card-fan-row .hand-card-slot")[handIndex]
+          ?.querySelector(".playing-card-shell")?.getBoundingClientRect();
+        const human = currentSnapshot.players.find(player => player.seat === "SOUTH");
+        const played = human?.hand[handIndex];
+        if (origin?.width && origin.height && played) {
+          const step = trickAnimations.flatMap(segment => segment.plays).find(play => play.seat === "SOUTH"
+            && play.card.rank === played.rank && play.card.suit === played.suit);
+          if (step) step.origin = { left: origin.left, top: origin.top, width: origin.width, height: origin.height };
+        }
         applySession(response, { deferSnapshot: true });
+        setHiddenHandIndex(handIndex);
         startTrickAnimationQueue(trickAnimations);
       } else {
-        applySession(response);
+        applySession(response, { forceCommit: true });
         setSelectedHandIndex(null);
       }
     } catch (error) {
+      if (generation !== sessionGenerationRef.current) return;
       if (await recoverMissingSession(error)) {
         return;
       }
@@ -286,7 +309,10 @@ function App() {
       setHiddenHandIndex(null);
       clearAnimationTimeline();
       pendingAnimationQueueRef.current = [];
+      animatedTrickRef.current = null;
       setAnimatedTrick(null);
+    } finally {
+      if (generation === sessionGenerationRef.current) pendingPlayRef.current = false;
     }
   }
 
@@ -442,6 +468,9 @@ function App() {
   }
 
   function resetClientSessionState() {
+    sessionGenerationRef.current += 1;
+    committedSessionRef.current = null;
+    pendingPlayRef.current = false;
     subscriptionRef.current?.close();
     clearScheduledRefresh();
     clearAnimationTimeline();
@@ -483,6 +512,7 @@ function App() {
   function runNextAnimationSegment() {
     const nextAnimation = pendingAnimationQueueRef.current.shift();
     if (!nextAnimation) {
+      clearAnimationTimeline();
       flushDeferredSession();
       return;
     }
@@ -494,31 +524,22 @@ function App() {
     clearAnimationTimeline();
     const runId = animationRunIdRef.current;
     clearScheduledRefresh();
-    setAnimatedTrick({
+    const initial = {
       ...trickAnimation,
-      visiblePlayCount: 0,
+      visiblePlayCount: Math.min(1, trickAnimation.plays.length),
       enteringPlayIndex: null
-    });
+    };
+    animatedTrickRef.current = initial;
+    setAnimatedTrick(initial);
     setSelectedHandIndex(null);
 
     for (const [index, step] of trickAnimation.plays.entries()) {
-      queueAnimation(runId, step.startAtMs, () => {
+      if (index > 0) queueAnimation(runId, step.startAtMs, () => {
         setAnimatedTrick((current) =>
           current
             ? {
                 ...current,
                 visiblePlayCount: Math.max(current.visiblePlayCount, index + 1),
-                enteringPlayIndex: index
-              }
-            : current
-        );
-      });
-
-      queueAnimation(runId, step.startAtMs + PLAY_MOUNT_BUFFER_MS, () => {
-        setAnimatedTrick((current) =>
-          current && current.enteringPlayIndex === index
-            ? {
-                ...current,
                 enteringPlayIndex: null
               }
             : current
@@ -539,10 +560,9 @@ function App() {
     }
 
     const lastPlay = trickAnimation.plays[trickAnimation.plays.length - 1];
-    const finishWithoutWinAt = lastPlay.startAtMs + lastPlay.durationMs + HUMAN_HOLD_AFTER_LAND_MS;
+    const finishWithoutWinAt = lastPlay.startAtMs + lastPlay.durationMs + CARD_TIMING.unfinishedTrickHoldMs;
     if (!trickAnimation.resolution) {
-      queueAnimation(runId, finishWithoutWinAt + POST_COLLECT_SETTLE_MS, () => {
-        setAnimatedTrick(null);
+      queueAnimation(runId, finishWithoutWinAt, () => {
         clearAnimationTimeline();
         runNextAnimationSegment();
       });
@@ -550,6 +570,21 @@ function App() {
     }
 
     const resolution = trickAnimation.resolution;
+    const restTable = () => {
+      setAnimatedTrick((current) => current ? {
+        ...current, phase: "resting", pointsVisible: false, pointsPulse: false
+      } : current);
+      queueAnimation(runId, resolution.restDurationMs, () => {
+        clearAnimationTimeline();
+        runNextAnimationSegment();
+      });
+    };
+    const collectTrick = () => {
+      setAnimatedTrick((current) => current ? {
+        ...current, phase: "collecting", pointsPulse: false
+      } : current);
+      queueAnimation(runId, resolution.collectDurationMs, restTable);
+    };
     queueAnimation(runId, resolution.countUpStartMs, () => {
       setAnimatedTrick((current) =>
         current
@@ -565,25 +600,19 @@ function App() {
             }
           : current
       );
-    });
-
-    queueAnimation(runId, resolution.countUpStartMs + POINTS_FINAL_PULSE_MS, () => {
-      setAnimatedTrick((current) => (current ? { ...current, pointsPulse: false } : current));
-    });
-
-    queueAnimation(runId, resolution.collectStartMs, () => {
-      setAnimatedTrick((current) => (current ? { ...current, phase: "collecting" } : current));
-    });
-
-    queueAnimation(runId, resolution.collectStartMs + resolution.collectDurationMs + POST_COLLECT_SETTLE_MS, () => {
-      setAnimatedTrick(null);
-      clearAnimationTimeline();
-      runNextAnimationSegment();
+      // Schedule each phase from the preceding phase, so a busy browser cannot
+      // consume the reading/rest time by running overdue timers together.
+      queueAnimation(runId, Math.min(CARD_TIMING.pointsPulseMs, resolution.highlightDurationMs), () => {
+        setAnimatedTrick((current) => (current ? { ...current, pointsPulse: false } : current));
+      });
+      queueAnimation(runId, resolution.highlightDurationMs, collectTrick);
     });
   }
 
   function applySession(response: SessionResponse, options?: { deferSnapshot?: boolean; forceCommit?: boolean }) {
-    const shouldDeferSnapshot = !options?.forceCommit && (options?.deferSnapshot || animatedTrickRef.current !== null);
+    const committed = committedSessionRef.current;
+    if (committed?.sessionId === response.sessionId && response.snapshot.lastEventSequence < committed.snapshot.lastEventSequence) return;
+    const shouldDeferSnapshot = !options?.forceCommit && (options?.deferSnapshot || pendingPlayRef.current || animatedTrickRef.current !== null);
 
     setSessionId((current) => (current === response.sessionId ? current : response.sessionId));
     if (persistSession) {
@@ -592,7 +621,9 @@ function App() {
     lastSequenceRef.current = Math.max(lastSequenceRef.current, response.snapshot.lastEventSequence);
 
     if (shouldDeferSnapshot) {
-      deferredSessionRef.current = response;
+      if (!deferredSessionRef.current || response.snapshot.lastEventSequence >= deferredSessionRef.current.snapshot.lastEventSequence) {
+        deferredSessionRef.current = response;
+      }
       return;
     }
 
@@ -600,6 +631,7 @@ function App() {
   }
 
   function commitSessionSnapshot(response: SessionResponse) {
+    committedSessionRef.current = response;
     deferredSessionRef.current = null;
     setSnapshot(response.snapshot);
     setHiddenHandIndex(null);
@@ -609,29 +641,32 @@ function App() {
   }
 
   function flushDeferredSession() {
+    const generation = sessionGenerationRef.current;
     const refreshSessionId = deferredRefreshSessionIdRef.current;
     deferredRefreshSessionIdRef.current = null;
     const deferredSession = deferredSessionRef.current;
+
+    // Commit the known final state before removing its animated representation.
+    // A background refresh must never expose the old hand/trick in between.
+    if (deferredSession) commitSessionSnapshot(deferredSession);
+    animatedTrickRef.current = null;
+    setAnimatedTrick(null);
+    setSelectedHandIndex(null);
 
     if (refreshSessionId) {
       void gateway
         .getSession(refreshSessionId)
         .then((response) => {
-          applySession(response, { forceCommit: true });
+          if (generation === sessionGenerationRef.current) applySession(response);
         })
         .catch(() => {
-          if (deferredSession) {
-            commitSessionSnapshot(deferredSession);
-            return;
-          }
+          if (generation !== sessionGenerationRef.current) return;
+          if (deferredSession) return;
           setErrorMessage("error.refresh");
         });
       return;
     }
 
-    if (deferredSession) {
-      commitSessionSnapshot(deferredSession);
-    }
   }
 
   function appendHistory(history: GameEvent[]) {
@@ -644,8 +679,9 @@ function App() {
   }
 
   async function syncEvents(id: string, afterSequence: number) {
+    const generation = sessionGenerationRef.current;
     const history = await gateway.getSessionEvents(id, afterSequence);
-    appendHistory(history);
+    if (generation === sessionGenerationRef.current) appendHistory(history);
   }
 
   async function recoverMissingSession(error: unknown) {
@@ -653,6 +689,9 @@ function App() {
       return false;
     }
 
+    sessionGenerationRef.current += 1;
+    committedSessionRef.current = null;
+    pendingPlayRef.current = false;
     subscriptionRef.current?.close();
     clearScheduledRefresh();
     clearAnimationTimeline();
@@ -686,7 +725,7 @@ function App() {
   }
 
   function applyFreshSession(response: SessionResponse) {
-    applySession(response);
+    applySession(response, { forceCommit: true });
     void syncEvents(response.sessionId, 0);
   }
 
@@ -731,7 +770,7 @@ function App() {
   }
 
   const playersBySeat = indexPlayers(snapshot?.players ?? []);
-  const highlightedSeat = animatedTrick && animatedTrick.phase !== "placing" ? animatedTrick.winnerSeat : null;
+  const highlightedSeat = animatedTrick && ["highlight", "collecting"].includes(animatedTrick.phase) ? animatedTrick.winnerSeat : null;
   const handLocked = selectedHandIndex !== null || animatedTrick !== null || pendingBelaChoiceIndex !== null;
   const southPlayer = playersBySeat.SOUTH;
   const belaChoiceCard =
@@ -740,14 +779,14 @@ function App() {
       : null;
   const gameCompleteSummary = sessionResetting ? null : latestGameCompleteSummary(snapshot, events);
   const matchCompleteSummary = sessionResetting ? null : latestMatchCompleteSummary(snapshot, events);
-  const canQuitMatch = snapshot !== null && !snapshot.matchComplete && animatedTrick === null;
+  const canQuitMatch = snapshot !== null && !snapshot.matchComplete && !handLocked;
   const canForfeitGame =
     snapshot !== null &&
     snapshot.score.gameNumber > 0 &&
     !snapshot.matchComplete &&
     snapshot.pendingAction.type !== "START_MATCH" &&
     snapshot.pendingAction.type !== "START_NEXT_GAME" &&
-    animatedTrick === null;
+    !handLocked;
 
   const isChoosingTrump = snapshot?.pendingAction.type === "CHOOSE_TRUMP";
   const isTableAction = isChoosingTrump || snapshot?.pendingAction.type === "REPORT_MELDS";

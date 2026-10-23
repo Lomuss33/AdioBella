@@ -1,8 +1,11 @@
 import { useEffect, type RefObject } from "react";
-import { fitMeldReview } from "./meldReviewLayout";
+import { fitMeldReview, type MeldLayout } from "./meldReviewLayout";
+
+const reviewLayouts: MeldLayout[] = ["stacked", "columns", "rows", "columns-rows"];
 
 /** Fit actual declarations, including translated names and the selected deck. */
-export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, enabled: boolean, contentKey: unknown) {
+export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, enabled: boolean, contentKey: unknown,
+  layouts: MeldLayout[] = reviewLayouts) {
   useEffect(() => {
     const dialog = dialogRef.current;
     const card = dialog?.querySelector<HTMLElement>(".popup-card");
@@ -18,8 +21,7 @@ export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, ena
         getComputedStyle(card).getPropertyValue("--meld-card-ratio"), body?.textContent].join(":");
       if (size === lastSize) return;
       lastSize = size;
-      // Keep one content column: the longest card row owns the popup width.
-      const best = fitMeldReview(["stacked"], (layout, density, width) => {
+      const best = fitMeldReview(layouts, (layout, density, width) => {
         dialog.dataset.meldLayout = layout;
         dialog.dataset.meldDensity = density;
         card.style.setProperty("--meld-card-width", `${width}px`);
@@ -48,5 +50,5 @@ export function useMeldReviewLayout(dialogRef: RefObject<HTMLDialogElement>, ena
       delete dialog.dataset.meldDensity;
       card.style.removeProperty("--meld-card-width");
     };
-  }, [dialogRef, enabled, contentKey]);
+  }, [dialogRef, enabled, contentKey, layouts]);
 }

@@ -4,7 +4,7 @@ html:has(.belot-dialog-setup[open]) {
   scrollbar-gutter: auto;
 }
 .belot-dialog.belot-dialog-setup {
-  --setup-action-height: 68px;
+  --setup-action-height: var(--dialog-action-height);
   padding: 0;
   background: var(--ui-dialog);
   backdrop-filter: none;
@@ -209,7 +209,6 @@ html:has(.belot-dialog-setup[open]) {
 }
 .setup-guide-button > svg { flex-shrink: 0; }
 @media (max-width: 360px), (max-height: 520px) {
-  .belot-dialog.belot-dialog-setup { --setup-action-height: 56px; }
   .belot-dialog.belot-dialog-setup .popup-footer:has(.setup-guide-button) .action-button { font-size: 11px; gap: 5px; }
 }
 

@@ -1,0 +1,20 @@
+/* Main footer actions share the setup button's dimensions across every dialog.
+   Keep this after the individual popup styles so compact content rules cannot
+   shrink Continue, Back to table or one half of a paired decision. */
+.belot-dialog[open] > .popup-card > .popup-footer .action-button {
+  display: flex;
+  align-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--dialog-action-height);
+  padding: 10px 16px;
+  border-radius: 5px;
+}
+
+/* Single confirmations stay substantial and centered without becoming a bar
+   across the full guide page. Two-action footers retain their equal columns. */
+.belot-dialog[open] > .popup-card > .popup-footer > .action-button:only-child {
+  flex: 1 1 280px;
+  width: 100%;
+  max-width: 280px;
+}

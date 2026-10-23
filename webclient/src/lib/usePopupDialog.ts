@@ -10,6 +10,8 @@ export function usePopupDialog(visible: boolean, {
     if (!visible || !dialog) return;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingInlineEnd;
+    const previousGutter = document.documentElement.style.scrollbarGutter;
     const viewport = window.visualViewport;
     const containTab = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !modal) {
@@ -38,7 +40,15 @@ export function usePopupDialog(visible: boolean, {
         dialog.style.top = `${viewport.offsetTop}px`;
       }
     };
-    if (lockPageScroll) document.body.style.overflow = "hidden";
+    if (lockPageScroll) {
+      // A reserved root gutter also clips fixed overlays. Release it while
+      // locked, retaining that space in the page so the table cannot jump.
+      const gutter = Math.max(0, window.innerWidth - document.documentElement.getBoundingClientRect().width);
+      const padding = parseFloat(getComputedStyle(document.body).paddingInlineEnd) || 0;
+      document.body.style.paddingInlineEnd = `${padding + gutter}px`;
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.scrollbarGutter = "auto";
+    }
     // Native modal dialogs enter the browser's top layer and make the rest of
     // the document inert, which prevents preview annotation overlays from
     // selecting popup controls. Keep popups in the document layer instead.
@@ -55,7 +65,11 @@ export function usePopupDialog(visible: boolean, {
       dialog.close();
       dialog.style.removeProperty("height");
       dialog.style.removeProperty("top");
-      if (lockPageScroll) document.body.style.overflow = previousOverflow;
+      if (lockPageScroll) {
+        document.body.style.overflow = previousOverflow;
+        document.body.style.paddingInlineEnd = previousPadding;
+        document.documentElement.style.scrollbarGutter = previousGutter;
+      }
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
   }, [visible, modal, fitToViewport, lockPageScroll]);

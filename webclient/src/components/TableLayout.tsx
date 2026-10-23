@@ -34,6 +34,8 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
   canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, tableActionPanel }: TableLayoutProps) {
   const arenaRef = useRef<HTMLElement>(null);
+  const syncLayoutRef = useRef<() => void>(() => {});
+  const trumpPickerVisible = Boolean(tableActionPanel) && snapshot?.pendingAction.type === "CHOOSE_TRUMP";
   useLayoutEffect(() => {
     const arena = arenaRef.current;
     const pool = arena?.querySelector<HTMLElement>(".trick-pool");
@@ -115,11 +117,32 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         const next = `${value}px`;
         if (arena.style.getPropertyValue(property) !== next) arena.style.setProperty(property, next);
       }
+      const trumpPicker = arena.querySelector<HTMLElement>(".table-trump-picker");
+      if (trumpPicker) {
+        // Fill the real space between the upper seats and the hand/status lane.
+        // Absolute insets keep the playing-card layout independent of the picker.
+        const pickerLane = shell.getBoundingClientRect();
+        const edgeGap = px(getComputedStyle(trumpPicker).getPropertyValue("--trump-edge-gap"));
+        const above = [...arena.querySelectorAll<HTMLElement>(".arena-play > .seat-panel")]
+          .map(seat => seat.getBoundingClientRect()).filter(seat => seat.bottom <= pickerLane.top + .5);
+        const top = above.length ? Math.max(...above.map(seat => seat.bottom)) + edgeGap : pickerLane.top;
+        const bottom = (beside ? status : handArea).getBoundingClientRect().top - edgeGap;
+        if (bottom > top) {
+          for (const [property, value] of Object.entries({
+            "--trump-edge-start": top - pickerLane.top,
+            "--trump-edge-end": pickerLane.bottom - bottom
+          })) {
+            const next = `${value}px`;
+            if (trumpPicker.style.getPropertyValue(property) !== next) trumpPicker.style.setProperty(property, next);
+          }
+        }
+      }
     };
     const applyLayout = () => {
       syncHandSize();
       handRow.dispatchEvent(new Event(HAND_LAYOUT_APPLIED));
     };
+    syncLayoutRef.current = applyLayout;
     applyLayout();
     // Settle card-count-driven sizes before the hand captures its reflow targets.
     // The requesting reflow applies these sizes itself, retaining its animation.
@@ -132,6 +155,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
     [arena, pool, handRow, handArea, status].forEach(element => observer.observe(element));
     window.addEventListener("resize", scheduleSync);
     return () => {
+      syncLayoutRef.current = () => {};
       observer.disconnect();
       handRow.removeEventListener(HAND_LAYOUT_REQUEST, syncHandSize);
       window.removeEventListener("resize", scheduleSync);
@@ -146,8 +170,15 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
       arena.style.removeProperty("--table-trick-offset-y");
       arena.style.removeProperty("--trick-north-offset-x");
       arena.style.removeProperty("--trick-south-offset-x");
+      const trumpPicker = arena.querySelector<HTMLElement>(".table-trump-picker");
+      trumpPicker?.style.removeProperty("--trump-edge-start");
+      trumpPicker?.style.removeProperty("--trump-edge-end");
     };
   }, [Boolean(playersBySeat.SOUTH)]);
+  useLayoutEffect(() => {
+    // A chooser can appear while the same six card identities remain in hand.
+    if (trumpPickerVisible) syncLayoutRef.current();
+  }, [trumpPickerVisible]);
   const dealerSeat = snapshot?.players.find((player) => player.dealer)?.seat;
   const declarerSeat = snapshot?.players.find((player) => player.id === snapshot.declarerPlayerId)?.seat;
   const seat = (position: Seat) => <SeatPanel
@@ -170,7 +201,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
         {seat("EAST")}
       </div>
       <div className="arena-bottom">
-        <PlayerHand player={playersBySeat.SOUTH} pendingType={snapshot?.pendingAction.type}
+        <PlayerHand player={playersBySeat.SOUTH} pendingType={snapshot?.pendingAction.type} trumpSuit={snapshot?.trumpSuit}
           selectedIndex={selectedHandIndex} hiddenIndex={hiddenHandIndex} locked={handLocked}
           winnerGlow={highlightedSeat === "SOUTH"} showDealer={dealerSeat === "SOUTH"}
           showTrumpCaller={declarerSeat === "SOUTH"} onPlayCard={onPlayCard} />

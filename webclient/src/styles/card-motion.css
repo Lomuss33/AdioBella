@@ -1,0 +1,14 @@
+/* Faces remain painted while geometry is measured and while cards move. */
+.table-arena .card-fan-row:not([data-layout-ready]) .hand-slot-empty { display: none; }
+.table-arena .card-fan-row:not([data-layout-ready]) .hand-card-slot {
+  position: relative;
+  visibility: visible;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / var(--playing-card-height-factor, 1.42);
+}
+.table-arena .trick-card-stack > .playing-card-shell { transform-origin: top left; }
+.table-arena .arena-play:has(.trick-cards-animated) { position: relative; z-index: 4; }
+.table-arena .trick-pool-shell:has(.trick-cards-animated) { z-index: 4; }
+/* Placement and collection are driven by measured card paths, not opacity gates. */
+.table-arena .trick-cards-animated .trick-card-stack { transition: filter 220ms ease; }

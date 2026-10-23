@@ -1,12 +1,15 @@
+import type { CSSProperties } from "react";
 import { t } from "../i18n";
 import type { PlayerView } from "../types";
 import { HAND_CAPACITY } from "../lib/handLayout";
 import { useHandReflow } from "../lib/useHandReflow";
+import { DEAL_HIGHLIGHT_MS, useNewlyDealtCards } from "../lib/useNewlyDealtCards";
 import PlayingCard from "./PlayingCard";
 
 interface PlayerHandProps {
   player?: PlayerView;
   pendingType?: string;
+  trumpSuit?: string | null;
   selectedIndex?: number | null;
   hiddenIndex?: number | null;
   locked?: boolean;
@@ -17,10 +20,13 @@ interface PlayerHandProps {
 }
 
 const HAND_SPACES = Array.from({ length: HAND_CAPACITY }, (_, index) => index);
+// Keep the CSS finish and the cleanup timer on the same clock.
+const DEAL_HIGHLIGHT_STYLE = { "--hand-deal-duration": `${DEAL_HIGHLIGHT_MS}ms` } as CSSProperties;
 
 function PlayerHand({
   player,
   pendingType,
+  trumpSuit,
   selectedIndex,
   hiddenIndex,
   locked,
@@ -30,11 +36,12 @@ function PlayerHand({
   onPlayCard
 }: PlayerHandProps) {
   const choosingCard = pendingType === "PLAY_CARD" && !locked;
-  const visibleCards = (player?.hand ?? [])
-    .map((card, handIndex) => (hiddenIndex !== null && handIndex === hiddenIndex ? null : { handIndex, card }))
-    .filter((slot): slot is { handIndex: number; card: PlayerView["hand"][number] } => slot !== null)
-    .map(slot => ({ ...slot, key: `card-${slot.card.suit}-${slot.card.rank}-${slot.card.label}` }));
+  const handCards = (player?.hand ?? []).map((card, handIndex) => ({
+    card, handIndex, key: `card-${card.suit}-${card.rank}-${card.label}`
+  }));
+  const visibleCards = handCards.filter(slot => slot.handIndex !== hiddenIndex);
   const rowRef = useHandReflow(player?.id, visibleCards.map(slot => slot.key));
+  const newlyDealt = useNewlyDealtCards(player?.id, handCards.map(slot => slot.key), trumpSuit, pendingType);
 
   if (!player) return null;
 
@@ -44,11 +51,11 @@ function PlayerHand({
       data-team="your" role="group" aria-label={t("Your hand")}
     >
       <div className="player-hand-decoration" aria-hidden="true" />
-      <div ref={rowRef} className="card-fan-row" data-card-count={visibleCards.length}
+      <div ref={rowRef} className="card-fan-row" style={DEAL_HIGHLIGHT_STYLE} data-card-count={visibleCards.length}
         data-layout-count={pendingType === "CHOOSE_TRUMP" ? HAND_CAPACITY : visibleCards.length}>
         {HAND_SPACES.map(index => <div key={`space-${index}`} className="hand-slot hand-slot-empty" aria-hidden="true" />)}
         {visibleCards.map(slot => (
-          <div key={slot.key} className="hand-card-slot" data-card-key={slot.key}>
+          <div key={slot.key} className={`hand-card-slot${newlyDealt.includes(slot.key) ? " is-newly-dealt" : ""}`} data-card-key={slot.key}>
             <PlayingCard
               card={slot.card}
               disabled={!slot.card.playable || pendingType !== "PLAY_CARD" || locked}

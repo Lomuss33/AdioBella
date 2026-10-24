@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check:decks": "vitest run tests/deckAssets.test.js",
+    "prebuild": "npm run check:decks",
+    "prebuild:pages": "npm run check:decks",
     "build": "tsc && vite build",
     "build:pages": "tsc && vite build --mode pages",
     "test": "vitest run"

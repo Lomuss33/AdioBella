@@ -140,7 +140,9 @@ function App() {
     }
 
     subscriptionRef.current?.close();
-    const source = gateway.subscribe(sessionId, lastSequenceRef.current, {
+    let source: { close(): void };
+    try {
+      source = gateway.subscribe(sessionId, lastSequenceRef.current, {
       onEvent: (event: GameEvent) => {
         lastSequenceRef.current = Math.max(lastSequenceRef.current, event.sequence);
         setEvents((current) => dedupeEvents([...current, event]).slice(-100));
@@ -152,7 +154,15 @@ function App() {
       onError: () => {
         setErrorMessage("error.stream");
       }
-    });
+      });
+    } catch (error) {
+      // A browser-runtime restart can invalidate a session before subscribing.
+      // Recover through the same path as a missing HTTP session, never a render crash.
+      void recoverMissingSession(error).then(recovered => {
+        if (!recovered) setErrorMessage("error.stream");
+      });
+      return;
+    }
     subscriptionRef.current = source;
 
     return () => source.close();

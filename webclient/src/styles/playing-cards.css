@@ -7,6 +7,10 @@
 .playing-card-shell[data-card-style="heritage"],
 .playing-card-face[data-card-style="heritage"] { --playing-card-height-factor: 1.4; }
 
+/* Each card paints as one unit. Later/right-hand cards cover the complete
+   preceding card, including its positioned pips, indices and highlights. */
+.playing-card-shell { isolation: isolate; }
+
 /* The original Belot face: simple indexed corners and a clear center pip. */
 .playing-card-face {
   position: relative;

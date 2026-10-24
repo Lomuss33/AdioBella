@@ -25,6 +25,42 @@ class SessionControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    void completesAMatchThroughTheHttpContract() throws Exception {
+        String sessionId = createSessionId();
+        mockMvc.perform(post("/api/sessions/{sessionId}/settings", sessionId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"matchTargetWins\":1,\"gameLength\":\"SHORT\",\"difficulty\":\"HARD\"}"))
+                .andExpect(status().isOk());
+        String response = mockMvc.perform(post("/api/sessions/{sessionId}/start", sessionId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode snapshot = objectMapper.readTree(response).path("snapshot");
+        int actions = 0;
+        while (!snapshot.path("matchComplete").asBoolean() && actions++ < 1000) {
+            JsonNode pending = snapshot.path("pendingAction");
+            String route, body;
+            switch (pending.path("type").asText()) {
+                case "CHOOSE_TRUMP" -> { route = "trump"; body = "{\"choice\":\"HEARTS\"}"; }
+                case "REPORT_MELDS" -> { route = "melds"; body = "{\"declare\":true}"; }
+                case "ACKNOWLEDGE_MELDS" -> { route = "melds/ack"; body = "{\"acknowledged\":true}"; }
+                case "PLAY_CARD" -> {
+                    int index = pending.path("legalCardIndices").get(0).asInt();
+                    boolean bela = false;
+                    for (JsonNode eligible : pending.path("belaEligibleCardIndices")) bela |= eligible.asInt() == index;
+                    route = "card"; body = "{\"handIndex\":" + index + ",\"callBela\":" + bela + "}";
+                }
+                default -> throw new AssertionError("Unexpected pending action: " + pending);
+            }
+            response = mockMvc.perform(post("/api/sessions/{sessionId}/" + route, sessionId)
+                    .contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            snapshot = objectMapper.readTree(response).path("snapshot");
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(snapshot.path("matchComplete").asBoolean());
+        mockMvc.perform(get("/api/sessions/{sessionId}/events", sessionId))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.payload.eventKind == 'MATCH_WIN')]").isNotEmpty());
+    }
+
+    @Test
     void createsSessionAndReturnsSnapshot() throws Exception {
         mockMvc.perform(post("/api/sessions")
                         .contentType(MediaType.APPLICATION_JSON)

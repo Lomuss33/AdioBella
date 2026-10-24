@@ -27,6 +27,20 @@ test("a low trump takes a plain ace and the correct team receives its points", (
   expect(win.payload.trickPoints).toBe("18");
 });
 
+test("legal discards and overtrumping follow the actual current winner", () => {
+  const { facade, state } = scenario([
+    ["HEARTS:NINE", "HEARTS:SEVEN", "DIAMONDS:ACE"], [], [], []
+  ]);
+  state.currentTrick.cards = [
+    { playerIndex: 1, card: { suit: "SPADES", rank: "ACE" } },
+    { playerIndex: 2, card: { suit: "HEARTS", rank: "EIGHT" } },
+    { playerIndex: 3, card: { suit: "SPADES", rank: "TEN" } }
+  ];
+  expect(facade.getSnapshot().pendingAction.legalCardIndices).toEqual([0, 1, 2]);
+  state.currentTrick.cards[2].card = { suit: "HEARTS", rank: "QUEEN" };
+  expect(facade.getSnapshot().pendingAction.legalCardIndices).toEqual([0]);
+});
+
 test("winning a zero-point trick makes the team's declared melds count", () => {
   const { facade, state } = scenario([
     ["CLUBS:EIGHT", "HEARTS:ACE"], ["CLUBS:SEVEN", "HEARTS:SEVEN"],

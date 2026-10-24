@@ -400,6 +400,22 @@ test("browser mode bootstraps without backend requests", async () => {
   expect(window.localStorage.getItem("belot-session-id")).toBeNull();
 });
 
+test("a missing browser session during subscription recovers without crashing the app", async () => {
+  vi.stubEnv("VITE_GAME_RUNTIME", "browser");
+  const { browserGateway } = await import("./lib/browserGateway");
+  const subscription = vi.spyOn(browserGateway, "subscribe").mockImplementationOnce(() => {
+    throw Object.assign(new Error("Session not found."), { code: "error.session" });
+  });
+  try {
+    render(<App />);
+    await waitFor(() => expect(subscription).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole("button", { name: "Start the match" })).toBeEnabled();
+    expect(screen.getByRole("region", { name: "Belot table" })).toBeInTheDocument();
+  } finally {
+    subscription.mockRestore();
+  }
+});
+
 test("renders the winning team and its player melds", async () => {
   const meldWinnerSession: SessionResponse = {
     ...baseSession,

@@ -17,6 +17,15 @@ const hotData = import.meta.hot?.data;
 const cache: ArtworkCache = hotData?.cardArtworkCache ?? {
   assets: new Map(), decks: new Map(), listeners: new Set()
 };
+// Restoring a missing public asset must also repair an already-open preview.
+// Preserve decoded faces, but retry failed resources once on a module refresh.
+if (hotData) {
+  let retry = false;
+  for (const [src, entry] of cache.assets) {
+    if (entry.status === "failed") { cache.assets.delete(src); retry = true; }
+  }
+  if (retry) cache.decks.clear();
+}
 if (hotData) hotData.cardArtworkCache = cache;
 const { assets, decks, listeners } = cache;
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
@@ -51,7 +60,7 @@ export function loadCardArtwork(src: string): Promise<boolean> {
 
 export function useCardArtwork(src: string | null) {
   const status = useSyncExternalStore(subscribe, () => src ? assets.get(src)?.status ?? "loading" : "ready", () => "loading");
-  useEffect(() => { if (src) void loadCardArtwork(src); }, [src]);
+  useEffect(() => { if (src && status === "loading") void loadCardArtwork(src); }, [src, status]);
   return status === "ready";
 }
 

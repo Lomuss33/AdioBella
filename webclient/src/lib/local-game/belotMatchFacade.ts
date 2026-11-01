@@ -11,77 +11,41 @@ import type {
   PendingAction,
   PlayedCardView,
   PlayerView,
-  Rank,
   ScoreView,
   Suit,
   TrumpChoice
 } from "../../types";
+import {
+  belaEligibleCardIndices,
+  cardLabel,
+  cardPoints,
+  chooseCardForAi,
+  chooseTrumpForAi,
+  compareCards,
+  createShuffledDeck,
+  findWinningPlay,
+  isBelaEligible,
+  legalCardIndices,
+  suitDisplayNames
+} from "./aiAndRules";
+import type {
+  Card,
+  MeldCombination,
+  MeldSet,
+  MeldWinner,
+  PlayedCard,
+  PlayerState,
+  Seat,
+  TeamSide,
+  TeamState,
+  TrickState
+} from "./meldService";
+import { determineWinningMeldWinner, evaluateMeldSet } from "./meldService";
 import type { RandomSource } from "./random";
 import { BrowserRandom } from "./random";
-import { trickCardStrength as cardStrength } from "../trickRules";
 
 type ActionType = "NONE" | "START_MATCH" | "START_NEXT_GAME" | "CHOOSE_TRUMP" | "REPORT_MELDS" | "ACKNOWLEDGE_MELDS" | "PLAY_CARD";
 type Phase = "READY_TO_START" | "BETWEEN_GAMES" | "TRUMP_SELECTION" | "TRICK_PLAY" | "MATCH_COMPLETE";
-type TeamSide = "YOURS" | "ENEMIES";
-type Seat = "SOUTH" | "WEST" | "NORTH" | "EAST";
-interface Card {
-  suit: Suit;
-  rank: Rank;
-}
-
-interface PlayedCard {
-  playerIndex: number;
-  card: Card;
-}
-
-interface TeamState {
-  side: TeamSide;
-  name: string;
-  matchWins: number;
-  gameScore: number;
-  trickPoints: number;
-  tricksWon: number;
-  meldPoints: number;
-}
-
-interface PlayerState {
-  index: number;
-  id: string;
-  name: string;
-  seat: Seat;
-  human: boolean;
-  team: TeamState;
-  hand: Card[];
-  belaCalled?: boolean;
-  belaResolved?: boolean;
-}
-
-interface TrickState {
-  leadPlayerIndex: number;
-  cards: PlayedCard[];
-}
-
-interface MeldCombination {
-  kind: string;
-  label: string;
-  points: number;
-  comparisonValue: number;
-  cards: Card[];
-}
-
-interface MeldSet {
-  player: PlayerState;
-  melds: MeldCombination[];
-  totalPoints: number;
-  strongestComparisonValue: number;
-}
-
-interface MeldWinner {
-  team: TeamSide;
-  teamName: string;
-  players: MeldSet[];
-  totalPoints: number;
-}
 
 interface MatchState {
   difficulty: Difficulty;
@@ -114,30 +78,6 @@ const DEFAULT_MATCH_TARGET_WINS: MatchTargetWins = 3;
 const FULL_HAND_SIZE = 8;
 const OPENING_DEAL_SIZE = 6;
 const LAST_TRICK_BONUS = 10;
-const SUITS: Suit[] = ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"];
-const RANKS: Rank[] = ["SEVEN", "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING", "ACE"];
-const suitSymbols: Record<Suit, string> = {
-  SPADES: "S",
-  HEARTS: "H",
-  DIAMONDS: "D",
-  CLUBS: "C"
-};
-const suitDisplayNames: Record<Suit, string> = {
-  SPADES: "Spades",
-  HEARTS: "Hearts",
-  DIAMONDS: "Diamonds",
-  CLUBS: "Clubs"
-};
-const rankSymbols: Record<Rank, string> = {
-  SEVEN: "7",
-  EIGHT: "8",
-  NINE: "9",
-  TEN: "10",
-  JACK: "J",
-  QUEEN: "Q",
-  KING: "K",
-  ACE: "A"
-};
 
 export class BelotMatchFacade {
   private readonly random: RandomSource;
@@ -454,7 +394,7 @@ export class BelotMatchFacade {
           return;
         }
 
-        const choice = this.chooseTrumpForAi(player, this.state.trumpTurnOffset === 3);
+        const choice = chooseTrumpForAi(player, this.state.trumpTurnOffset === 3, this.state.difficulty);
         if (choice === "SKIP") {
           this.log("ACTION", `${player.name} skipped trump selection.`, {
             eventKind: "TRUMP_SKIP",
@@ -492,14 +432,21 @@ export class BelotMatchFacade {
         return;
       }
 
-      const chosenIndex = this.chooseCardForAi(player, legal);
-      this.playCardInternal(chosenIndex, this.belaEligibleCardIndices(player).includes(chosenIndex));
+      const chosenIndex = chooseCardForAi(
+        player,
+        legal,
+        this.state.currentTrick?.cards ?? [],
+        this.state.trumpSuit,
+        this.state.difficulty,
+        this.random
+      );
+      this.playCardInternal(chosenIndex, belaEligibleCardIndices(player, this.state.trumpSuit).includes(chosenIndex));
     }
   }
 
   private playCardInternal(handIndex: number, callBela: boolean) {
     const player = this.currentPlayer();
-    const belaEligible = this.isBelaEligible(player, handIndex);
+    const belaEligible = isBelaEligible(player, handIndex, this.state.trumpSuit);
     if (callBela && !belaEligible) {
       this.reject("BELA_NOT_ALLOWED", "Bela cannot be called with that card.");
     }
@@ -627,7 +574,8 @@ export class BelotMatchFacade {
       const teamOneAward = defenders === this.state.teamOne ? totalPoints : 0;
       const teamTwoAward = defenders === this.state.teamTwo ? totalPoints : 0;
       this.log("SCORE", `${declarer.name} failed the hand. ${defenders.name} collected all ${totalPoints} points.`, {
-        eventKind: "HAND_FAILED", team: declarer.name,
+        eventKind: "HAND_FAILED",
+        team: declarer.name,
         winner: defenders.name,
         points: String(totalPoints),
         teamOneName: this.state.teamOne.name,
@@ -760,69 +708,6 @@ export class BelotMatchFacade {
     }
   }
 
-  private chooseCardForAi(player: PlayerState, legalIndices: number[]) {
-    switch (this.state.difficulty) {
-      case "EASY":
-        return legalIndices[this.random.nextInt(legalIndices.length)];
-      case "HARD":
-        return this.chooseHardCard(player, legalIndices);
-      case "NORMAL":
-      default:
-        return this.chooseNormalCard(player, legalIndices);
-    }
-  }
-
-  private chooseNormalCard(player: PlayerState, legalIndices: number[]) {
-    const currentWinner = findWinningPlay(this.state.currentTrick?.cards ?? [], this.state.trumpSuit);
-    const currentLeadSuit = leadSuit(this.state.currentTrick?.cards ?? []);
-    return [...legalIndices].sort((leftIndex, rightIndex) => {
-      const leftCard = player.hand[leftIndex];
-      const rightCard = player.hand[rightIndex];
-      const leftWins = !currentWinner || cardWins(leftCard, currentWinner.card, currentLeadSuit, this.state.trumpSuit);
-      const rightWins = !currentWinner || cardWins(rightCard, currentWinner.card, currentLeadSuit, this.state.trumpSuit);
-      const leftScore = leftWins ? cardPoints(leftCard, this.state.trumpSuit) : 100 + cardPoints(leftCard, this.state.trumpSuit);
-      const rightScore = rightWins ? cardPoints(rightCard, this.state.trumpSuit) : 100 + cardPoints(rightCard, this.state.trumpSuit);
-      return leftScore - rightScore;
-    })[0];
-  }
-
-  private chooseHardCard(player: PlayerState, legalIndices: number[]) {
-    const currentWinner = findWinningPlay(this.state.currentTrick?.cards ?? [], this.state.trumpSuit);
-    const currentLeadSuit = leadSuit(this.state.currentTrick?.cards ?? []);
-    const winningCards = legalIndices.filter(
-      (index) => !currentWinner || cardWins(player.hand[index], currentWinner.card, currentLeadSuit, this.state.trumpSuit)
-    );
-
-    if (winningCards.length > 0) {
-      return [...winningCards].sort(
-        (leftIndex, rightIndex) =>
-          cardStrength(player.hand[leftIndex], currentLeadSuit, this.state.trumpSuit) -
-          cardStrength(player.hand[rightIndex], currentLeadSuit, this.state.trumpSuit)
-      )[0];
-    }
-
-    return [...legalIndices].sort(
-      (leftIndex, rightIndex) =>
-        cardPoints(player.hand[leftIndex], this.state.trumpSuit) - cardPoints(player.hand[rightIndex], this.state.trumpSuit)
-    )[0];
-  }
-
-  private chooseTrumpForAi(player: PlayerState, forced: boolean): TrumpChoice {
-    let bestChoice: TrumpChoice = "SKIP";
-    let bestScore = Number.NEGATIVE_INFINITY;
-
-    for (const suit of SUITS) {
-      const score = player.hand.reduce((sum, card) => sum + trumpSelectionScore(card, suit), 0);
-      if (score > bestScore) {
-        bestScore = score;
-        bestChoice = suit;
-      }
-    }
-
-    const threshold = this.state.difficulty === "EASY" ? 42 : this.state.difficulty === "HARD" ? 32 : 36;
-    return forced || bestScore >= threshold ? bestChoice : "SKIP";
-  }
-
   private setupMeldFlow() {
     this.state.declaredMeldSets = [];
     this.state.lastWinningMeldSets = [];
@@ -859,7 +744,7 @@ export class BelotMatchFacade {
   }
 
   private finalizeMeldDeclarations() {
-    const winner = this.determineWinningMeldWinner(this.state.declaredMeldSets);
+    const winner = determineWinningMeldWinner(this.state.declaredMeldSets, this.state.declarer, (side) => this.teamFor(side).name);
     if (!winner) {
       this.state.lastWinningMeldSets = [];
       this.state.pendingMeldWinner = null;
@@ -878,50 +763,8 @@ export class BelotMatchFacade {
     this.state.pendingType = "ACKNOWLEDGE_MELDS";
   }
 
-  private determineWinningMeldWinner(declaredMeldSets: MeldSet[]) {
-    const yourSets = declaredMeldSets.filter((meldSet) => meldSet.player.team.side === "YOURS");
-    const enemySets = declaredMeldSets.filter((meldSet) => meldSet.player.team.side === "ENEMIES");
-    const yourHighest = Math.max(0, ...yourSets.map((meldSet) => meldSet.strongestComparisonValue));
-    const enemyHighest = Math.max(0, ...enemySets.map((meldSet) => meldSet.strongestComparisonValue));
-
-    if (yourHighest === 0 && enemyHighest === 0) {
-      return null;
-    }
-
-    const winningTeam = yourHighest > enemyHighest ? "YOURS" : enemyHighest > yourHighest ? "ENEMIES" : this.state.declarer;
-    if (!winningTeam) {
-      return null;
-    }
-
-    const players = winningTeam === "YOURS" ? yourSets : enemySets;
-    return {
-      team: winningTeam,
-      teamName: this.teamFor(winningTeam).name,
-      players,
-      totalPoints: players.reduce((sum, player) => sum + player.totalPoints, 0)
-    } satisfies MeldWinner;
-  }
-
   private teamHandPoints(team: TeamState) {
     return team.tricksWon === 0 ? 0 : team.trickPoints + team.meldPoints;
-  }
-
-  private belaEligibleCardIndices(player: PlayerState) {
-    return indexRange(player.hand.length).filter((index) => this.isBelaEligible(player, index));
-  }
-
-  private isBelaEligible(player: PlayerState, handIndex: number) {
-    if (player.belaResolved || !this.state.trumpSuit || handIndex < 0 || handIndex >= player.hand.length) {
-      return false;
-    }
-
-    const card = player.hand[handIndex];
-    if (card.suit !== this.state.trumpSuit || (card.rank !== "QUEEN" && card.rank !== "KING")) {
-      return false;
-    }
-
-    const partnerRank: Rank = card.rank === "QUEEN" ? "KING" : "QUEEN";
-    return player.hand.some((candidate, index) => index !== handIndex && candidate.suit === this.state.trumpSuit && candidate.rank === partnerRank);
   }
 
   private buildPendingAction(): PendingAction {
@@ -1000,7 +843,7 @@ export class BelotMatchFacade {
           actingPlayerId: this.currentPlayer().id,
           legalCardIndices: legalCardIndices(this.currentPlayer(), this.state.currentTrick?.cards ?? [], this.state.trumpSuit),
           legalTrumpChoices: [],
-          belaEligibleCardIndices: this.belaEligibleCardIndices(this.currentPlayer()),
+          belaEligibleCardIndices: belaEligibleCardIndices(this.currentPlayer(), this.state.trumpSuit),
           availableMelds: [],
           meldWinner: null,
           validationMessage: this.state.pendingValidationMessage,
@@ -1077,15 +920,20 @@ export class BelotMatchFacade {
   }
 
   private meldDeclarations(): MeldDeclarationView[] {
-    return this.state.players.flatMap(player => {
-      const meldSet = this.state.lastWinningMeldSets.find(set => set.player === player);
+    return this.state.players.flatMap((player) => {
+      const meldSet = this.state.lastWinningMeldSets.find((set) => set.player === player);
       if (!meldSet && !player.belaCalled) return [];
-      return [{
-        playerId: player.id, playerName: player.name, teamName: player.team.name,
-        meldPoints: meldSet?.totalPoints ?? 0, belaPoints: player.belaCalled ? 20 : 0,
-        labels: meldSet?.melds.map(meld => meld.label) ?? [],
-        melds: meldSet?.melds.map(meld => this.toMeldCombinationView(meld)) ?? []
-      }];
+      return [
+        {
+          playerId: player.id,
+          playerName: player.name,
+          teamName: player.team.name,
+          meldPoints: meldSet?.totalPoints ?? 0,
+          belaPoints: player.belaCalled ? 20 : 0,
+          labels: meldSet?.melds.map((meld) => meld.label) ?? [],
+          melds: meldSet?.melds.map((meld) => this.toMeldCombinationView(meld)) ?? []
+        }
+      ];
     });
   }
 
@@ -1269,342 +1117,4 @@ function createMatchState(difficulty: Difficulty): MatchState {
 
 function sanitizeMatchTargetWins(matchTargetWins: number): MatchTargetWins {
   return matchTargetWins === 1 || matchTargetWins === 3 || matchTargetWins === 5 ? matchTargetWins : DEFAULT_MATCH_TARGET_WINS;
-}
-
-function createShuffledDeck(random: RandomSource) {
-  const deck: Card[] = [];
-  for (const suit of SUITS) {
-    for (const rank of RANKS) {
-      deck.push({ suit, rank });
-    }
-  }
-
-  for (let index = deck.length - 1; index > 0; index -= 1) {
-    const swapIndex = random.nextInt(index + 1);
-    const current = deck[index];
-    deck[index] = deck[swapIndex];
-    deck[swapIndex] = current;
-  }
-
-  return deck;
-}
-
-function compareCards(left: Card, right: Card) {
-  const suitCompare = SUITS.indexOf(left.suit) - SUITS.indexOf(right.suit);
-  if (suitCompare !== 0) {
-    return suitCompare;
-  }
-  return RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank);
-}
-
-function cardLabel(card: Card) {
-  return `${rankSymbols[card.rank]}${suitSymbols[card.suit]}`;
-}
-
-function cardPoints(card: Card, trumpSuit: Suit | null) {
-  const trump = card.suit === trumpSuit;
-  switch (card.rank) {
-    case "SEVEN":
-    case "EIGHT":
-      return 0;
-    case "NINE":
-      return trump ? 14 : 0;
-    case "JACK":
-      return trump ? 20 : 2;
-    case "QUEEN":
-      return 3;
-    case "KING":
-      return 4;
-    case "TEN":
-      return 10;
-    case "ACE":
-      return 11;
-  }
-}
-
-function trumpSelectionScore(card: Card, candidateTrump: Suit) {
-  // Keep bidding weights independent of the trick comparison tier.
-  const strength = cardStrength(card, candidateTrump, candidateTrump) - (card.suit === candidateTrump ? 100 : 0);
-  const base = cardPoints(card, candidateTrump) + strength;
-  if (card.suit === candidateTrump && card.rank === "JACK") {
-    return base + 30;
-  }
-  if (card.suit === candidateTrump && card.rank === "NINE") {
-    return base + 20;
-  }
-  if (card.suit !== candidateTrump && card.rank === "ACE") {
-    return base + 8;
-  }
-  return base;
-}
-
-function leadSuit(trick: PlayedCard[]) {
-  return trick.length === 0 ? null : trick[0].card.suit;
-}
-
-function legalCardIndices(player: PlayerState, trick: PlayedCard[], trumpSuit: Suit | null) {
-  if (trick.length === 0) {
-    return indexRange(player.hand.length);
-  }
-
-  const currentLeadSuit = trick[0].card.suit;
-  const leadSuitCards = indexesForSuit(player.hand, currentLeadSuit);
-  if (leadSuitCards.length > 0) {
-    if (currentLeadSuit === trumpSuit) {
-      const overTrump = higherTrumpCards(player.hand, trick, trumpSuit);
-      return overTrump.length === 0 ? leadSuitCards : overTrump;
-    }
-    return leadSuitCards;
-  }
-
-  const currentWinner = findWinningPlay(trick, trumpSuit);
-  const partnerWinning = currentWinner != null && player.team.side === teamSideForPlayer(currentWinner.playerIndex);
-  const trumpCards = indexesForSuit(player.hand, trumpSuit);
-  if (partnerWinning || trumpCards.length === 0) {
-    return indexRange(player.hand.length);
-  }
-
-  const overTrump = higherTrumpCards(player.hand, trick, trumpSuit);
-  return overTrump.length === 0 ? trumpCards : overTrump;
-}
-
-function findWinningPlay(trick: PlayedCard[], trumpSuit: Suit | null) {
-  if (trick.length === 0) {
-    return null;
-  }
-
-  const currentLeadSuit = leadSuit(trick);
-  return trick.reduce((winner, play) =>
-    cardStrength(play.card, currentLeadSuit, trumpSuit) > cardStrength(winner.card, currentLeadSuit, trumpSuit) ? play : winner
-  );
-}
-
-function cardWins(challenger: Card, currentWinner: Card, currentLeadSuit: Suit | null, trumpSuit: Suit | null) {
-  return cardStrength(challenger, currentLeadSuit, trumpSuit) > cardStrength(currentWinner, currentLeadSuit, trumpSuit);
-}
-
-function higherTrumpCards(hand: Card[], trick: PlayedCard[], trumpSuit: Suit | null) {
-  if (!trumpSuit) {
-    return [];
-  }
-
-  const currentWinner = findWinningPlay(trick, trumpSuit);
-  if (!currentWinner || currentWinner.card.suit !== trumpSuit) {
-    return indexesForSuit(hand, trumpSuit);
-  }
-
-  return indexRange(hand.length)
-    .filter((index) => hand[index].suit === trumpSuit)
-    .filter((index) => cardStrength(hand[index], trumpSuit, trumpSuit) > cardStrength(currentWinner.card, trumpSuit, trumpSuit));
-}
-
-function indexesForSuit(hand: Card[], suit: Suit | null) {
-  if (!suit) {
-    return [];
-  }
-
-  const indexes: number[] = [];
-  for (let index = 0; index < hand.length; index += 1) {
-    if (hand[index].suit === suit) {
-      indexes.push(index);
-    }
-  }
-  return indexes;
-}
-
-function indexRange(size: number) {
-  return Array.from({ length: size }, (_, index) => index);
-}
-
-function teamSideForPlayer(playerIndex: number): TeamSide {
-  return playerIndex % 2 === 0 ? "YOURS" : "ENEMIES";
-}
-
-function evaluateMeldSet(player: PlayerState, trumpSuit: Suit): MeldSet {
-  const candidates = [...sameRankCandidates(player.hand), ...sequenceCandidates(player.hand)];
-  const best = chooseBestNonOverlapping(candidates, 0, new Set<string>(), [], 0, 0, null);
-  return {
-    player,
-    melds: best?.melds ?? [],
-    totalPoints: best?.totalPoints ?? 0,
-    strongestComparisonValue: best?.strongestComparisonValue ?? 0
-  };
-}
-
-function groupCardsByRank(cards: Card[]) {
-  const byRank = new Map<Rank, Card[]>();
-  for (const card of cards) {
-    const matchingCards = byRank.get(card.rank) ?? [];
-    matchingCards.push(card);
-    byRank.set(card.rank, matchingCards);
-  }
-  return byRank;
-}
-
-function groupCardsBySuit(cards: Card[]) {
-  const bySuit = new Map<Suit, Card[]>();
-  for (const card of cards) {
-    const suitedCards = bySuit.get(card.suit) ?? [];
-    suitedCards.push(card);
-    bySuit.set(card.suit, suitedCards);
-  }
-  return bySuit;
-}
-
-function sameRankCandidates(cards: Card[]): MeldCombination[] {
-  const combinations: MeldCombination[] = [];
-  const byRank = groupCardsByRank(cards);
-
-  for (const [rank, matchingCards] of byRank.entries()) {
-    if (matchingCards.length !== 4 || rank === "SEVEN" || rank === "EIGHT") {
-      continue;
-    }
-
-    if (rank === "JACK") {
-      combinations.push({
-        kind: "FOUR_OF_A_KIND",
-        label: "Four Jacks",
-        points: 200,
-        comparisonValue: 700 + RANKS.indexOf(rank),
-        cards: [...matchingCards]
-      });
-      continue;
-    }
-
-    if (rank === "NINE") {
-      combinations.push({
-        kind: "FOUR_OF_A_KIND",
-        label: "Four Nines",
-        points: 150,
-        comparisonValue: 650 + RANKS.indexOf(rank),
-        cards: [...matchingCards]
-      });
-      continue;
-    }
-
-    combinations.push({
-      kind: "FOUR_OF_A_KIND",
-      label: "Four of a Kind",
-      points: 100,
-      comparisonValue: 600 + RANKS.indexOf(rank),
-      cards: [...matchingCards]
-    });
-  }
-
-  return combinations;
-}
-
-function sequenceCandidates(cards: Card[]): MeldCombination[] {
-  const combinations: MeldCombination[] = [];
-  const bySuit = groupCardsBySuit(cards);
-
-  for (const suitedCards of bySuit.values()) {
-    const sortedCards = [...suitedCards].sort((left, right) => RANKS.indexOf(left.rank) - RANKS.indexOf(right.rank));
-    for (let start = 0; start < sortedCards.length; start += 1) {
-      const run: Card[] = [sortedCards[start]];
-      for (let index = start + 1; index < sortedCards.length; index += 1) {
-        if (RANKS.indexOf(sortedCards[index].rank) !== RANKS.indexOf(sortedCards[index - 1].rank) + 1) {
-          break;
-        }
-        run.push(sortedCards[index]);
-        if (run.length >= 3) {
-          combinations.push(toSequenceCombination(run));
-        }
-      }
-    }
-  }
-
-  return combinations;
-}
-
-function toSequenceCombination(run: Card[]): MeldCombination {
-  const highest = run[run.length - 1];
-  if (run.length >= 5) {
-    return {
-      kind: "SEQUENCE",
-      label: `Sequence of ${run.length}`,
-      points: 100,
-      comparisonValue: 500 + RANKS.indexOf(highest.rank),
-      cards: [...run]
-    };
-  }
-
-  if (run.length === 4) {
-    return {
-      kind: "SEQUENCE",
-      label: "Sequence of 4",
-      points: 50,
-      comparisonValue: 450 + RANKS.indexOf(highest.rank),
-      cards: [...run]
-    };
-  }
-
-  return {
-    kind: "SEQUENCE",
-    label: "Sequence of 3",
-    points: 20,
-    comparisonValue: 400 + RANKS.indexOf(highest.rank),
-    cards: [...run]
-  };
-}
-
-interface BestSelection {
-  melds: MeldCombination[];
-  totalPoints: number;
-  strongestComparisonValue: number;
-}
-
-function chooseBestNonOverlapping(
-  candidates: MeldCombination[],
-  index: number,
-  usedCards: Set<string>,
-  chosen: MeldCombination[],
-  totalPoints: number,
-  strongestComparisonValue: number,
-  best: BestSelection | null
-): BestSelection | null {
-  let currentBest = best;
-  if (index >= candidates.length) {
-    const candidate: BestSelection = {
-      melds: [...chosen],
-      totalPoints,
-      strongestComparisonValue
-    };
-    return !currentBest || beatsSelection(candidate, currentBest) ? candidate : currentBest;
-  }
-
-  currentBest = chooseBestNonOverlapping(candidates, index + 1, usedCards, chosen, totalPoints, strongestComparisonValue, currentBest);
-  const combination = candidates[index];
-  const combinationKeys = combination.cards.map(cardKey);
-  if (combinationKeys.every((key) => !usedCards.has(key))) {
-    combinationKeys.forEach((key) => usedCards.add(key));
-    chosen.push(combination);
-    currentBest = chooseBestNonOverlapping(
-      candidates,
-      index + 1,
-      usedCards,
-      chosen,
-      totalPoints + combination.points,
-      Math.max(strongestComparisonValue, combination.comparisonValue),
-      currentBest
-    );
-    chosen.pop();
-    combinationKeys.forEach((key) => usedCards.delete(key));
-  }
-
-  return currentBest;
-}
-
-function beatsSelection(candidate: BestSelection, best: BestSelection) {
-  if (candidate.totalPoints !== best.totalPoints) {
-    return candidate.totalPoints > best.totalPoints;
-  }
-  if (candidate.strongestComparisonValue !== best.strongestComparisonValue) {
-    return candidate.strongestComparisonValue > best.strongestComparisonValue;
-  }
-  return candidate.melds.length < best.melds.length;
-}
-
-function cardKey(card: Card) {
-  return `${card.suit}:${card.rank}`;
 }

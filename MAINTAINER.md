@@ -18,7 +18,7 @@ Keep Java rules independent of React and Spring. Route UI game operations throug
 
 Use a focused feature branch and a pull request describing the problem, resulting behavior, and validation. Review the diff before merging.
 
-Merging or pushing to `main` triggers the Pages deployment workflow. That workflow builds the browser client but does **not** run the Java or frontend test suites. Complete applicable checks before merging.
+Merging or pushing to `main` triggers the Pages deployment workflow, which runs the Java and frontend test suites before building and deploying the browser client. Complete applicable local checks before merging.
 
 Follow [Deployment](docs/deployment.md) for Pages configuration, local packaging, and deployment troubleshooting.
 
@@ -36,4 +36,4 @@ AI assistants enter through the README link to [AI development guidance](docs/ai
 
 ## Current maintenance constraints
 
-Both game implementations require maintenance; there is no automatic translation between Java and TypeScript. Sessions are in memory. Keep bundled card artwork credits and licenses aligned with the assets. Avoid documenting multiplayer, durable storage, or automated test gates as existing features.
+Both game implementations require maintenance; there is no automatic translation between Java and TypeScript. Sessions are in memory. Keep bundled card artwork credits and licenses aligned with the assets. Avoid documenting multiplayer or durable storage as existing features.

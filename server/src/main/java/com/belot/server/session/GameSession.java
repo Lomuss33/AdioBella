@@ -20,15 +20,32 @@ public final class GameSession {
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     private long broadcastSequence;
+    private volatile long lastAccessedMillis;
 
     public GameSession(UUID id, Difficulty difficulty) {
         this.id = id;
         this.facade = new BelotMatchFacade(new Random(), difficulty);
         this.broadcastSequence = facade.getSnapshot().lastEventSequence();
+        this.lastAccessedMillis = System.currentTimeMillis();
     }
 
     public UUID id() {
         return id;
+    }
+
+    public long lastAccessedMillis() {
+        return lastAccessedMillis;
+    }
+
+    public void touch(long nowMillis) {
+        this.lastAccessedMillis = nowMillis;
+    }
+
+    public void closeStreams() {
+        for (SseEmitter emitter : emitters) {
+            emitter.complete();
+        }
+        emitters.clear();
     }
 
     public synchronized GameSnapshot snapshot() {

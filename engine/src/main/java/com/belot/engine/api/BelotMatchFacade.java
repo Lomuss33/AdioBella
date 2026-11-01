@@ -2,15 +2,11 @@ package com.belot.engine.api;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class BelotMatchFacade {
 
@@ -353,7 +349,7 @@ public final class BelotMatchFacade {
                     return;
                 }
 
-                TrumpChoice choice = chooseTrumpForAi(player, state.trumpTurnOffset == 3);
+                TrumpChoice choice = BelotAiAndRules.chooseTrumpForAi(player, state.trumpTurnOffset == 3, state.difficulty);
                 if (choice == TrumpChoice.SKIP) {
                     log("ACTION", player.name + " skipped trump selection.", Map.of(
                             "eventKind", "TRUMP_SKIP",
@@ -391,14 +387,14 @@ public final class BelotMatchFacade {
                 return;
             }
 
-            int chosenIndex = chooseCardForAi(player, legal);
-            playCardInternal(chosenIndex, belaEligibleCardIndices(player).contains(chosenIndex));
+            int chosenIndex = BelotAiAndRules.chooseCardForAi(player, legal, state.currentTrick, state.trumpSuit, state.difficulty, random);
+            playCardInternal(chosenIndex, BelotAiAndRules.belaEligibleCardIndices(player, state.trumpSuit).contains(chosenIndex));
         }
     }
 
     private void playCardInternal(int handIndex, boolean callBela) {
         PlayerState player = currentPlayer();
-        boolean belaEligible = isBelaEligible(player, handIndex);
+        boolean belaEligible = BelotAiAndRules.isBelaEligible(player, handIndex, state.trumpSuit);
         if (callBela && !belaEligible) {
             reject("BELA_NOT_ALLOWED", "Bela cannot be called with that card.");
         }
@@ -440,7 +436,7 @@ public final class BelotMatchFacade {
     }
 
     private void resolveTrick() {
-        PlayedCard winningPlay = RuleUtils.findWinningPlay(state.currentTrick.cards, state.trumpSuit);
+        PlayedCard winningPlay = BelotAiAndRules.findWinningPlay(state.currentTrick.cards, state.trumpSuit);
         PlayerState winner = playerAt(winningPlay.playerIndex);
         int trickPoints = state.currentTrick.cards.stream().mapToInt(play -> play.card.points(state.trumpSuit)).sum();
         winner.team.trickPoints += trickPoints;
@@ -460,8 +456,7 @@ public final class BelotMatchFacade {
                 "winnerPlayerName", winner.name,
                 "winnerSeat", winner.seat.name(),
                 "playerId", winner.id,
-                "team", winner.team.name
-                ,
+                "team", winner.team.name,
                 "trickPoints", String.valueOf(trickPoints),
                 "lastTrickBonus", String.valueOf(lastTrickBonus),
                 "trickCardCount", String.valueOf(state.currentTrick.cards.size())
@@ -608,7 +603,7 @@ public final class BelotMatchFacade {
         state.pendingValidationMessage = null;
         state.pendingValidationCode = null;
         state.currentPlayerIndex = (state.dealerIndex + 1) % state.players.size();
-        state.deck = RuleUtils.createShuffledDeck(random);
+        state.deck = BelotAiAndRules.createShuffledDeck(random);
         dealCards(OPENING_DEAL_SIZE);
     }
 
@@ -645,7 +640,7 @@ public final class BelotMatchFacade {
         state.humanMeldOffer = null;
 
         for (PlayerState player : state.players) {
-            MeldSet meldSet = MeldService.evaluate(player, state.trumpSuit);
+            MeldSet meldSet = BelotMeldService.evaluate(player, state.trumpSuit);
             if (meldSet.totalPoints() == 0) {
                 continue;
             }
@@ -674,7 +669,11 @@ public final class BelotMatchFacade {
     }
 
     private void finalizeMeldDeclarations() {
-        MeldWinner winner = determineWinningMeldWinner(state.declaredMeldSets);
+        MeldWinner winner = BelotMeldService.determineWinningMeldWinner(
+                state.declaredMeldSets,
+                state.declarer,
+                side -> teamFor(side).name
+        );
         if (winner == null) {
             state.lastWinningMeldSets = List.of();
             state.pendingMeldWinner = null;
@@ -694,71 +693,6 @@ public final class BelotMatchFacade {
         state.pendingType = ActionType.ACKNOWLEDGE_MELDS;
     }
 
-    private MeldWinner determineWinningMeldWinner(List<MeldSet> declaredMeldSets) {
-        List<MeldSet> yourSets = declaredMeldSets.stream()
-                .filter(meldSet -> meldSet.player().team.side == TeamSide.YOURS)
-                .toList();
-        List<MeldSet> enemySets = declaredMeldSets.stream()
-                .filter(meldSet -> meldSet.player().team.side == TeamSide.ENEMIES)
-                .toList();
-
-        int yourHighest = yourSets.stream().mapToInt(MeldSet::strongestComparisonValue).max().orElse(0);
-        int enemyHighest = enemySets.stream().mapToInt(MeldSet::strongestComparisonValue).max().orElse(0);
-        if (yourHighest == 0 && enemyHighest == 0) {
-            return null;
-        }
-
-        TeamSide winningTeam;
-        if (yourHighest > enemyHighest) {
-            winningTeam = TeamSide.YOURS;
-        } else if (enemyHighest > yourHighest) {
-            winningTeam = TeamSide.ENEMIES;
-        } else {
-            winningTeam = state.declarer;
-        }
-
-        List<MeldSet> winningSets = winningTeam == TeamSide.YOURS ? yourSets : enemySets;
-        return new MeldWinner(
-                winningTeam,
-                teamFor(winningTeam).name,
-                winningSets,
-                winningSets.stream().mapToInt(MeldSet::totalPoints).sum()
-        );
-    }
-
-    private List<Integer> belaEligibleCardIndices(PlayerState player) {
-        List<Integer> eligible = new ArrayList<>();
-        for (int index = 0; index < player.hand.size(); index++) {
-            if (isBelaEligible(player, index)) {
-                eligible.add(index);
-            }
-        }
-        return eligible;
-    }
-
-    private boolean isBelaEligible(PlayerState player, int handIndex) {
-        if (player.belaResolved || state.trumpSuit == null || handIndex < 0 || handIndex >= player.hand.size()) {
-            return false;
-        }
-
-        Card card = player.hand.get(handIndex);
-        if (card.suit != state.trumpSuit || (card.rank != Rank.QUEEN && card.rank != Rank.KING)) {
-            return false;
-        }
-
-        Rank partnerRank = card.rank == Rank.QUEEN ? Rank.KING : Rank.QUEEN;
-        for (int index = 0; index < player.hand.size(); index++) {
-            if (index == handIndex) {
-                continue;
-            }
-            Card candidate = player.hand.get(index);
-            if (candidate.suit == state.trumpSuit && candidate.rank == partnerRank) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void dealCards(int count) {
         for (int round = 0; round < count; round++) {
             for (int offset = 0; offset < state.players.size(); offset++) {
@@ -769,66 +703,7 @@ public final class BelotMatchFacade {
     }
 
     private List<Integer> legalCardIndices(PlayerState player) {
-        return RuleUtils.legalCardIndices(player.hand, state.currentTrick.cards, state.trumpSuit, player.team.side);
-    }
-
-    private int chooseCardForAi(PlayerState player, List<Integer> legalIndices) {
-        return switch (state.difficulty) {
-            case EASY -> legalIndices.get(random.nextInt(legalIndices.size()));
-            case NORMAL -> chooseNormalCard(player, legalIndices);
-            case HARD -> chooseHardCard(player, legalIndices);
-        };
-    }
-
-    private int chooseNormalCard(PlayerState player, List<Integer> legalIndices) {
-        PlayedCard currentWinner = RuleUtils.findWinningPlay(state.currentTrick.cards, state.trumpSuit);
-        return legalIndices.stream()
-                .min(Comparator.comparingInt(index -> {
-                    Card card = player.hand.get(index);
-                    boolean wins = currentWinner == null
-                            || RuleUtils.cardWins(card, currentWinner.card, state.currentTrick.leadSuit(), state.trumpSuit);
-                    return wins ? card.points(state.trumpSuit) : 100 + card.points(state.trumpSuit);
-                }))
-                .orElse(legalIndices.get(0));
-    }
-
-    private int chooseHardCard(PlayerState player, List<Integer> legalIndices) {
-        PlayedCard currentWinner = RuleUtils.findWinningPlay(state.currentTrick.cards, state.trumpSuit);
-        List<Integer> winningCards = legalIndices.stream()
-                .filter(index -> currentWinner == null
-                        || RuleUtils.cardWins(player.hand.get(index), currentWinner.card, state.currentTrick.leadSuit(), state.trumpSuit))
-                .toList();
-
-        if (!winningCards.isEmpty()) {
-            return winningCards.stream()
-                    .min(Comparator.comparingInt(index -> player.hand.get(index).strength(state.currentTrick.leadSuit(), state.trumpSuit)))
-                    .orElse(winningCards.get(0));
-        }
-
-        return legalIndices.stream()
-                .min(Comparator.comparingInt(index -> player.hand.get(index).points(state.trumpSuit)))
-                .orElse(legalIndices.get(0));
-    }
-
-    private TrumpChoice chooseTrumpForAi(PlayerState player, boolean forced) {
-        TrumpChoice bestChoice = TrumpChoice.SKIP;
-        int bestScore = Integer.MIN_VALUE;
-
-        for (Suit suit : Suit.values()) {
-            int score = player.hand.stream().mapToInt(card -> card.trumpSelectionScore(suit)).sum();
-            if (score > bestScore) {
-                bestScore = score;
-                bestChoice = TrumpChoice.valueOf(suit.name());
-            }
-        }
-
-        int threshold = switch (state.difficulty) {
-            case EASY -> 42;
-            case NORMAL -> 36;
-            case HARD -> 32;
-        };
-
-        return forced || bestScore >= threshold ? bestChoice : TrumpChoice.SKIP;
+        return BelotAiAndRules.legalCardIndices(player.hand, state.currentTrick.cards, state.trumpSuit, player.team.side);
     }
 
     private PendingAction buildPendingAction() {
@@ -880,7 +755,7 @@ public final class BelotMatchFacade {
                     currentPlayer().id,
                     legalCardIndices(currentPlayer()),
                     List.of(),
-                    belaEligibleCardIndices(currentPlayer()),
+                    BelotAiAndRules.belaEligibleCardIndices(currentPlayer(), state.trumpSuit),
                     List.of(),
                     null,
                     state.pendingValidationMessage,
@@ -1070,7 +945,7 @@ public final class BelotMatchFacade {
         };
     }
 
-    private enum Phase {
+    enum Phase {
         READY_TO_START,
         BETWEEN_GAMES,
         TRUMP_SELECTION,
@@ -1078,26 +953,26 @@ public final class BelotMatchFacade {
         MATCH_COMPLETE
     }
 
-    private enum TeamSide {
+    enum TeamSide {
         YOURS,
         ENEMIES
     }
 
-    private enum Seat {
+    enum Seat {
         SOUTH,
         WEST,
         NORTH,
         EAST
     }
 
-    private enum Suit {
+    enum Suit {
         SPADES("Spades", "S"),
         HEARTS("Hearts", "H"),
         DIAMONDS("Diamonds", "D"),
         CLUBS("Clubs", "C");
 
-        private final String displayName;
-        private final String symbol;
+        final String displayName;
+        final String symbol;
 
         Suit(String displayName, String symbol) {
             this.displayName = displayName;
@@ -1105,7 +980,7 @@ public final class BelotMatchFacade {
         }
     }
 
-    private enum Rank {
+    enum Rank {
         SEVEN("7"),
         EIGHT("8"),
         NINE("9"),
@@ -1115,19 +990,19 @@ public final class BelotMatchFacade {
         KING("K"),
         ACE("A");
 
-        private final String symbol;
+        final String symbol;
 
         Rank(String symbol) {
             this.symbol = symbol;
         }
     }
 
-    private record Card(Suit suit, Rank rank) {
-        private String label() {
+    record Card(Suit suit, Rank rank) {
+        String label() {
             return rank.symbol + suit.symbol;
         }
 
-        private int points(Suit trumpSuit) {
+        int points(Suit trumpSuit) {
             boolean trump = suit == trumpSuit;
             return switch (rank) {
                 case SEVEN, EIGHT -> 0;
@@ -1140,7 +1015,7 @@ public final class BelotMatchFacade {
             };
         }
 
-        private int strength(Suit leadSuit, Suit trumpSuit) {
+        int strength(Suit leadSuit, Suit trumpSuit) {
             // Trump and plain-card ranges must never overlap.
             if (suit == trumpSuit) {
                 return 100 + switch (rank) {
@@ -1171,7 +1046,7 @@ public final class BelotMatchFacade {
             return 0;
         }
 
-        private int trumpSelectionScore(Suit candidateTrump) {
+        int trumpSelectionScore(Suit candidateTrump) {
             // Preserve bidding weights when changing the trick comparison tier.
             int strength = strength(candidateTrump, candidateTrump) - (suit == candidateTrump ? 100 : 0);
             int base = points(candidateTrump) + strength;
@@ -1188,46 +1063,46 @@ public final class BelotMatchFacade {
         }
     }
 
-    private record PlayedCard(int playerIndex, Card card) {
+    record PlayedCard(int playerIndex, Card card) {
     }
 
-    private static final class TeamState {
-        private final TeamSide side;
-        private String name;
-        private int matchWins;
-        private int gameScore;
-        private int trickPoints;
-        private int tricksWon;
-        private int meldPoints;
+    static final class TeamState {
+        final TeamSide side;
+        String name;
+        int matchWins;
+        int gameScore;
+        int trickPoints;
+        int tricksWon;
+        int meldPoints;
 
-        private TeamState(TeamSide side, String name) {
+        TeamState(TeamSide side, String name) {
             this.side = side;
             this.name = name;
         }
 
-        private void resetHandState() {
+        void resetHandState() {
             trickPoints = 0;
             tricksWon = 0;
             meldPoints = 0;
         }
 
-        private int totalHandPoints() {
+        int totalHandPoints() {
             return tricksWon == 0 ? 0 : trickPoints + meldPoints;
         }
     }
 
-    private static final class PlayerState {
-        private final int index;
-        private final String id;
-        private String name;
-        private final Seat seat;
-        private final boolean human;
-        private final TeamState team;
-        private final List<Card> hand = new ArrayList<>();
-        private boolean belaCalled;
-        private boolean belaResolved;
+    static final class PlayerState {
+        final int index;
+        final String id;
+        String name;
+        final Seat seat;
+        final boolean human;
+        final TeamState team;
+        final List<Card> hand = new ArrayList<>();
+        boolean belaCalled;
+        boolean belaResolved;
 
-        private PlayerState(int index, String id, String name, Seat seat, boolean human, TeamState team) {
+        PlayerState(int index, String id, String name, Seat seat, boolean human, TeamState team) {
             this.index = index;
             this.id = id;
             this.name = name;
@@ -1237,46 +1112,46 @@ public final class BelotMatchFacade {
         }
     }
 
-    private static final class TrickState {
-        private final int leadPlayerIndex;
-        private final List<PlayedCard> cards = new ArrayList<>();
+    static final class TrickState {
+        final int leadPlayerIndex;
+        final List<PlayedCard> cards = new ArrayList<>();
 
-        private TrickState(int leadPlayerIndex) {
+        TrickState(int leadPlayerIndex) {
             this.leadPlayerIndex = leadPlayerIndex;
         }
 
-        private Suit leadSuit() {
+        Suit leadSuit() {
             return cards.isEmpty() ? null : cards.get(0).card.suit;
         }
     }
 
-    private static final class MatchState {
-        private Difficulty difficulty;
-        private final List<PlayerState> players;
-        private final TeamState teamOne;
-        private final TeamState teamTwo;
-        private int dealerIndex;
-        private int currentPlayerIndex;
-        private int trumpTurnOffset;
-        private int gameNumber;
-        private int matchTargetWins;
-        private int gameTargetPoints;
-        private List<Card> deck = new ArrayList<>();
-        private Suit trumpSuit;
-        private TeamSide declarer;
-        private Integer declarerPlayerIndex;
-        private TrickState currentTrick;
-        private List<MeldSet> lastWinningMeldSets = List.of();
-        private List<MeldSet> declaredMeldSets = new ArrayList<>();
-        private MeldSet humanMeldOffer;
-        private MeldWinnerView pendingMeldWinner;
-        private boolean firstTrickAnnounced;
-        private Phase phase;
-        private ActionType pendingType;
-        private String pendingValidationMessage;
-        private String pendingValidationCode;
+    static final class MatchState {
+        Difficulty difficulty;
+        final List<PlayerState> players;
+        final TeamState teamOne;
+        final TeamState teamTwo;
+        int dealerIndex;
+        int currentPlayerIndex;
+        int trumpTurnOffset;
+        int gameNumber;
+        int matchTargetWins;
+        int gameTargetPoints;
+        List<Card> deck = new ArrayList<>();
+        Suit trumpSuit;
+        TeamSide declarer;
+        Integer declarerPlayerIndex;
+        TrickState currentTrick;
+        List<MeldSet> lastWinningMeldSets = List.of();
+        List<MeldSet> declaredMeldSets = new ArrayList<>();
+        MeldSet humanMeldOffer;
+        MeldWinnerView pendingMeldWinner;
+        boolean firstTrickAnnounced;
+        Phase phase;
+        ActionType pendingType;
+        String pendingValidationMessage;
+        String pendingValidationCode;
 
-        private MatchState(Difficulty difficulty, List<PlayerState> players, TeamState teamOne, TeamState teamTwo) {
+        MatchState(Difficulty difficulty, List<PlayerState> players, TeamState teamOne, TeamState teamTwo) {
             this.difficulty = difficulty;
             this.players = players;
             this.teamOne = teamOne;
@@ -1288,7 +1163,7 @@ public final class BelotMatchFacade {
             this.gameTargetPoints = GameLength.LONG.targetPoints();
         }
 
-        private static MatchState create(Difficulty difficulty) {
+        static MatchState create(Difficulty difficulty) {
             TeamState yourTeam = new TeamState(TeamSide.YOURS, "Us");
             TeamState enemyTeam = new TeamState(TeamSide.ENEMIES, "Them");
             List<PlayerState> players = List.of(
@@ -1301,219 +1176,12 @@ public final class BelotMatchFacade {
         }
     }
 
-    private record MeldCombination(String kind, String label, int points, int comparisonValue, List<Card> cards) {
+    record MeldCombination(String kind, String label, int points, int comparisonValue, List<Card> cards) {
     }
 
-    private record MeldSet(PlayerState player, List<MeldCombination> melds, int totalPoints, int strongestComparisonValue) {
+    record MeldSet(PlayerState player, List<MeldCombination> melds, int totalPoints, int strongestComparisonValue) {
     }
 
-    private record MeldWinner(TeamSide team, String teamName, List<MeldSet> players, int totalPoints) {
+    record MeldWinner(TeamSide team, String teamName, List<MeldSet> players, int totalPoints) {
     }
-
-    private static final class MeldService {
-        private static MeldSet evaluate(PlayerState player, Suit trumpSuit) {
-            List<MeldCombination> candidates = new ArrayList<>();
-            candidates.addAll(fourOfKindCandidates(player.hand));
-            candidates.addAll(sequenceCandidates(player.hand));
-
-            BestSelection bestSelection = chooseBestNonOverlapping(candidates, 0, new HashSet<>(), new ArrayList<>(), 0, 0, null);
-            return new MeldSet(player, List.copyOf(bestSelection.melds()), bestSelection.totalPoints(), bestSelection.strongestComparisonValue());
-        }
-
-        private static List<MeldCombination> fourOfKindCandidates(List<Card> hand) {
-            List<MeldCombination> combinations = new ArrayList<>();
-            Map<Rank, List<Card>> byRank = hand.stream().collect(Collectors.groupingBy(card -> card.rank));
-            for (Map.Entry<Rank, List<Card>> entry : byRank.entrySet()) {
-                Rank rank = entry.getKey();
-                if (entry.getValue().size() != 4 || rank == Rank.SEVEN || rank == Rank.EIGHT) {
-                    continue;
-                }
-
-                int points = rank == Rank.JACK ? 200 : rank == Rank.NINE ? 150 : 100;
-                int comparisonValue = rank == Rank.JACK ? 700 + rank.ordinal() : rank == Rank.NINE ? 650 + rank.ordinal() : 600 + rank.ordinal();
-                String label = rank == Rank.JACK ? "Four Jacks" : rank == Rank.NINE ? "Four Nines" : "Four of a Kind";
-                combinations.add(new MeldCombination("FOUR_OF_A_KIND", label, points, comparisonValue, List.copyOf(entry.getValue())));
-            }
-            return combinations;
-        }
-
-        private static List<MeldCombination> sequenceCandidates(List<Card> hand) {
-            List<MeldCombination> combinations = new ArrayList<>();
-            Map<Suit, List<Card>> bySuit = hand.stream().collect(Collectors.groupingBy(card -> card.suit));
-            for (Map.Entry<Suit, List<Card>> entry : bySuit.entrySet()) {
-                List<Card> cards = new ArrayList<>(entry.getValue());
-                cards.sort(Comparator.comparingInt(card -> card.rank.ordinal()));
-
-                for (int start = 0; start < cards.size(); start++) {
-                    List<Card> run = new ArrayList<>();
-                    run.add(cards.get(start));
-                    for (int index = start + 1; index < cards.size(); index++) {
-                        Card previous = cards.get(index - 1);
-                        Card current = cards.get(index);
-                        if (current.rank.ordinal() != previous.rank.ordinal() + 1) {
-                            break;
-                        }
-                        run.add(current);
-                        if (run.size() >= 3) {
-                            combinations.add(sequenceCombination(run));
-                        }
-                    }
-                }
-            }
-            return combinations;
-        }
-
-        private static MeldCombination sequenceCombination(List<Card> run) {
-            Card highest = run.get(run.size() - 1);
-            int points = run.size() >= 5 ? 100 : run.size() == 4 ? 50 : 20;
-            int comparisonValue = run.size() >= 5 ? 500 + highest.rank.ordinal() : run.size() == 4 ? 450 + highest.rank.ordinal() : 400 + highest.rank.ordinal();
-            String label = "Sequence of " + run.size();
-            return new MeldCombination("SEQUENCE", label, points, comparisonValue, List.copyOf(run));
-        }
-
-        private static BestSelection chooseBestNonOverlapping(
-                List<MeldCombination> candidates,
-                int index,
-                Set<String> usedCards,
-                List<MeldCombination> chosen,
-                int totalPoints,
-                int strongestComparisonValue,
-                BestSelection best
-        ) {
-            BestSelection currentBest = best;
-            if (index >= candidates.size()) {
-                BestSelection candidate = new BestSelection(List.copyOf(chosen), totalPoints, strongestComparisonValue);
-                if (currentBest == null || candidate.beats(currentBest)) {
-                    return candidate;
-                }
-                return currentBest;
-            }
-
-            currentBest = chooseBestNonOverlapping(candidates, index + 1, usedCards, chosen, totalPoints, strongestComparisonValue, currentBest);
-            MeldCombination combination = candidates.get(index);
-            if (combination.cards().stream().map(MeldService::cardKey).noneMatch(usedCards::contains)) {
-                List<String> addedKeys = combination.cards().stream().map(MeldService::cardKey).toList();
-                usedCards.addAll(addedKeys);
-                chosen.add(combination);
-                currentBest = chooseBestNonOverlapping(
-                        candidates,
-                        index + 1,
-                        usedCards,
-                        chosen,
-                        totalPoints + combination.points(),
-                        Math.max(strongestComparisonValue, combination.comparisonValue()),
-                        currentBest
-                );
-                chosen.remove(chosen.size() - 1);
-                usedCards.removeAll(addedKeys);
-            }
-            return currentBest;
-        }
-
-        private static String cardKey(Card card) {
-            return card.suit.name() + ":" + card.rank.name();
-        }
-
-        private record BestSelection(List<MeldCombination> melds, int totalPoints, int strongestComparisonValue) {
-            private boolean beats(BestSelection other) {
-                if (totalPoints != other.totalPoints()) {
-                    return totalPoints > other.totalPoints();
-                }
-                if (strongestComparisonValue != other.strongestComparisonValue()) {
-                    return strongestComparisonValue > other.strongestComparisonValue();
-                }
-                return melds.size() < other.melds.size();
-            }
-        }
-    }
-
-    private static final class RuleUtils {
-        private static List<Card> createShuffledDeck(Random random) {
-            List<Card> deck = new ArrayList<>();
-            for (Suit suit : Suit.values()) {
-                for (Rank rank : Rank.values()) {
-                    deck.add(new Card(suit, rank));
-                }
-            }
-            Collections.shuffle(deck, random);
-            return deck;
-        }
-
-        private static List<Integer> legalCardIndices(List<Card> hand, List<PlayedCard> trick, Suit trumpSuit, TeamSide teamSide) {
-            if (trick.isEmpty()) {
-                return indexRange(hand.size());
-            }
-
-            Suit leadSuit = trick.get(0).card.suit;
-            List<Integer> leadSuitCards = indexesForSuit(hand, leadSuit);
-            if (!leadSuitCards.isEmpty()) {
-                if (leadSuit == trumpSuit) {
-                    List<Integer> overTrump = higherTrumpCards(hand, trick, trumpSuit);
-                    return overTrump.isEmpty() ? leadSuitCards : overTrump;
-                }
-                return leadSuitCards;
-            }
-
-            PlayedCard currentWinner = findWinningPlay(trick, trumpSuit);
-            boolean partnerWinning = currentWinner != null && teamSide == teamSideForPlayer(currentWinner.playerIndex);
-            List<Integer> trumpCards = indexesForSuit(hand, trumpSuit);
-            if (partnerWinning || trumpCards.isEmpty()) {
-                return indexRange(hand.size());
-            }
-
-            List<Integer> overTrump = higherTrumpCards(hand, trick, trumpSuit);
-            return overTrump.isEmpty() ? trumpCards : overTrump;
-        }
-
-        private static PlayedCard findWinningPlay(List<PlayedCard> trick, Suit trumpSuit) {
-            if (trick.isEmpty()) {
-                return null;
-            }
-            Suit leadSuit = trick.get(0).card.suit;
-            return trick.stream()
-                    .max(Comparator.comparingInt(play -> play.card.strength(leadSuit, trumpSuit)))
-                    .orElse(trick.get(0));
-        }
-
-        private static boolean cardWins(Card challenger, Card currentWinner, Suit leadSuit, Suit trumpSuit) {
-            return challenger.strength(leadSuit, trumpSuit) > currentWinner.strength(leadSuit, trumpSuit);
-        }
-
-        private static List<Integer> higherTrumpCards(List<Card> hand, List<PlayedCard> trick, Suit trumpSuit) {
-            PlayedCard currentWinner = findWinningPlay(trick, trumpSuit);
-            if (currentWinner == null || currentWinner.card.suit != trumpSuit) {
-                return indexesForSuit(hand, trumpSuit);
-            }
-
-            return indexRange(hand.size()).stream()
-                    .filter(index -> hand.get(index).suit == trumpSuit)
-                    .filter(index -> hand.get(index).strength(trumpSuit, trumpSuit)
-                            > currentWinner.card.strength(trumpSuit, trumpSuit))
-                    .toList();
-        }
-
-        private static List<Integer> indexesForSuit(List<Card> hand, Suit suit) {
-            List<Integer> indexes = new ArrayList<>();
-            for (int index = 0; index < hand.size(); index++) {
-                if (hand.get(index).suit == suit) {
-                    indexes.add(index);
-                }
-            }
-            return indexes;
-        }
-
-        private static List<Integer> indexRange(int size) {
-            List<Integer> indexes = new ArrayList<>(size);
-            for (int index = 0; index < size; index++) {
-                indexes.add(index);
-            }
-            return indexes;
-        }
-
-        private static TeamSide teamSideForPlayer(int playerIndex) {
-            return playerIndex % 2 == 0 ? TeamSide.YOURS : TeamSide.ENEMIES;
-        }
-    }
-
-
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import type { Difficulty, GameEvent, Rank, Suit } from "../../types";
+import { chooseTrumpForAi } from "./aiAndRules";
 import { BelotMatchFacade } from "./belotMatchFacade";
 import { SeededRandom } from "./random";
 
@@ -151,4 +152,30 @@ test.each<Difficulty>(["EASY", "NORMAL", "HARD"])("complete seeded %s matches co
     }
     expect(hand).toEqual([]);
   }
+});
+
+test("cross-engine parity: meld evaluation, tie-breaking, and AI difficulty decisions match Java engine", () => {
+  const { facade, state } = scenario([
+    ["SPADES:JACK", "HEARTS:JACK", "DIAMONDS:JACK", "CLUBS:JACK", "SPADES:NINE", "SPADES:TEN", "SPADES:QUEEN", "SPADES:KING"],
+    ["HEARTS:SEVEN", "HEARTS:EIGHT", "HEARTS:NINE", "DIAMONDS:SEVEN", "DIAMONDS:EIGHT", "DIAMONDS:NINE", "CLUBS:SEVEN", "CLUBS:EIGHT"],
+    ["CLUBS:NINE", "CLUBS:TEN", "CLUBS:QUEEN", "CLUBS:KING", "CLUBS:ACE", "DIAMONDS:TEN", "DIAMONDS:QUEEN", "DIAMONDS:KING"],
+    ["SPADES:SEVEN", "SPADES:EIGHT", "SPADES:ACE", "HEARTS:TEN", "HEARTS:QUEEN", "HEARTS:KING", "HEARTS:ACE", "DIAMONDS:ACE"]
+  ]);
+  Reflect.get(facade, "setupMeldFlow").call(facade);
+  const reportSnap = facade.getSnapshot();
+  expect(reportSnap.pendingAction.type).toBe("REPORT_MELDS");
+  expect(reportSnap.pendingAction.availableMelds[0].totalPoints).toBe(200);
+  expect(reportSnap.pendingAction.availableMelds[0].melds.map(m => m.label)).toEqual(["Four Jacks"]);
+
+  // AI trump threshold parity: QH (33) + 7C/7D/7S (0) = 33 -> skips on EASY (42) & NORMAL (36), chooses HEARTS on HARD (32) or when forced
+  state.players[1].hand = [
+    { suit: "HEARTS", rank: "QUEEN" },
+    { suit: "CLUBS", rank: "SEVEN" },
+    { suit: "DIAMONDS", rank: "SEVEN" },
+    { suit: "SPADES", rank: "SEVEN" }
+  ];
+  expect(chooseTrumpForAi(state.players[1], false, "EASY")).toBe("SKIP");
+  expect(chooseTrumpForAi(state.players[1], false, "NORMAL")).toBe("SKIP");
+  expect(chooseTrumpForAi(state.players[1], false, "HARD")).toBe("HEARTS");
+  expect(chooseTrumpForAi(state.players[1], true, "EASY")).toBe("HEARTS");
 });

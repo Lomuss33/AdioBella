@@ -267,6 +267,36 @@ class BelotMatchFacadeTest {
         assertEquals(0, snapshot.score().teamTwoMeldPoints());
     }
 
+    @Test
+    void crossEngineParityMeldOverlapAndAiThresholdMatchesTypeScriptEngine() throws Exception {
+        BelotMatchFacade facade = new BelotMatchFacade(new Random(7), Difficulty.EASY);
+        setTrumpAndDeclarer(facade, "HEARTS", "YOURS");
+        setPlayerHand(facade, 0, "JS", "JH", "JD", "JC", "9S", "10S", "QS", "KS");
+        setPlayerHand(facade, 1, "7H", "8H", "9H", "7D", "8D", "9D", "7C", "8C");
+        setPlayerHand(facade, 2, "9C", "10C", "QC", "KC", "AC", "10D", "QD", "KD");
+        setPlayerHand(facade, 3, "7S", "8S", "AS", "10H", "QH", "KH", "AH", "AD");
+
+        Method setupMeldFlow = BelotMatchFacade.class.getDeclaredMethod("setupMeldFlow");
+        setupMeldFlow.setAccessible(true);
+        setupMeldFlow.invoke(facade);
+
+        GameSnapshot snapshot = facade.getSnapshot();
+        assertEquals(ActionType.REPORT_MELDS, snapshot.pendingAction().type());
+        assertEquals(200, snapshot.pendingAction().availableMelds().get(0).totalPoints());
+        assertEquals(List.of("Four Jacks"), snapshot.pendingAction().availableMelds().get(0).melds().stream().map(MeldCombinationView::label).toList());
+
+        Object state = getState(facade);
+        Field playersField = state.getClass().getDeclaredField("players");
+        playersField.setAccessible(true);
+        List<?> players = (List<?>) playersField.get(state);
+        BelotMatchFacade.PlayerState west = (BelotMatchFacade.PlayerState) players.get(1);
+        setPlayerHand(facade, 1, "QH", "7C", "7D", "7S");
+        assertEquals(TrumpChoice.SKIP, BelotAiAndRules.chooseTrumpForAi(west, false, Difficulty.EASY));
+        assertEquals(TrumpChoice.SKIP, BelotAiAndRules.chooseTrumpForAi(west, false, Difficulty.NORMAL));
+        assertEquals(TrumpChoice.HEARTS, BelotAiAndRules.chooseTrumpForAi(west, false, Difficulty.HARD));
+        assertEquals(TrumpChoice.HEARTS, BelotAiAndRules.chooseTrumpForAi(west, true, Difficulty.EASY));
+    }
+
     private static void invokeApplyMelds(BelotMatchFacade facade) throws Exception {
         Method applyMelds = BelotMatchFacade.class.getDeclaredMethod("setupMeldFlow");
         applyMelds.setAccessible(true);

@@ -171,17 +171,17 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
         <label className="rooms-field rooms-name-field">{t("rooms.name")}
           <input autoComplete="nickname" maxLength={24} value={name} onChange={event => setName(event.target.value)} /></label>
         {!joinMode ? <div className="rooms-entry-grid">
-          <button type="button" className="rooms-choice-card rooms-choice-create" disabled={busy || !name.trim() || !hasRoomServer} onClick={() => void connect(false)}>
+          <button type="button" className="rooms-choice-card rooms-choice-create" aria-label={t("rooms.create")} disabled={busy || !name.trim() || !hasRoomServer} onClick={() => void connect(false)}>
             <span className="rooms-choice-icon" aria-hidden="true">♧</span><span className="rooms-choice-arrow" aria-hidden="true">↗</span>
             <strong>{t("rooms.create")}</strong><small>{t("rooms.bots")}</small>
           </button>
-          <button type="button" className="rooms-choice-card" disabled={!hasRoomServer || busy} onClick={() => setJoinMode(true)}>
+          <button type="button" className="rooms-choice-card" aria-label={t("rooms.join")} disabled={!hasRoomServer || busy} onClick={() => setJoinMode(true)}>
             <span className="rooms-choice-icon" aria-hidden="true">↗</span><span className="rooms-choice-arrow" aria-hidden="true">↗</span>
             <strong>{t("rooms.join")}</strong><small>{t("rooms.invite")}</small>
           </button>
         </div> : <form className="rooms-join-form" onSubmit={event => { event.preventDefault(); void connect(true); }}>
           <h2>{t("rooms.join")}</h2>
-          <label className="rooms-field">{t("rooms.invite")}<input required value={invite} onChange={event => setInvite(event.target.value)} /></label>
+          <label className="rooms-field">{t("rooms.invite")}<input aria-label={t("rooms.invite")} required value={invite} onChange={event => setInvite(event.target.value)} /></label>
           <label className="rooms-field">{t("rooms.seat")}<select value={seat} onChange={event => setSeat(event.target.value)}>
             {(["north", "west", "east"] as const).map(value => <option key={value} value={value}>{t(`rooms.${value}`)}</option>)}</select></label>
           <div className="rooms-join-actions">

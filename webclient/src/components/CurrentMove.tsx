@@ -64,7 +64,8 @@ function toStatusMessage(snapshot: GameSnapshot | null, animatedTrick: AnimatedT
         ? t("Your turn — choose a highlighted card.")
         : t("Waiting for the next player…");
     default:
-      return t("The table is ready.");
+      const waitingPlayer = snapshot.players.find(player => player.id === snapshot.pendingAction.actingPlayerId);
+      return waitingPlayer ? t("rooms.wait", { name: waitingPlayer.name }) : t("The table is ready.");
   }
 }
 

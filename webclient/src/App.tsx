@@ -2,7 +2,7 @@ import { accentVariables, tableVariables, tablePalettes, TABLE_THEMES } from "./
 import GuideBook from "./components/GuideBook";
 import { loadPreferences, savePreferences, readStorage, writeStorage, removeStorage, type VisualSettings } from "./lib/preferences";
 import { errorCode } from "./i18n/presentation";
-import { useLanguage } from "./i18n";
+import { t, useLanguage } from "./i18n";
 import { resolveNames } from "./i18n/defaultNames";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ActionPanel from "./components/ActionPanel";
@@ -13,7 +13,7 @@ import { CardStyleProvider } from "./components/CardStyleContext";
 import { preloadDeckArtwork, usePreparedCardStyle } from "./lib/cardArtwork";
 import TerminalLog from "./components/TerminalLog";
 import CurrentMove from "./components/CurrentMove";
-import { getGameGateway, shouldPersistSession } from "./lib/gameGateway";
+import { getGameGateway, getGameRuntime, shouldPersistSession } from "./lib/gameGateway";
 import { HttpError } from "./lib/serverGateway";
 import { buildAnimatedTrickTimeline } from "./lib/trickAnimation";
 import { CARD_TIMING } from "./lib/cardAnimationConfig";
@@ -37,11 +37,11 @@ import type {
   TrumpChoice
 } from "./types";
 
-const SESSION_KEY = "belot-session-id";
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 
-function App() {
+function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () => void } = {}) {
+  const SESSION_KEY = getGameRuntime() === "browser" ? "belot-browser-session-id" : "belot-session-id";
   const { locale } = useLanguage();
   const [initialPreferences] = useState(loadPreferences);
   const [showBook, setShowBook] = useState<"welcome" | "rules" | null>(null);
@@ -932,6 +932,7 @@ function App() {
       onPlayWithBela={handlePlayWithBela}
       onPlayWithoutBela={handlePlayWithoutBela}
       onOpenBook={() => setShowBook("welcome")}
+      onOpenRooms={onOpenRooms}
       visual={visual}
       onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
     />
@@ -965,6 +966,8 @@ function App() {
           onRetry={() => void bootstrapSession()} /> : null}
       </div>
       <section className="after-table">
+        {onOpenRooms && snapshot?.pendingAction.type !== "START_MATCH" && <button type="button" className="action-button" onClick={onOpenRooms}>{t("rooms.title")}</button>}
+        {onHome && <button type="button" className="action-button" onClick={onHome}>{t("home.back")}</button>}
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}
           currentMove={<CurrentMove snapshot={snapshot} animatedTrick={animatedTrick} />} />
       </section>

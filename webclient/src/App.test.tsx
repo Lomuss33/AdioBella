@@ -400,6 +400,28 @@ test("browser mode bootstraps without backend requests", async () => {
   expect(window.localStorage.getItem("belot-session-id")).toBeNull();
 });
 
+test("browser mode reopens the saved solo match instead of creating a new one", async () => {
+  vi.stubEnv("VITE_GAME_RUNTIME", "browser");
+  const fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+  const { browserGateway, BROWSER_SAVE_KEY } = await import("./lib/browserGateway");
+  const created = await browserGateway.createSession();
+  const started = await browserGateway.startMatch(created.sessionId);
+  window.localStorage.setItem("belot-browser-session-id", created.sessionId);
+  const saved = window.localStorage.getItem(BROWSER_SAVE_KEY);
+  const create = vi.spyOn(browserGateway, "createSession");
+  try {
+    render(<App />);
+    expect(await screen.findByRole("button", { name: "hearts" })).toBeEnabled();
+    expect(create).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(await browserGateway.getSession(created.sessionId)).toEqual(started);
+    expect(window.localStorage.getItem(BROWSER_SAVE_KEY)).toBe(saved);
+  } finally {
+    create.mockRestore();
+  }
+});
+
 test("a missing browser session during subscription recovers without crashing the app", async () => {
   vi.stubEnv("VITE_GAME_RUNTIME", "browser");
   const { browserGateway } = await import("./lib/browserGateway");

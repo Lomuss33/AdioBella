@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:browser": "vite --mode browser --host 127.0.0.1 --port 5174 --strictPort",
     "check:decks": "vitest run tests/deckAssets.test.js",
     "prebuild": "npm run check:decks",
     "prebuild:pages": "npm run check:decks",

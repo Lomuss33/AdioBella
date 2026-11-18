@@ -22,7 +22,7 @@ npm run setup
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally <http://localhost:3003/>. This uses the browser game engine through `webclient/.env.browser`, so Java is not required. Vite watches source files and applies UI changes as you save. Some module changes may reload the page and reset the in-memory browser game. Stop with Ctrl+C.
+Open the local URL printed by Vite, normally <http://localhost:3003/>. This uses the browser game engine through `webclient/.env.browser`, so Java is not required. Vite watches source files and applies UI changes as you save. Browser games resume from local storage after page reloads when the save format remains compatible. Stop with Ctrl+C.
 
 For another port, use `npm run dev -- --port 5175`. Vite binds to localhost by default. To expose it to other devices on your network, use `npm run dev -- --host 0.0.0.0`; only do this on a trusted network. The full-stack launcher explicitly enables this network access.
 
@@ -57,9 +57,9 @@ cd ..
 .\gradlew.bat liveGame
 ```
 
-Open <http://localhost:5174>. The launcher runs Vite, Spring Boot, and continuous Java compilation. Vite proxies `/api` to the backend; Spring DevTools handles backend restarts. Stop the launcher with Ctrl+C.
+Open <http://localhost:1111>. The launcher runs Vite, Spring Boot on port 1112, and continuous Java compilation. Vite proxies `/api` to the backend; Spring DevTools handles backend restarts. Stop the launcher with Ctrl+C.
 
-The same live launcher is available from the project root as `npm run dev:full`. It requires JDK 21 and installed frontend dependencies (`npm run setup`).
+The same live launcher is available from the project root as `npm run dev:full`. It requires JDK 21 and installed frontend dependencies (`npm run setup`). The launcher calls the Gradle wrapper by its project-root path, so `gradlew.bat` does not need to be on `PATH`.
 
 Custom ports:
 
@@ -67,7 +67,7 @@ Custom ports:
 .\gradlew.bat liveGame -PserverPort=28081 -PclientPort=5175
 ```
 
-Open <http://localhost:5175>. See [scripts/live-game.mjs](../scripts/live-game.mjs) for orchestration.
+Open <http://localhost:5175>. The backend is available on port 28081. See [scripts/live-game.mjs](../scripts/live-game.mjs) for orchestration.
 
 ### Browser-only development
 

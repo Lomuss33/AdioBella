@@ -91,6 +91,38 @@ export class BelotMatchFacade {
     this.createNewMatch(difficulty);
   }
 
+  /** Private engine state, not the public snapshot (which omits opponents' cards). */
+  saveGame(): string {
+    return JSON.stringify({ version: 1, state: this.state, events: this.events, nextSequence: this.nextSequence });
+  }
+
+  restoreGame(saved: string): void {
+    const data = JSON.parse(saved);
+    if (data?.version !== 1 || !data.state || !Array.isArray(data.events)
+      || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1) {
+      throw new Error("Unsupported or invalid saved game.");
+    }
+    const state: MatchState = data.state;
+    validateSavedState(state);
+    if (data.events.length !== data.nextSequence - 1 || data.events.some((event: GameEvent, index: number) =>
+      event?.sequence !== index + 1 || typeof event.message !== "string")) {
+      throw new Error("Invalid saved event history.");
+    }
+    // JSON duplicates shared objects. Restore identity before any rules run:
+    // scoring mutates teams and meld views compare players by reference.
+    for (const player of state.players) {
+      player.team = player.team.side === "YOURS" ? state.teamOne : state.teamTwo;
+    }
+    const bindPlayer = (set: MeldSet) => { set.player = state.players[set.player.index]; };
+    state.lastWinningMeldSets.forEach(bindPlayer);
+    state.declaredMeldSets.forEach(bindPlayer);
+    if (state.humanMeldOffer) bindPlayer(state.humanMeldOffer);
+    this.state = state;
+    this.events.splice(0, this.events.length, ...data.events);
+    this.nextSequence = data.nextSequence;
+    this.getSnapshot();
+  }
+
   createNewMatch(difficulty: Difficulty) {
     this.events.length = 0;
     this.nextSequence = 1;
@@ -1060,6 +1092,52 @@ export class BelotMatchFacade {
       players: meldWinner.players.map((meldSet) => this.toMeldSetView(meldSet))
     };
   }
+}
+
+function validateSavedState(state: MatchState) {
+  const assert = (valid: boolean) => { if (!valid) throw new Error("Invalid saved match state."); };
+  const index = (value: number) => Number.isInteger(value) && value >= 0 && value < 4;
+  const cards = (values: Card[]) => Array.isArray(values) && values.length <= 32 && values.every(card =>
+    card != null && ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"].includes(card.suit)
+    && ["SEVEN", "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING", "ACE"].includes(card.rank));
+  assert(["EASY", "NORMAL", "HARD"].includes(state.difficulty));
+  assert(["READY_TO_START", "BETWEEN_GAMES", "TRUMP_SELECTION", "TRICK_PLAY", "MATCH_COMPLETE"].includes(state.phase));
+  assert(["NONE", "START_MATCH", "START_NEXT_GAME", "CHOOSE_TRUMP", "REPORT_MELDS", "ACKNOWLEDGE_MELDS", "PLAY_CARD"].includes(state.pendingType));
+  assert([1, 3, 5].includes(state.matchTargetWins) && [501, 1001].includes(state.gameTargetPoints));
+  assert(index(state.dealerIndex) && index(state.currentPlayerIndex));
+  assert(Number.isInteger(state.gameNumber) && state.gameNumber >= 0);
+  assert(Number.isInteger(state.trumpTurnOffset) && state.trumpTurnOffset >= 0 && state.trumpTurnOffset <= 4);
+  assert(state.trumpSuit === null || ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"].includes(state.trumpSuit));
+  assert(state.declarer === null || ["YOURS", "ENEMIES"].includes(state.declarer));
+  assert(state.declarerPlayerIndex === null || index(state.declarerPlayerIndex));
+  assert(typeof state.firstTrickAnnounced === "boolean");
+  for (const [team, side] of [[state.teamOne, "YOURS"], [state.teamTwo, "ENEMIES"]] as const) {
+    assert(team?.side === side && typeof team.name === "string");
+    assert([team.matchWins, team.gameScore, team.trickPoints, team.tricksWon, team.meldPoints]
+      .every(value => Number.isSafeInteger(value) && value >= 0));
+  }
+  assert(Array.isArray(state.players) && state.players.length === 4);
+  state.players.forEach((player, i) => {
+    assert(player?.index === i && player.seat === ["SOUTH", "WEST", "NORTH", "EAST"][i]);
+    assert(typeof player.id === "string" && typeof player.name === "string" && player.human === (i === 0));
+    assert(player.team?.side === (i % 2 === 0 ? "YOURS" : "ENEMIES") && cards(player.hand));
+  });
+  assert(cards(state.deck));
+  if (state.currentTrick !== null) {
+    assert(index(state.currentTrick.leadPlayerIndex) && Array.isArray(state.currentTrick.cards));
+    assert(state.currentTrick.cards.length <= 4 && state.currentTrick.cards.every(play => index(play.playerIndex) && cards([play.card])));
+  }
+  const melds = (sets: MeldSet[]) => {
+    assert(Array.isArray(sets));
+    sets.forEach(set => {
+      assert(index(set.player.index) && Array.isArray(set.melds));
+      assert(Number.isFinite(set.totalPoints) && Number.isFinite(set.strongestComparisonValue));
+      set.melds.forEach(meld => assert(typeof meld.label === "string" && Number.isFinite(meld.points) && cards(meld.cards)));
+    });
+  };
+  melds(state.lastWinningMeldSets);
+  melds(state.declaredMeldSets);
+  if (state.humanMeldOffer !== null) melds([state.humanMeldOffer]);
 }
 
 function createMatchState(difficulty: Difficulty): MatchState {

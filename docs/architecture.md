@@ -12,7 +12,7 @@ The React app uses [GameGateway](../webclient/src/lib/gameGateway.ts) for sessio
 | Transport | [serverGateway.ts](../webclient/src/lib/serverGateway.ts): HTTP and SSE | [browserGateway.ts](../webclient/src/lib/browserGateway.ts): in-process calls and subscriptions |
 | Sessions | [GameSession.java](../server/src/main/java/com/belot/server/session/GameSession.java) and registry | [gameSession.ts](../webclient/src/lib/local-game/gameSession.ts) and gateway map |
 | Rules | [BelotMatchFacade.java](../engine/src/main/java/com/belot/engine/api/BelotMatchFacade.java) | [belotMatchFacade.ts](../webclient/src/lib/local-game/belotMatchFacade.ts) |
-| Lifetime | Server memory; browser stores the session ID | Page memory; session ID is not persisted |
+| Lifetime | Server memory; browser stores the session ID | Current session and full engine state saved in browser local storage |
 
 These are separate implementations, not generated copies. Changes to rules, AI decisions, scoring, or session behavior need equivalent changes and verification in both.
 
@@ -26,9 +26,17 @@ These are separate implementations, not generated copies. Changes to rules, AI d
 
 The Java engine exposes view records in [engine/api](../engine/src/main/java/com/belot/engine/api). Frontend equivalents live in [types.ts](../webclient/src/types.ts). Keep these aligned, especially legal card indices, pending actions, scores, and meld/Bela information.
 
-The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/belot/server/session/GameSessionRegistry.java). There is no database or durable game save. Storing a session ID in local storage does not persist server state.
+The server stores sessions in [GameSessionRegistry](../server/src/main/java/com/belot/server/session/GameSessionRegistry.java). There is no server database or durable server game save. Storing a session ID in local storage does not persist server state.
 
-## Where to change things
+The browser gateway stores one current save in `belot-browser-save-v1` and the UI stores its identifier in `belot-browser-session-id`, separately from the Java server's `belot-session-id`. Successful session mutations save before broadcasting events. The versioned engine save includes private hands, pending actions, scores, and event history; public snapshots alone cannot restore a game. Restore validates the format and rebinds player/team/meld references that JSON duplicates. Event broadcasting resumes after the saved sequence. Unknown versions or damaged saves fall back to a fresh session. Browser randomness resumes with fresh random draws; future deals are not predetermined by the save. Storage failures leave the current tab playable but may prevent saving. Multiple tabs are not synchronized; the last writer wins. This local save is not suitable as trusted multiplayer state.
+
+## Private rooms
+
+Private rooms use a separate `/api/rooms` contract and [RoomService](../server/src/main/java/com/belot/server/room/RoomService.java), rather than placing multi-user games in the unauthenticated solo-session registry. The Java engine can configure human seats and generate player-specific snapshots. It queues each human's meld offer and redacts other players' pending choices. The TypeScript engine remains solo-only; its gameplay rules are unchanged.
+
+[GameRoot](../webclient/src/GameRoot.tsx) routes `#rooms` and `#room=<uuid>` to [RoomHub](../webclient/src/components/RoomHub.tsx). The hub uses [roomGateway](../webclient/src/lib/roomGateway.ts) with per-member bearer tokens, visible-tab polling, revision checks, and idempotent command IDs. Membership tokens are saved separately from solo state. The server writes an atomic command journal before acknowledging each move, reconstructing the deterministic game after restart. See [Multiplayer](multiplayer.md) for storage, capacity, deployment, and the room API.
+
+## Where to change solo behavior
 
 | Concern | Source |
 | --- | --- |

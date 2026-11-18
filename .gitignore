@@ -36,3 +36,4 @@ Test.java
 .gradle
 node_modules/
 dist/
+**/data/rooms/

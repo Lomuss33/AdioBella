@@ -1,6 +1,6 @@
 # Projekt Belot
 
-A single-player Belot game built with React and TypeScript, with a Java engine and Spring Boot server for local play. You play with an AI teammate against two AI opponents.
+A Belot game built with React and TypeScript, with a Java engine and Spring Boot server. Play solo with bots or create private multiplayer rooms on your own server.
 
 [Play online](https://lomuss33.github.io/AdioBella/) · [User guide](USERGUIDE.md) · [Maintainer guide](MAINTAINER.md) · [Development docs](docs/README.md)
 
@@ -23,7 +23,7 @@ npm run setup
 npm run dev
 ```
 
-Setup is needed once after cloning or when frontend dependencies change. Open the local URL printed by Vite (normally <http://localhost:3003>). Saved UI changes update automatically. Use `npm run dev:full` for live development with the Java backend; that full-stack launcher uses port 5174 by default.
+Setup is needed once after cloning or when frontend dependencies change. Open the local URL printed by Vite (normally <http://localhost:3003>). Saved UI changes update automatically. Use `npm run dev:full` for live development with the Java backend; the full-stack launcher uses port 1111 for the frontend and 1112 for the backend by default.
 
 ## Features
 
@@ -32,9 +32,9 @@ Setup is needed once after cloning or when frontend dependencies change. Open th
 - Team and player names, three AI difficulty levels, and table themes.
 - Short (501) or long (1001) games; matches to 1, 3, or 5 game wins.
 - Trump selection, meld declarations, Bela prompts, and a game event log.
-- Browser-only play on GitHub Pages, or local play through the Java server.
+- GitHub Pages publishes the static singleplayer version. Multiplayer room code remains in the repository for later live hosting and is available in local/server builds. Private server rooms support invite links, up to four human players, bots for empty seats, and disk-backed continuation after restarts. See [Multiplayer](docs/multiplayer.md).
 
-Sessions are held in memory. Online games are lost on page reload; local server games are lost when the server restarts. Multiplayer and durable saved games are not implemented.
+Browser-only solo games are saved automatically on this browser and resume after a reload or reopening the site, when browser storage is available. Legacy Java solo sessions remain in memory and are lost when the server restarts. Private multiplayer rooms save on the server's disk and resume after restarts. Profiles, friends, and timed modes are not yet implemented.
 
 ## Development
 

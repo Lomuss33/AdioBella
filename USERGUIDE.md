@@ -39,13 +39,19 @@ The table uses the visible screen height, with card sizes adapting to the availa
 
 **Forfeit game** concedes the current game. **Quit match** concedes the match. Use these controls when you intend to give up the corresponding result.
 
-## Sessions and settings
+## Play with friends
 
-The online version keeps the game in the current page's memory. Reloading or closing it loses the match.
+Choose **Play with friends** to create or join a private room on a connected game server. Share the invite before starting, choose seats, and let bots fill empty places. Only the player whose action is pending can make that move. Each player's cards stay private. Use **All my rooms** to switch between saved rooms; reopening in the same browser restores your seat. Rooms continue after a server restart when its room files are retained. There are no timed turns yet, so an absent human's turn waits. For setup, storage, and limitations, see [Multiplayer rooms](docs/multiplayer.md).
+
+## Solo sessions and settings
+
+The browser-only online version automatically saves the current solo match after each successful action. Reload or reopen the same site in the same browser to continue with the same hands, scores, pending action, and event history. There is one current save; starting a fresh session or rematch replaces it. Use one tab per game: multiple tabs do not synchronize and the last save wins.
+
+Saving needs available browser storage. Clearing site data removes the save; private browsing, blocked storage, or a full storage quota can prevent it from being retained. Play still works in the current tab when storage is unavailable. Saves stay on this browser and site address, without an account or cloud upload. Damaged or unsupported saves start a fresh session.
 
 The local server version stores a session identifier in your browser and can restore the session while that server still holds it in memory. Restarting the server loses its games.
 
-Language, player and team names, match settings, card style, table color, and interface accent are saved automatically in this browser without a login. Table color changes the felt and surrounding background. Interface accent changes buttons, selections, highlights, and keyboard focus; menus retain a neutral background. Team and card suit colors stay consistent across combinations. These preferences survive reloads; they do not save an online match. Clearing site data removes them, and private browsing or blocked storage may prevent them from being retained. Preferences are specific to the browser and site address.
+Language, player and team names, match settings, card style, table color, and interface accent are saved automatically in this browser without a login. Table color changes the felt and surrounding background. Interface accent changes buttons, selections, highlights, and keyboard focus; menus retain a neutral background. Team and card suit colors stay consistent across combinations. These preferences survive reloads independently of the current match. Clearing site data removes them, and private browsing or blocked storage may prevent them from being retained. Preferences are specific to the browser and site address.
 
 Use the square globe button beside the scores to open the language dropup. Choose English, German, Croatian, or automatic browser language.
 
@@ -54,7 +60,7 @@ The square info button opens the **Brisnik Bela** book, also available from the 
 ## Troubleshooting
 
 - **Cannot play a card:** finish any open prompt and wait for your turn or the current animation.
-- **Online page is blank:** check that you opened the link above, then reload. Reloading discards an online match.
+- **Online page is blank:** check that you opened the link above, then reload. The browser-only version resumes the last successfully saved action.
 - **Local game stops responding:** confirm that the local server is running, then reload. If it still fails, remove the `belot-session-id` entry from that site's local storage and reload to start a fresh session.
 - **Local startup or port error:** see [development troubleshooting](docs/development.md#troubleshooting).
 

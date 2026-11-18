@@ -17,6 +17,8 @@ The repository's [deployment workflow](../.github/workflows/deploy-pages.yml) ru
 
 Pages serves static files; it does not run the Java backend. The build workflow does not run application tests. Complete the [applicable validation](development.md#validation) before merging.
 
+For private rooms with this static frontend and a homelab backend, see [Multiplayer deployment](multiplayer.md#free-static-frontend-plus-homelab-backend). Without a configured backend, the Pages build keeps solo available and disables room creation/joining.
+
 To publish, merge the reviewed change to `main` or manually run **Deploy Belot to GitHub Pages** from Actions. After the workflow succeeds, open the published URL and check setup and gameplay. Repository Pages settings should use GitHub Actions as the publishing source.
 
 If the repository name or hosting path changes, update the Vite base path and documentation links together.
@@ -54,4 +56,4 @@ The server defaults to port 8080. Packaged execution supports `SERVER_PORT` thro
 
 **Old content after deployment:** confirm that the successful workflow built the intended commit, then reload the site.
 
-**Game disappears after reload:** expected for the browser runtime. Neither deployment mode provides durable saved games.
+**Game disappears after reload:** browser-only solo games require available local storage and the same browser/site address to resume. Clearing site data, unavailable/full storage, or an incompatible save can prevent restoration. Legacy Java solo sessions disappear when the server restarts. Multiplayer rooms require both their server-side room files and the browser's saved member token.

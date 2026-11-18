@@ -2,9 +2,9 @@
 :root {
   --ui-text: #ffffff;
   --ui-muted: #ffffff;
-  --ui-accent-strong: #702d35;
-  --ui-accent: #ad7b7f;
-  --ui-accent-fill: #702d35;
+  --ui-accent-strong: #7d2532;
+  --ui-accent: #af7880;
+  --ui-accent-fill: #7d2532;
   --ui-accent-fill-text: #ffffff;
   /* Readability comes from white text, separate from restrained material dyes. */
   --ui-accent-text: #ffffff;
@@ -13,8 +13,8 @@
   --ui-gold-light: var(--ui-accent-text);
   --ui-focus: #c9cdcf;
   --ui-ink: #0b141d;
-  --ui-team-your: #658158;
-  --ui-team-opponent: #5e7394;
+  --ui-team-your: #5c8752;
+  --ui-team-opponent: #55759e;
   --ui-team-text: #ffffff;
   --ui-danger: #d0aaa9;
   --ui-warning: #c4b28d;
@@ -37,10 +37,10 @@
   --card-red: #992d35;
   --card-black: #19201d;
   --page-glow: transparent;
-  --page-top: #10131a;
-  --page-bottom: #080a10;
-  --felt-center: #20252d;
-  --felt-edge: #10141c;
+  --page-top: #0c0d11;
+  --page-bottom: #07070a;
+  --felt-center: #1d2129;
+  --felt-edge: #0e1015;
 }
 @media (max-width: 360px), (max-height: 520px) {
   :root { --dialog-action-height: 56px; }

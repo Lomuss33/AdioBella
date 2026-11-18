@@ -1,11 +1,12 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
+import path from "node:path";
 
 const isWindows = process.platform === "win32";
-const gradleCommand = isWindows ? "gradlew.bat" : "./gradlew";
+const gradleCommand = path.join(process.cwd(), isWindows ? "gradlew.bat" : "gradlew");
 const npmCommand = isWindows ? "npm.cmd" : "npm";
-const serverPort = process.env.BELOT_SERVER_PORT ?? "8080";
-const clientPort = process.env.BELOT_CLIENT_PORT ?? "5174";
+const serverPort = process.env.BELOT_SERVER_PORT ?? "1112";
+const clientPort = process.env.BELOT_CLIENT_PORT ?? "1111";
 const viteUrl = `http://localhost:${clientPort}`;
 
 if (process.argv.includes("--help")) {
@@ -79,11 +80,12 @@ function runProcess(label, command, args, cwd, extraEnv = {}) {
       })
     : spawn(command, args, {
         cwd,
+      detached: true,
         env: {
           ...process.env,
           ...extraEnv
         },
-        stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"]
       });
 
   child.label = label;
@@ -153,6 +155,8 @@ function killProcessTree(pid) {
 
   return new Promise((resolve) => {
     try {
+      // Children live in their own process groups so Ctrl+C can stop them
+      // without terminating PowerShell (which inherited the interactive group).
       process.kill(-pid, "SIGTERM");
     } catch {
       try {

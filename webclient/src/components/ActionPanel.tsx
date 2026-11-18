@@ -53,6 +53,8 @@ interface ActionPanelProps {
   onPlayWithBela: () => void;
   onPlayWithoutBela: () => void;
   onOpenBook?: () => void;
+  onOpenRooms?: () => void;
+  matchCompleteActions?: ReactNode;
   visual?: VisualSettings;
   onVisualChange?: (patch: Partial<VisualSettings>) => void;
 }
@@ -88,7 +90,7 @@ function ActionPanel({
   pendingBelaChoiceCard,
   onPlayWithBela,
   onPlayWithoutBela,
-  onOpenBook, visual, onVisualChange
+  onOpenBook, onOpenRooms, matchCompleteActions, visual, onVisualChange
 }: ActionPanelProps) {
   const isStart = pendingAction?.type === "START_MATCH";
   const isNextGame = pendingAction?.type === "START_NEXT_GAME";
@@ -259,6 +261,7 @@ function ActionPanel({
             <PopupActions aria-busy={busy} className={isTrumpChoice ? "trump-controls" : ""}>
               {isStart ? (
                 <>
+                {onOpenRooms && <button disabled={busy} type="button" className="action-button setup-multiplayer-button" onClick={onOpenRooms}>{t("rooms.title")}</button>}
                 {onStartWithGuide ? <button disabled={busy} type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Z" /></svg>
                   {t("How to play")}
@@ -268,7 +271,7 @@ function ActionPanel({
                 </>
               ) : null}
               {isMatchComplete ? (
-                <>
+                matchCompleteActions ?? <>
                   <button disabled={busy} type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
                   <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Rematch")}</button>
                 </>

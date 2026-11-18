@@ -10,6 +10,7 @@
 | Work with an AI coding assistant | [AI development guidance](ai-development.md), then the shared development guide |
 | Find the implementation to change | [Architecture](architecture.md) |
 | Inspect the server contract | [Session API](api.md) |
+| Host or play private multiplayer rooms | [Multiplayer rooms](multiplayer.md) |
 | Publish or diagnose a build | [Deployment](deployment.md) |
 | Review UI/UX changes and follow-up work | [UI and UX improvement plan](ui-ux-plan.md) (historical notes; current visuals unverified) |
 | Apply the current color direction | [Casino color and material plan](color-material-plan.md) (implemented; unverified) |

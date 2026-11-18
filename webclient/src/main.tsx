@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import GameRoot from "./GameRoot";
 import "./styles/tokens.css";
 import "./app.css";
 import "./styles/playing-cards.css";
@@ -31,5 +31,5 @@ import "./styles/card-motion.css";
 import "./styles/playback.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <App />
+  <GameRoot />
 );

@@ -52,6 +52,16 @@ public final class BelotMatchFacade {
         processUntilHumanTurn();
     }
 
+    /** Server-controlled seats; never accept this directly from an unauthenticated client. */
+    public synchronized void configureHumanPlayers(java.util.Set<String> playerIds) {
+        ensure(state.phase == Phase.READY_TO_START, "LOBBY_LOCKED", "Seats are locked after the match starts.");
+        if (playerIds == null || !playerIds.contains("south")
+                || playerIds.stream().anyMatch(id -> state.players.stream().noneMatch(player -> player.id.equals(id)))) {
+            throw new IllegalArgumentException("Choose valid player seats including the host.");
+        }
+        state.players.forEach(player -> player.human = playerIds.contains(player.id));
+    }
+
     public synchronized void updatePlayerNames(Map<String, String> playerNamesBySeat) {
         ensure(state.phase == Phase.READY_TO_START, "PLAYER_NAMES_LOCKED", "Player names can only be changed before the match starts.");
         if (playerNamesBySeat == null || playerNamesBySeat.isEmpty()) {
@@ -174,14 +184,18 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void forfeitGame() {
+        forfeitGame("south");
+    }
+
+    public synchronized void forfeitGame(String playerId) {
         ensure(state.phase != Phase.READY_TO_START, "GAME_NOT_STARTED", "Start the match before forfeiting a game.");
         ensure(state.phase != Phase.BETWEEN_GAMES, "GAME_COMPLETE", "The current game is already complete.");
         ensure(state.phase != Phase.MATCH_COMPLETE, "MATCH_COMPLETE", "The match is already complete.");
 
         clearValidation();
 
-        TeamState forfeitingTeam = state.teamOne;
-        TeamState winningTeam = state.teamTwo;
+        TeamState forfeitingTeam = requirePlayer(playerId).team;
+        TeamState winningTeam = otherTeam(forfeitingTeam.side);
         winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
         clearCurrentHandState();
 
@@ -197,14 +211,18 @@ public final class BelotMatchFacade {
     }
 
     public synchronized void forfeitMatch() {
+        forfeitMatch("south");
+    }
+
+    public synchronized void forfeitMatch(String playerId) {
         ensure(state.phase != Phase.READY_TO_START, "MATCH_NOT_STARTED", "Start the match before forfeiting it.");
         ensure(state.phase != Phase.MATCH_COMPLETE, "MATCH_COMPLETE", "The match is already complete.");
 
         clearValidation();
 
         boolean gameInProgress = state.phase != Phase.BETWEEN_GAMES;
-        TeamState forfeitingTeam = state.teamOne;
-        TeamState winningTeam = state.teamTwo;
+        TeamState forfeitingTeam = requirePlayer(playerId).team;
+        TeamState winningTeam = otherTeam(forfeitingTeam.side);
         if (gameInProgress) winningTeam.gameScore = Math.max(winningTeam.gameScore, state.gameTargetPoints);
         winningTeam.matchWins = state.matchTargetWins;
         if (gameInProgress) clearCurrentHandState();
@@ -269,6 +287,10 @@ public final class BelotMatchFacade {
         }
 
         state.humanMeldOffer = null;
+        if (!state.pendingHumanMeldOffers.isEmpty()) {
+            state.humanMeldOffer = state.pendingHumanMeldOffers.remove(0);
+            return;
+        }
         finalizeMeldDeclarations();
         processUntilHumanTurn();
     }
@@ -282,13 +304,22 @@ public final class BelotMatchFacade {
     }
 
     public synchronized GameSnapshot getSnapshot() {
+        return getSnapshotForPlayer("south");
+    }
+
+    public synchronized GameSnapshot getSnapshotForPlayer(String playerId) {
+        requirePlayer(playerId);
         PendingAction pendingAction = buildPendingAction();
+        if (!playerId.equals(pendingAction.actingPlayerId())) {
+            pendingAction = new PendingAction(ActionType.NONE, pendingAction.actingPlayerId(), List.of(), List.of(),
+                    List.of(), List.of(), null, null, null, "Waiting for another player.");
+        }
         List<Integer> legalCardIndices = pendingAction.type() == ActionType.PLAY_CARD
                 ? pendingAction.legalCardIndices()
                 : List.of();
 
         List<PlayerView> players = state.players.stream()
-                .map(player -> toPlayerView(player, legalCardIndices))
+                .map(player -> toPlayerView(player, legalCardIndices, playerId))
                 .toList();
 
         TrickView trick = new TrickView(
@@ -638,6 +669,7 @@ public final class BelotMatchFacade {
         state.lastWinningMeldSets = List.of();
         state.pendingMeldWinner = null;
         state.humanMeldOffer = null;
+        state.pendingHumanMeldOffers.clear();
 
         for (PlayerState player : state.players) {
             MeldSet meldSet = BelotMeldService.evaluate(player, state.trumpSuit);
@@ -646,7 +678,7 @@ public final class BelotMatchFacade {
             }
 
             if (player.human) {
-                state.humanMeldOffer = meldSet;
+                state.pendingHumanMeldOffers.add(meldSet);
             } else {
                 state.declaredMeldSets.add(meldSet);
                 log("INFO", player.name + " declared melds.", Map.of(
@@ -660,7 +692,8 @@ public final class BelotMatchFacade {
             }
         }
 
-        if (state.humanMeldOffer != null) {
+        if (!state.pendingHumanMeldOffers.isEmpty()) {
+            state.humanMeldOffer = state.pendingHumanMeldOffers.remove(0);
             state.pendingType = ActionType.REPORT_MELDS;
             return;
         }
@@ -728,7 +761,7 @@ public final class BelotMatchFacade {
             );
             case REPORT_MELDS -> new PendingAction(
                     ActionType.REPORT_MELDS,
-                    currentPlayer().id,
+                    state.humanMeldOffer.player().id,
                     List.of(),
                     List.of(),
                     List.of(),
@@ -740,7 +773,7 @@ public final class BelotMatchFacade {
             );
             case ACKNOWLEDGE_MELDS -> new PendingAction(
                     ActionType.ACKNOWLEDGE_MELDS,
-                    currentPlayer().id,
+                    playerAt(0).id,
                     List.of(),
                     List.of(),
                     List.of(),
@@ -767,9 +800,9 @@ public final class BelotMatchFacade {
         };
     }
 
-    private PlayerView toPlayerView(PlayerState player, List<Integer> legalCardIndices) {
+    private PlayerView toPlayerView(PlayerState player, List<Integer> legalCardIndices, String viewerId) {
         List<CardView> hand = new ArrayList<>();
-        if (player.human) {
+        if (player.id.equals(viewerId)) {
             for (int index = 0; index < player.hand.size(); index++) {
                 Card card = player.hand.get(index);
                 hand.add(new CardView(card.suit.name(), card.rank.name(), card.label(), true, legalCardIndices.contains(index)));
@@ -888,6 +921,11 @@ public final class BelotMatchFacade {
         return playerAt(state.currentPlayerIndex);
     }
 
+    private PlayerState requirePlayer(String playerId) {
+        return state.players.stream().filter(player -> player.id.equals(playerId)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown player."));
+    }
+
     private PlayerState playerAt(int index) {
         return state.players.get(index);
     }
@@ -909,6 +947,7 @@ public final class BelotMatchFacade {
         state.lastWinningMeldSets = List.of();
         state.declaredMeldSets = new ArrayList<>();
         state.humanMeldOffer = null;
+        state.pendingHumanMeldOffers.clear();
         state.pendingMeldWinner = null;
         state.firstTrickAnnounced = false;
         state.teamOne.resetHandState();
@@ -1096,7 +1135,7 @@ public final class BelotMatchFacade {
         final String id;
         String name;
         final Seat seat;
-        final boolean human;
+        boolean human;
         final TeamState team;
         final List<Card> hand = new ArrayList<>();
         boolean belaCalled;
@@ -1144,6 +1183,7 @@ public final class BelotMatchFacade {
         List<MeldSet> lastWinningMeldSets = List.of();
         List<MeldSet> declaredMeldSets = new ArrayList<>();
         MeldSet humanMeldOffer;
+        final List<MeldSet> pendingHumanMeldOffers = new ArrayList<>();
         MeldWinnerView pendingMeldWinner;
         boolean firstTrickAnnounced;
         Phase phase;

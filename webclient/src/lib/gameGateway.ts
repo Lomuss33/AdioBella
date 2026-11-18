@@ -43,7 +43,7 @@ export function getGameRuntime(): GameRuntime {
 }
 
 export function shouldPersistSession() {
-  return getGameRuntime() === "server";
+  return true;
 }
 
 export function getGameGateway(): GameGateway {

@@ -1,5 +1,9 @@
 import { guideMessages } from "./guide";
+import { roomMessages } from "./rooms";
+import { homeMessages } from "./home";
 export const messages = {
+  ...homeMessages,
+  ...roomMessages,
   "session.retry": ["Try again", "Erneut versuchen", "Pokušaj ponovno"],
   "playback.controls": ["Playback controls", "Wiedergabesteuerung", "Kontrole prikaza"],
   "playback.skipAnimations": ["Skip animations", "Animationen überspringen", "Preskoči animacije"],

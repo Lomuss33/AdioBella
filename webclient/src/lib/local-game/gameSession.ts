@@ -13,7 +13,8 @@ export class GameSession {
   constructor(
     private readonly sessionId: string,
     difficulty: Difficulty = "NORMAL",
-    random: RandomSource = new BrowserRandom()
+    random: RandomSource = new BrowserRandom(),
+    private readonly onChange: (session: GameSession) => void = () => {}
   ) {
     this.facade = new BelotMatchFacade(random, difficulty);
     this.broadcastSequence = this.facade.getSnapshot().lastEventSequence;
@@ -21,6 +22,15 @@ export class GameSession {
 
   id() {
     return this.sessionId;
+  }
+
+  saveGame(): string {
+    return this.facade.saveGame();
+  }
+
+  restoreGame(saved: string): void {
+    this.facade.restoreGame(saved);
+    this.broadcastSequence = this.facade.getSnapshot().lastEventSequence;
   }
 
   snapshot(): GameSnapshot {
@@ -101,6 +111,7 @@ export class GameSession {
   }
 
   private broadcastNewEvents() {
+    this.onChange(this);
     const newEvents = this.facade.getEventsAfter(this.broadcastSequence);
     if (newEvents.length === 0) {
       return;

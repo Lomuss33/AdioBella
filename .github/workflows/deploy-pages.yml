@@ -53,6 +53,8 @@ jobs:
 
       - name: Build Pages app
         working-directory: webclient
+        env:
+          VITE_GAME_RUNTIME: browser
         run: npm run build:pages
 
       - name: Setup Pages

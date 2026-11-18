@@ -4,6 +4,8 @@
 
 This HTTP API belongs to the local Spring Boot runtime. The Pages runtime exposes equivalent operations through an in-process gateway.
 
+Private multiplayer uses the separate authenticated [Room API](multiplayer.md#http-contract); room IDs cannot access games through this solo-session API.
+
 The authoritative request and response definitions are in [SessionController.java](../server/src/main/java/com/belot/server/web/SessionController.java). The active frontend consumer is [serverGateway.ts](../webclient/src/lib/serverGateway.ts).
 
 ## Endpoints

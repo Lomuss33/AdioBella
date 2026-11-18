@@ -16,13 +16,13 @@ tasks.register<Exec>("npmCi") {
     workingDir(projectDir)
 }
 
-val syncFavicon by tasks.registering(Sync::class) {
+val copyFavicon by tasks.registering(Copy::class) {
     from(rootProject.file("favicon.ico"))
     into(layout.projectDirectory.dir("public"))
 }
 
 tasks.register<Exec>("buildWebApp") {
-    dependsOn("npmCi", syncFavicon)
+    dependsOn("npmCi", copyFavicon)
     commandLine(npmCommand, "run", "build")
     workingDir(projectDir)
 }

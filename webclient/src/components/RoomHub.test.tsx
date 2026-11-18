@@ -40,6 +40,7 @@ test("joins an invitation using the chosen seat", async () => {
   vi.mocked(roomGateway.join).mockResolvedValue({ token: "friend-token", room: { ...fixture(), yourSeat: "north", host: false } });
   render(<RoomHub onBack={() => {}} />);
   fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "Friend" } });
+  fireEvent.click(screen.getByRole("button", { name: "Join a room" }));
   fireEvent.change(screen.getByLabelText("Invite link or room ID"), { target: { value: `https://example.com/#room=${id}` } });
   fireEvent.click(screen.getByRole("button", { name: "Join a room" }));
   await waitFor(() => expect(roomGateway.join).toHaveBeenCalledWith(id, "Friend", "north"));

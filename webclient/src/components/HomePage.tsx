@@ -50,7 +50,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
       <section className="home-lobby" aria-labelledby="home-title">
         <div className="home-lobby-heading">
           <div><p className="home-kicker">{t("home.kicker")}</p><h1 id="home-title">{t("home.headline")}</h1></div>
-          <span className="home-lobby-tag"><span className="home-online-dot" /> {t("home.freePlay")}</span>
+          <span className="home-lobby-tag"><span aria-hidden="true">♠</span> {t("home.lobby")}</span>
         </div>
 
         <section className="home-feature" aria-label={t("home.soloTitle")}>
@@ -67,7 +67,6 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
               <div className="home-table-you"><span className="home-player-avatar">{playerProfile.mark}</span><span>{playerProfile.name || t("home.you")}</span><i /></div>
             </div>
             <span className="home-art-badge home-art-badge-top">{t("home.soloTable")}</span>
-            <span className="home-art-badge home-art-badge-bottom"><span className="home-online-dot" /> {t("home.freePlay")}</span>
           </div>
           <div className="home-feature-copy">
             <div className="home-feature-eyebrow"><span className="home-online-dot" /> {t(hasSoloSave ? "home.backToTheTable" : "home.readyToDeal")}</div>
@@ -84,10 +83,10 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
 
         <div className="home-action-row" aria-label={t("home.chooseYourGame")}>
           <button className="home-lobby-tile home-lobby-tile-rules" type="button" onClick={() => setShowGuide(true)}>
-            <span className="home-tile-icon" aria-hidden="true">♧</span><span><b>{t("home.rulesTitle")}</b><small>{t("home.learnRules")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
+            <span className="home-tile-icon" aria-hidden="true">▤</span><span><b>{t("home.rulesTitle")}</b><small>{t("home.learnRules")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>
           {!singlePlayerOnly && <button className="home-lobby-tile home-lobby-tile-friends" type="button" onClick={onOpenRooms}>
-            <span className="home-tile-icon" aria-hidden="true">♠</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.friendsDescription")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
+            <span className="home-tile-icon" aria-hidden="true">♧</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.friendsDescription")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>}
           {singlePlayerOnly && <div className="home-lobby-note">
             <span className="home-note-icon" aria-hidden="true">✓</span><div><b>{t("home.noAccount")}</b><p>{t(browserRuntime ? "home.localSaveNote" : "home.serverSessionNote")}</p></div>

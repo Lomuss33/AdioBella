@@ -50,7 +50,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
       <section className="home-lobby" aria-labelledby="home-title">
         <div className="home-lobby-heading">
           <div><p className="home-kicker">{t("home.kicker")}</p><h1 id="home-title">{t("home.headline")}</h1></div>
-          <span className="home-lobby-tag"><span aria-hidden="true">♠</span> {t("home.lobby")}</span>
+          <span className="home-lobby-tag"><span className="home-online-dot" /> {t("home.freePlay")}</span>
         </div>
 
         <section className="home-feature" aria-label={t("home.soloTitle")}>
@@ -60,6 +60,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
               <div className="home-table-seat home-table-seat-north"><span>♣</span><i /></div>
               <div className="home-table-seat home-table-seat-west"><span>♠</span><i /></div>
               <div className="home-table-seat home-table-seat-east"><span>♥</span><i /></div>
+              <div className="home-table-seat home-table-seat-south"><span>♦</span><i /></div>
               <div className="home-table-cards"><span className="home-preview-card card-back-one" /><span className="home-preview-card card-back-two" />
                 <span className="home-preview-card card-front-one"><b>A</b><i>♠</i></span><span className="home-preview-card card-front-two"><b>K</b><i>♥</i></span></div>
               <div className="home-table-center-mark">♠ <span>BELOT</span> ♦</div>
@@ -69,7 +70,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
             <span className="home-art-badge home-art-badge-bottom"><span className="home-online-dot" /> {t("home.freePlay")}</span>
           </div>
           <div className="home-feature-copy">
-            <div className="home-feature-eyebrow"><span className="home-online-dot" /> {t("home.readyToDeal")}</div>
+            <div className="home-feature-eyebrow"><span className="home-online-dot" /> {t(hasSoloSave ? "home.backToTheTable" : "home.readyToDeal")}</div>
             <h2>{t(hasSoloSave ? "home.resumeSoloTitle" : "home.soloTitle")}</h2>
             <p>{t("home.soloLede")}</p>
             <div className="home-feature-meta"><span><b>3</b> {t("home.botOpponents")}</span><span className="home-meta-divider" /><span>{t("home.matchLength")}</span></div>
@@ -83,27 +84,16 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
 
         <div className="home-action-row" aria-label={t("home.chooseYourGame")}>
           <button className="home-lobby-tile home-lobby-tile-rules" type="button" onClick={() => setShowGuide(true)}>
-            <span className="home-tile-icon">▤</span><span><b>{t("home.rulesTitle")}</b><small>{t("home.learnRules")}</small></span><span className="home-tile-arrow">↗</span>
+            <span className="home-tile-icon" aria-hidden="true">♧</span><span><b>{t("home.rulesTitle")}</b><small>{t("home.learnRules")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>
           {!singlePlayerOnly && <button className="home-lobby-tile home-lobby-tile-friends" type="button" onClick={onOpenRooms}>
-            <span className="home-tile-icon">♧</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.friendsDescription")}</small></span><span className="home-tile-arrow">↗</span>
+            <span className="home-tile-icon" aria-hidden="true">♠</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.friendsDescription")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>}
+          {singlePlayerOnly && <div className="home-lobby-note">
+            <span className="home-note-icon" aria-hidden="true">✓</span><div><b>{t("home.noAccount")}</b><p>{t(browserRuntime ? "home.localSaveNote" : "home.serverSessionNote")}</p></div>
+          </div>}
         </div>
       </section>
-
-      <aside className="home-info-rail">
-        <section className="home-profile-card">
-          <span className="home-section-caption">{t("home.yourSeat")}</span>
-          <div className="home-profile-avatar">{playerProfile.mark}</div>
-          <strong>{playerProfile.name || t("home.guest")}</strong>
-          <span className="home-profile-status"><span className="home-online-dot" />{t("home.tableReady")}</span>
-          {!singlePlayerOnly && <button type="button" onClick={onOpenProfile}>{t("home.profile")} <span>↗</span></button>}
-        </section>
-        <section className="home-lobby-note">
-          <span className="home-note-icon">✦</span><div><b>{t("home.noAccount")}</b><p>{t(browserRuntime ? "home.localSaveNote" : "home.serverSessionNote")}</p></div>
-        </section>
-        <div className="home-info-footer">BELOT CLUB <span>·</span> {t("home.freePlay")}</div>
-      </aside>
     </div>
 
     {showGuide && <GuideBook initialChapter="welcome" onClose={() => setShowGuide(false)} />}

@@ -28,11 +28,13 @@ The versioned command journal is intended for this application version. Keep bac
 
 ## Free static frontend plus homelab backend
 
-The simplest setup serves both frontend and API from Spring Boot at the same origin. For a separate static frontend, set `VITE_MULTIPLAYER_URL` to the backend's public HTTPS origin **when building the frontend**:
+The simplest setup serves both frontend and API from Spring Boot at the same origin. The [homelab Docker setup](deployment.md#homelab-docker) uses this layout. GitHub Pages is intentionally singleplayer-only. If you build a separate multiplayer frontend yourself, set `VITE_MULTIPLAYER_URL` to the backend's public HTTPS origin **when building the normal frontend mode**:
 
 ```powershell
+$env:VITE_GAME_RUNTIME = "browser"
 $env:VITE_MULTIPLAYER_URL = "https://your-game-server.example"
-npm --prefix webclient run build:pages
+cd webclient
+npm run build
 ```
 
 Use your actual server address. On the server set `BELOT_ROOMS_ALLOWED_ORIGINS` to the exact frontend origin, for example `https://lomuss33.github.io` (no repository path). Multiple origins are comma-separated. CORS applies only to `/api/rooms/**`, with no cookie authentication. The existing solo session API is not exposed cross-origin by this setting. Use HTTPS for public access so seat tokens are encrypted in transit. Public routing, TLS, domains, and homelab deployment are not configured by this change.
@@ -50,7 +52,7 @@ The room API is separate from the legacy solo API. All room responses use `Cache
 | GET | `/api/rooms/{id}` | `Authorization: Bearer <member token>` |
 | POST | `/api/rooms/{id}/actions` | Same authorization; command body below |
 
-All commands require a unique UUID `requestId`, the last observed numeric `revision`, and `action`. Actions are `START`, `TRUMP` (`choice`), `MELDS` (`declare`), `ACK`, `CARD` (`handIndex`, `callBela`), `SETTINGS` (`gameLength`, `matchTargetWins`, optional `difficulty`), and `FORFEIT`. Start, settings, and meld acknowledgement belong to the host; trump, declarations, and card play belong to the pending actor. Forfeit concedes the acting member's own team, even when they are not on turn.
+All commands require a unique UUID `requestId`, the last observed numeric `revision`, and `action`. Actions are `START`, `TRUMP` (`choice`), `MELDS` (`declare`), `ACK`, `CARD` (`handIndex`, `callBela`), `SETTINGS` (`gameLength`, `matchTargetWins`, optional `difficulty`), `FORFEIT_GAME`, and `FORFEIT`. Start, settings, and meld acknowledgement belong to the host; trump, declarations, and card play belong to the pending actor. Forfeit commands concede the acting member's own team, even when they are not on turn.
 
 A room response includes `roomId`, `revision`, `yourSeat`, `host`, `seats`, a player-specific `snapshot`, and up to 40 recent public `events`. Opponent cards are placeholders. Other players' legal actions and undeclared meld offers are omitted. HTTP status codes distinguish invalid input (400), missing/bad member credentials (401), wrong actor/host (403), missing rooms (404), conflicting seat/revision/request ID (409), and unavailable storage/capacity (503).
 

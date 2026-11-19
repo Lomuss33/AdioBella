@@ -1,0 +1,12 @@
+.git
+.agents
+.gradle
+**/node_modules
+**/dist
+**/build
+!server/build
+!server/build/libs
+!server/build/libs/server-1.0.0.jar
+**/data/rooms
+.env
+.env.*

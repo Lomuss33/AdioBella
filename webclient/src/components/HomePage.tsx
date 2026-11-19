@@ -2,7 +2,6 @@ import { useState } from "react";
 import { t, useLanguage } from "../i18n";
 import GuideBook from "./GuideBook";
 import LanguageSelect from "./LanguageSelect";
-import { savedRoomAccess } from "../lib/roomGateway";
 import { getGameRuntime } from "../lib/gameGateway";
 import { readStorage } from "../lib/preferences";
 import { loadPlayerProfile } from "../lib/playerProfile";
@@ -13,17 +12,15 @@ type HomePageProps = {
   singlePlayerOnly?: boolean;
   onPlaySolo: () => void;
   onOpenRooms: () => void;
-  onOpenRoom: (roomId: string) => void;
   onOpenProfile: () => void;
   onHome: () => void;
 };
 
-export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenRooms, onOpenRoom, onOpenProfile, onHome }: HomePageProps) {
+export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenRooms, onOpenProfile, onHome }: HomePageProps) {
   useLanguage();
   const [showGuide, setShowGuide] = useState(false);
   useSavedAppearance();
   const playerProfile = loadPlayerProfile();
-  const rooms = savedRoomAccess();
   const browserRuntime = getGameRuntime() === "browser";
   const sessionKey = browserRuntime ? "belot-browser-session-id" : "belot-session-id";
   const hasSoloSave = Boolean(readStorage(sessionKey));
@@ -50,21 +47,6 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
     </header>
 
     <div className="home-lobby-shell">
-      <aside className="home-side-nav" aria-label={t("home.navigation")}>
-        <span className="home-side-caption">{t("home.menu")}</span>
-        <button className="home-side-link is-active" type="button" onClick={onHome}><span>⌂</span>{t("home.lobby")}</button>
-        <button className="home-side-link" type="button" onClick={onPlaySolo}><span>♠</span>{t("home.solo")}</button>
-        {!singlePlayerOnly && <button className="home-side-link" type="button" onClick={onOpenRooms}><span>♧</span>{t("home.multiplayer")}</button>}
-        <button className="home-side-link" type="button" onClick={() => setShowGuide(true)}><span>▤</span>{t("home.rules")}</button>
-        {!singlePlayerOnly && rooms.length > 0 && <div className="home-side-saved">
-          <span className="home-side-caption">{t("home.savedTablesMenu")}</span>
-          {rooms.slice(0, 3).map(room => <button key={room.roomId} type="button" onClick={() => onOpenRoom(room.roomId)}>
-            <span className="home-room-dot" />{room.name || room.roomId.slice(0, 8)}
-          </button>)}
-        </div>}
-        <div className="home-side-bottom"><span className="home-online-dot" />{t("home.tableReady")}</div>
-      </aside>
-
       <section className="home-lobby" aria-labelledby="home-title">
         <div className="home-lobby-heading">
           <div><p className="home-kicker">{t("home.kicker")}</p><h1 id="home-title">{t("home.headline")}</h1></div>
@@ -111,7 +93,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
 
       <aside className="home-info-rail">
         <section className="home-profile-card">
-          <span className="home-side-caption">{t("home.yourSeat")}</span>
+          <span className="home-section-caption">{t("home.yourSeat")}</span>
           <div className="home-profile-avatar">{playerProfile.mark}</div>
           <strong>{playerProfile.name || t("home.guest")}</strong>
           <span className="home-profile-status"><span className="home-online-dot" />{t("home.tableReady")}</span>

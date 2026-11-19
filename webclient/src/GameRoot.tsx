@@ -18,7 +18,7 @@ export default function GameRoot() {
   if (import.meta.env.MODE === "pages") {
     if (route === "#solo") return <App onHome={() => navigate("")} />;
     return <HomePage singlePlayerOnly onPlaySolo={() => navigate("solo")} onOpenRooms={() => {}}
-      onOpenRoom={() => {}} onOpenProfile={() => {}} onHome={() => navigate("")} />;
+      onOpenProfile={() => {}} onHome={() => navigate("")} />;
   }
   if (route === "#rooms" || route.startsWith("#room=")) {
     return <RoomHub key={route} onBack={() => navigate("")} />;
@@ -28,5 +28,5 @@ export default function GameRoot() {
   }
   if (route === "#profile") return <ProfilePage onBack={() => navigate("")} />;
   return <HomePage onPlaySolo={() => navigate("solo")} onOpenRooms={() => navigate("rooms")}
-    onOpenRoom={roomId => navigate(`room=${roomId}`)} onOpenProfile={() => navigate("profile")} onHome={() => navigate("")} />;
+    onOpenProfile={() => navigate("profile")} onHome={() => navigate("")} />;
 }

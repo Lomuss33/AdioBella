@@ -32,10 +32,6 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
         <span>BELOT<span className="home-brand-dot">.</span></span>
         <span className="home-brand-caption">CARD CLUB</span>
       </button>
-      <nav className="home-top-nav" aria-label={t("home.navigation")}>
-        <button className="home-top-nav-active" type="button" onClick={onHome}>{t("home.lobby")}</button>
-        <button type="button" onClick={() => setShowGuide(true)}>{t("home.rules")}</button>
-      </nav>
       <div className="home-top-actions">
         <span className="home-free-badge"><span aria-hidden="true">✦</span> {t("home.freePlay")}</span>
         {!singlePlayerOnly && <button type="button" className="home-player-pill" onClick={onOpenProfile}>
@@ -48,10 +44,6 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
 
     <div className="home-lobby-shell">
       <section className="home-lobby" aria-labelledby="home-title">
-        <div className="home-lobby-heading">
-          <div><p className="home-kicker">{t("home.kicker")}</p><h1 id="home-title">{t("home.headline")}</h1></div>
-          <span className="home-lobby-tag"><span aria-hidden="true">♠</span> {t("home.lobby")}</span>
-        </div>
 
         <section className="home-feature" aria-label={t("home.soloTitle")}>
           <div className="home-feature-art" aria-hidden="true">
@@ -60,18 +52,16 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
               <div className="home-table-seat home-table-seat-north"><span>♣</span><i /></div>
               <div className="home-table-seat home-table-seat-west"><span>♠</span><i /></div>
               <div className="home-table-seat home-table-seat-east"><span>♥</span><i /></div>
-              <div className="home-table-seat home-table-seat-south"><span>♦</span><i /></div>
               <div className="home-table-cards"><span className="home-preview-card card-back-one" /><span className="home-preview-card card-back-two" />
                 <span className="home-preview-card card-front-one"><b>A</b><i>♠</i></span><span className="home-preview-card card-front-two"><b>K</b><i>♥</i></span></div>
               <div className="home-table-center-mark">♠ <span>BELOT</span> ♦</div>
               <div className="home-table-you"><span className="home-player-avatar">{playerProfile.mark}</span><span>{playerProfile.name || t("home.you")}</span><i /></div>
             </div>
-            <span className="home-art-badge home-art-badge-top">{t("home.soloTable")}</span>
           </div>
           <div className="home-feature-copy">
             <div className="home-feature-eyebrow"><span className="home-online-dot" /> {t(hasSoloSave ? "home.backToTheTable" : "home.readyToDeal")}</div>
-            <h2>{t(hasSoloSave ? "home.resumeSoloTitle" : "home.soloTitle")}</h2>
-            <p>{t("home.soloLede")}</p>
+            <h1 id="home-title">{t(hasSoloSave ? "home.resumeSoloTitle" : "home.soloTitle")}</h1>
+            <p>{t("home.soloDescription")}</p>
             <div className="home-feature-meta"><span><b>3</b> {t("home.botOpponents")}</span><span className="home-meta-divider" /><span>{t("home.matchLength")}</span></div>
             <button className="home-play-button" type="button" onClick={onPlaySolo}>
               <span className="home-play-icon" aria-hidden="true">▶</span>
@@ -86,7 +76,7 @@ export default function HomePage({ singlePlayerOnly = false, onPlaySolo, onOpenR
             <span className="home-tile-icon" aria-hidden="true">▤</span><span><b>{t("home.rulesTitle")}</b><small>{t("home.learnRules")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>
           {!singlePlayerOnly && <button className="home-lobby-tile home-lobby-tile-friends" type="button" onClick={onOpenRooms}>
-            <span className="home-tile-icon" aria-hidden="true">♧</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.friendsDescription")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
+            <span className="home-tile-icon" aria-hidden="true">♧</span><span><b>{t("home.friendsTitle")}</b><small>{t("home.createOrJoin")}</small></span><span className="home-tile-arrow" aria-hidden="true">↗</span>
           </button>}
           {singlePlayerOnly && <div className="home-lobby-note">
             <span className="home-note-icon" aria-hidden="true">✓</span><div><b>{t("home.noAccount")}</b><p>{t(browserRuntime ? "home.localSaveNote" : "home.serverSessionNote")}</p></div>

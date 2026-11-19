@@ -1,4 +1,5 @@
 export const homeMessages = {
+  "home.multiplayerUnavailable": ["Unavailable on this site", "Hier nicht verfügbar", "Nedostupno na ovoj stranici"],
   "home.lobby": ["Lobby", "Lobby", "Lobi"],
   "home.freePlay": ["Free to play", "Kostenlos spielen", "Besplatna igra"],
   "home.guest": ["Guest player", "Gastspieler", "Gost"],

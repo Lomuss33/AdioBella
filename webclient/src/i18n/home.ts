@@ -1,4 +1,5 @@
 export const homeMessages = {
+  "home.soloWithBots": ["Play with bots", "Mit Bots spielen", "Igraj s botovima"],
   "home.multiplayerUnavailable": ["Unavailable on this site", "Hier nicht verfügbar", "Nedostupno na ovoj stranici"],
   "home.lobby": ["Lobby", "Lobby", "Lobi"],
   "home.freePlay": ["Free to play", "Kostenlos spielen", "Besplatna igra"],
@@ -67,5 +68,8 @@ export const homeMessages = {
   "home.profileMark": ["Your mark", "Dein Zeichen", "Tvoj znak"],
   "home.profileSave": ["Save profile", "Profil speichern", "Spremi profil"],
   "home.profileSaved": ["Profile saved", "Profil gespeichert", "Profil je spremljen"],
-  "home.profileLocal": ["This profile is saved only in this browser. No account or personal data is sent.", "Dieses Profil wird nur in diesem Browser gespeichert. Es wird kein Konto benötigt und keine persönlichen Daten werden gesendet.", "Profil se sprema samo u ovaj preglednik. Ne treba račun i osobni podaci se ne šalju."],
+  "home.profileLocal": ["Your profile is saved in this browser. Your table name is shared when you create or join a room.", "Dein Profil wird in diesem Browser gespeichert. Dein Tischname wird beim Erstellen oder Betreten eines Raums geteilt.", "Profil se sprema u ovom pregledniku. Ime za stolom dijeli se kad napraviš sobu ili se pridružiš."],
+  "home.profilePreview": ["Profile preview", "Profilvorschau", "Pregled profila"],
+  "home.profileReset": ["Discard changes", "Änderungen verwerfen", "Odbaci promjene"],
+  "home.profileSaveError": ["Could not save your profile in this browser.", "Dein Profil konnte in diesem Browser nicht gespeichert werden.", "Profil se nije mogao spremiti u ovom pregledniku."],
 } as const;

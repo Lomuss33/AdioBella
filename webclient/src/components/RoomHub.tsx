@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { t, tr, useLanguage } from "../i18n";
+import { t, useLanguage } from "../i18n";
 import { CardStyleProvider } from "./CardStyleContext";
 import { usePreparedCardStyle } from "../lib/cardArtwork";
 import { useSavedAppearance } from "../lib/useSavedAppearance";
@@ -8,11 +8,15 @@ import { eventDescription } from "../i18n/presentation";
 import { loadPlayerProfile } from "../lib/playerProfile";
 import { hasRoomServer, invitation, rememberRoom, roomGateway, roomIdFromInput, RoomError, savedRoomAccess,
   type RoomAccess, type RoomCommand, type RoomView, type SavedRoomAccess } from "../lib/roomGateway";
-import type { GameLength, MatchTargetWins, TrumpChoice } from "../types";
+import SetupOptions from "./SetupOptions";
+import type { MatchRules } from "../types";
 import RoomGameTable from "./RoomGameTable";
-import PlayingCard from "./PlayingCard";
-import LanguageSelect from "./LanguageSelect";
+import SavedGameList from "./SavedGameList";
+import SettingsButton, { DisplaySettingsFields, DisplaySettingsProvider } from "./SettingsButton";
+import { displayPreferences, type DisplayPreferences } from "../lib/preferences";
 import "../styles/rooms.css";
+
+const DEFAULT_ROOM_RULES: MatchRules = { gameLength: "SHORT", matchTargetWins: 1, difficulty: "NORMAL" };
 
 function errorKey(error: unknown): MessageKey {
   if (!(error instanceof RoomError)) return "rooms.network";
@@ -22,12 +26,15 @@ function errorKey(error: unknown): MessageKey {
 
 export default function RoomHub({ onBack }: { onBack: () => void }) {
   useLanguage();
-  const preferences = useSavedAppearance();
-  const preparedCardStyle = usePreparedCardStyle(preferences.visual.cardStyle);
   const initialId = roomIdFromInput(window.location.href);
   const [saved, setSaved] = useState(savedRoomAccess);
   const [access, setAccess] = useState<SavedRoomAccess | null>(() => savedRoomAccess().find(item => item.roomId === initialId) ?? null);
   const [room, setRoom] = useState<RoomView | null>(null);
+  const { preferences, updateRoomDisplay } = useSavedAppearance(room?.displayDefaults ?? undefined, access?.roomId);
+  const preparedCardStyle = usePreparedCardStyle(preferences.visual.cardStyle);
+  const [defaultPatch, setDefaultPatch] = useState<Partial<DisplayPreferences>>({});
+  const displayDefaults = { ...displayPreferences(preferences), ...defaultPatch };
+  const personalDisplayControls = access ? { value: displayPreferences(preferences), onChange: updateRoomDisplay } : null;
   const [name, setName] = useState(() => loadPlayerProfile().name || savedRoomAccess()[0]?.name || "");
   const [invite, setInvite] = useState(initialId ?? "");
   const [seat, setSeat] = useState("north");
@@ -37,11 +44,10 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<MessageKey | null>(null);
   const [storageWarning, setStorageWarning] = useState(false);
   const [retry, setRetry] = useState<RoomCommand | null>(null);
-  const [belaIndex, setBelaIndex] = useState<number | null>(null);
-  const [confirmForfeit, setConfirmForfeit] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [length, setLength] = useState<GameLength>("SHORT");
-  const [wins, setWins] = useState<MatchTargetWins>(1);
+  const [rules, setRules] = useState(DEFAULT_ROOM_RULES);
+  const ruleControls = { value: rules, onChange: (patch: Partial<MatchRules>) => setRules(current => ({ ...current, ...patch })) };
+  const score = room?.snapshot.score;
 
   function accept(next: RoomView) {
     setRoom(current => current?.roomId === next.roomId && current.revision > next.revision ? current : next);
@@ -72,12 +78,14 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
     return () => { stopped = true; clearTimeout(timer); controller.abort(); document.removeEventListener("visibilitychange", onVisible); };
   }, [access]);
 
-  useEffect(() => { setBelaIndex(null); setConfirmForfeit(false); }, [room?.revision]);
   useEffect(() => {
-    if (!room) return;
-    setLength(room.snapshot.score.gameTargetPoints === 501 ? "SHORT" : "LONG");
-    setWins(room.snapshot.score.matchTargetWins === 5 ? 5 : room.snapshot.score.matchTargetWins === 3 ? 3 : 1);
-  }, [room?.roomId, room?.revision]);
+    if (!score) return;
+    setRules({
+      gameLength: score.gameTargetPoints === 501 ? "SHORT" : "LONG",
+      matchTargetWins: score.matchTargetWins === 5 ? 5 : score.matchTargetWins === 3 ? 3 : 1,
+      difficulty: score.difficulty
+    });
+  }, [room?.roomId, score?.gameTargetPoints, score?.matchTargetWins, score?.difficulty]);
 
   function enter(next: RoomAccess) {
     const stored = rememberRoom(next);
@@ -96,7 +104,7 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
     const existing = join ? saved.find(item => item.roomId === id) : undefined;
     if (existing) { open(existing); return; }
     commandLock.current = true; setBusy(true); setError(null);
-    try { enter(join ? await roomGateway.join(id!, name.trim(), seat) : await roomGateway.create(name.trim())); }
+    try { enter(join ? await roomGateway.join(id!, name.trim(), seat) : await roomGateway.create(name.trim(), displayDefaults, rules)); }
     catch (reason) { setError(errorKey(reason)); }
     finally { commandLock.current = false; setBusy(false); }
   }
@@ -127,20 +135,22 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
   }
 
   const pending = room?.snapshot.pendingAction;
-  const me = room?.snapshot.players.find(player => player.id === room.yourSeat);
-  const actor = room?.snapshot.players.find(player => player.id === pending?.actingPlayerId);
   const locked = busy || retry !== null;
   const lobby = room?.snapshot.phase === "READY_TO_START";
   const invitationUrl = room ? invitation(room.roomId) : "";
 
   function backToRoomList() {
-    setAccess(null); setRoom(null); setRetry(null); setError(null); history.replaceState(null, "", "#rooms");
+    setAccess(null); setRoom(null); setRetry(null); setError(null);
+    setJoinMode(false); setInvite(""); setCopied(false); setStorageWarning(false);
+    setRules(DEFAULT_ROOM_RULES); setDefaultPatch({});
+    history.replaceState(null, "", "#rooms");
   }
 
   if (access && room && !lobby) {
-    return <CardStyleProvider value={preparedCardStyle}><RoomGameTable
+    return <DisplaySettingsProvider value={personalDisplayControls}><CardStyleProvider value={preparedCardStyle}><RoomGameTable
       room={room}
       preferences={preferences}
+      onDisplayChange={updateRoomDisplay}
       busy={busy}
       locked={locked}
       errorMessage={error ? t(error) : null}
@@ -149,16 +159,15 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
       onRefresh={() => { void refresh(); }}
       onRoomList={backToRoomList}
       onRetry={() => { if (retry) void act({ action: retry.action }, retry); }}
-    /></CardStyleProvider>;
+    /></CardStyleProvider></DisplaySettingsProvider>;
   }
 
-  return <CardStyleProvider value={preparedCardStyle}><main className={`rooms-page ${!access ? "rooms-page-entry" : !room ? "rooms-page-connecting" : lobby ? "rooms-page-lobby" : ""}`}>
+  return <DisplaySettingsProvider value={personalDisplayControls}><main className="rooms-page">
     <header className="rooms-header">
-      <button type="button" onClick={onBack} disabled={busy}>← {t("home.back")}</button>
-      <LanguageSelect />
+      <button type="button" onClick={access ? backToRoomList : onBack} disabled={busy}>← {t(access ? "rooms.list" : "home.back")}</button>
+      <h1>{t(room ? "rooms.lobby" : "rooms.title")}</h1>
+      <SettingsButton />
     </header>
-    <div className="rooms-heading"><span className="rooms-eyebrow">BELOT · MULTIPLAYER</span>
-      <h1>{t("rooms.title")}</h1><p>{t("rooms.intro")}</p></div>
     {!hasRoomServer && <p className="rooms-notice" role="status">{t("rooms.noServer")}</p>}
     {storageWarning && <p className="rooms-notice" role="status">{t("rooms.storage")}</p>}
     {error && <div className="rooms-notice" role="alert"><p>{t(error)}</p>
@@ -167,107 +176,80 @@ export default function RoomHub({ onBack }: { onBack: () => void }) {
     {retry && <button className="rooms-primary" disabled={busy} onClick={() => void act({ action: retry.action }, retry)}>{t("rooms.retry")}</button>}
 
     {!access ? <>
-      <section className="rooms-entry-panel">
-        <label className="rooms-field rooms-name-field">{t("rooms.name")}
-          <input autoComplete="nickname" maxLength={24} value={name} onChange={event => setName(event.target.value)} /></label>
+      <form className="rooms-entry-panel" aria-busy={busy} onSubmit={event => { event.preventDefault(); void connect(joinMode); }}>
+        <label className="rooms-field">{t("rooms.name")}
+          <input autoComplete="nickname" required maxLength={24} value={name} onChange={event => setName(event.target.value)} /></label>
         {!joinMode ? <div className="rooms-entry-grid">
-          <button type="button" className="rooms-choice-card rooms-choice-create" aria-label={t("rooms.create")} disabled={busy || !name.trim() || !hasRoomServer} onClick={() => void connect(false)}>
-            <span className="rooms-choice-icon" aria-hidden="true">♧</span><span className="rooms-choice-arrow" aria-hidden="true">↗</span>
-            <strong>{t("rooms.create")}</strong><small>{t("rooms.bots")}</small>
+          <button type="submit" className="rooms-choice-card rooms-choice-create" aria-label={t("rooms.create")} disabled={busy || !hasRoomServer}>
+            <span className="rooms-choice-icon" aria-hidden="true">+</span>
+            <span><strong>{t("rooms.create")}</strong><small>{t("rooms.shareWithFriends")}</small></span>
           </button>
-          <button type="button" className="rooms-choice-card" aria-label={t("rooms.join")} disabled={!hasRoomServer || busy} onClick={() => setJoinMode(true)}>
-            <span className="rooms-choice-icon" aria-hidden="true">↗</span><span className="rooms-choice-arrow" aria-hidden="true">↗</span>
-            <strong>{t("rooms.join")}</strong><small>{t("rooms.invite")}</small>
+          <button type="button" className="rooms-choice-card" aria-label={t("rooms.join")} disabled={!hasRoomServer || busy} onClick={() => { setJoinMode(true); setError(null); }}>
+            <span className="rooms-choice-icon" aria-hidden="true">→</span>
+            <span><strong>{t("rooms.join")}</strong><small>{t("rooms.invite")}</small></span>
           </button>
-        </div> : <form className="rooms-join-form" onSubmit={event => { event.preventDefault(); void connect(true); }}>
+        </div> : <div className="rooms-join-form">
           <h2>{t("rooms.join")}</h2>
-          <label className="rooms-field">{t("rooms.invite")}<input aria-label={t("rooms.invite")} required value={invite} onChange={event => setInvite(event.target.value)} /></label>
+          <label className="rooms-field">{t("rooms.invite")}<input autoFocus autoCapitalize="none" spellCheck={false} required value={invite} onChange={event => setInvite(event.target.value)} /></label>
           <label className="rooms-field">{t("rooms.seat")}<select value={seat} onChange={event => setSeat(event.target.value)}>
             {(["north", "west", "east"] as const).map(value => <option key={value} value={value}>{t(`rooms.${value}`)}</option>)}</select></label>
           <div className="rooms-join-actions">
-            <button type="button" className="rooms-back-link" onClick={() => { setJoinMode(false); setError(null); }}>← {t("rooms.chooseAction")}</button>
-            <button className="rooms-primary" disabled={busy || !name.trim() || !hasRoomServer} type="submit">{t("rooms.join")}</button>
+            <button type="button" className="rooms-back-link" disabled={busy} onClick={() => { setJoinMode(false); setError(null); }}>← {t("rooms.chooseAction")}</button>
+            <button className="rooms-primary" disabled={busy || !hasRoomServer} type="submit">{t("rooms.join")}</button>
           </div>
-        </form>}
-      </section>
-      {saved.length > 0 && <details className="rooms-saved-menu"><summary>{t("rooms.mine")} <span>{saved.length}</span></summary>
-        <ul className="rooms-saved-list">{saved.map(item => <li key={item.roomId}>
+        </div>}
+        {!joinMode && <details className="rooms-defaults"><summary>{t("rooms.creationSettings")}</summary>
+          <DisplaySettingsFields rules={ruleControls} value={displayDefaults} onChange={patch => setDefaultPatch(current => ({ ...current, ...patch }))} />
+        </details>}
+      </form>
+      {saved.length > 0 && <section className="rooms-saved-menu" aria-labelledby="saved-rooms-title"><h2 id="saved-rooms-title">{t("rooms.mine")}</h2>
+        <SavedGameList items={saved.map(item => ({ ...item, id: item.roomId }))} render={item => <>
           <span>{item.name} · {item.roomId.slice(0, 8)}</span>
           <button disabled={!hasRoomServer || busy} onClick={() => open(item)}>{t("rooms.open")}</button>
-        </li>)}</ul>
-      </details>}
-    </> : !room ? <section className="rooms-panel"><p role="status">{t("rooms.connecting")}</p>
-      <button type="button" onClick={() => { setAccess(null); setError(null); }}>{t("rooms.list")}</button></section> : <>
-      <nav className="rooms-room-nav"><button type="button" disabled={busy} onClick={backToRoomList}>{t("rooms.list")}</button><button type="button" onClick={() => void refresh()} disabled={busy}>{t("rooms.refresh")}</button>
-        <span>{room.roomId.slice(0, 8)}</span></nav>
-      {lobby && <section className="rooms-lobby-panel">
-        <div className="rooms-lobby-heading"><div><span className="rooms-eyebrow">BELOT · MULTIPLAYER</span>
-          <h2>{t("rooms.lobby")}</h2></div><span className="rooms-room-code">{room.roomId.slice(0, 8)}</span></div>
-        <p>{t("rooms.bots")}</p>
-        <div className="rooms-lobby-tools">
-          <details className="rooms-inline-menu"><summary>{t("rooms.link")}</summary><div className="rooms-menu-content">
-            <input aria-label={t("rooms.link")} readOnly value={invitationUrl} onFocus={event => event.target.select()} />
-            <button type="button" onClick={() => { void navigator.clipboard?.writeText(invitationUrl).then(() => setCopied(true)).catch(() => setCopied(false)); }}>
-              {t(copied ? "rooms.copied" : "rooms.copy")}</button>
-          </div></details>
-          {room.host && <details className="rooms-inline-menu"><summary>{t("rooms.settings")}</summary><div className="rooms-menu-content rooms-settings">
-          <label>{t("rooms.points")} <select value={length} disabled={locked} onChange={event => setLength(event.target.value as GameLength)}>
-            <option value="SHORT">501</option><option value="LONG">1001</option></select></label>
-          <label>{t("rooms.wins")} <select value={wins} disabled={locked} onChange={event => setWins(Number(event.target.value) as MatchTargetWins)}>
-            {[1, 3, 5].map(value => <option key={value}>{value}</option>)}</select></label>
-          <button disabled={locked} onClick={() => void act({ action: "SETTINGS", gameLength: length, matchTargetWins: wins })}>{t("rooms.apply")}</button>
-          </div></details>}
-        </div>
+        </>} />
       </section>}
-      <section className="rooms-table" aria-label={t("rooms.seat")}>
-        <div className="rooms-seats">{room.snapshot.players.map(player => <div key={player.id}
-          data-team={player.team === me?.team ? "your" : "opponent"}
-          className={`rooms-seat rooms-seat-${player.seat.toLowerCase()} ${pending?.actingPlayerId === player.id ? "rooms-seat-active" : ""}`}>
-          <span>{player.name}{player.id === room.yourSeat ? ` · ${t("rooms.you")}` : ""}</span>
-          <small>{player.team} · {player.human ? player.seat : t("rooms.bot")} · {player.handSize}</small>
-        </div>)}</div>
-        <div className="rooms-score"><span>{room.snapshot.score.teamOneName}: <strong>{room.snapshot.score.teamOneGamePoints}</strong> ({room.snapshot.score.teamOneMatchScore})</span>
-          <span>{room.snapshot.score.teamTwoName}: <strong>{room.snapshot.score.teamTwoGamePoints}</strong> ({room.snapshot.score.teamTwoMatchScore})</span>
-          <small>{room.snapshot.score.gameTargetPoints} · {room.snapshot.score.matchTargetWins}</small>
-          {room.snapshot.trumpSuit && <span>{tr(room.snapshot.trumpSuit.toLowerCase())}</span>}</div>
-        <div className="rooms-trick">{room.snapshot.trick.cards.map(play => <div key={play.playerId}>
-          <PlayingCard card={play.card} ownerName={play.playerName} /><small>{play.playerName}</small></div>)}</div>
-        <div className="rooms-actions" aria-live="polite">
-          {room.snapshot.matchComplete ? <h2>{t("rooms.finished")}</h2> : pending?.type === "NONE" ? <p>{t("rooms.wait", { name: actor?.name ?? "…" })}</p> : <>
-            {!lobby && <p className="rooms-turn">{t("rooms.turn")}</p>}
-            {(pending?.type === "START_MATCH" || pending?.type === "START_NEXT_GAME") && <button className="rooms-primary" disabled={locked}
-              onClick={() => void act({ action: "START" })}>{t(lobby ? "rooms.start" : "rooms.next")}</button>}
-            {pending?.type === "CHOOSE_TRUMP" && <div className="rooms-buttons">{pending.legalTrumpChoices.map(choice =>
-              <button key={choice} disabled={locked} onClick={() => void act({ action: "TRUMP", choice: choice as TrumpChoice })}>
-                {choice === "SKIP" ? t("rooms.pass") : tr(choice.toLowerCase())}</button>)}</div>}
-            {pending?.type === "REPORT_MELDS" && <><p>{t("rooms.melds")} {pending.availableMelds.map(meld => meld.totalPoints).join(" + ")}</p>
-              <button disabled={locked} onClick={() => void act({ action: "MELDS", declare: true })}>{t("rooms.declare")}</button>
-              <button disabled={locked} onClick={() => void act({ action: "MELDS", declare: false })}>{t("rooms.pass")}</button></>}
-            {pending?.type === "ACKNOWLEDGE_MELDS" && <><p>{pending.meldWinner?.teamName}</p>
-              <button disabled={locked} onClick={() => void act({ action: "ACK" })}>{t("rooms.ack")}</button></>}
-          </>}
+    </> : !room ? !error && <section className="rooms-panel"><p role="status">{t("rooms.connecting")}</p></section> : <>
+      <section className="rooms-lobby-panel" aria-labelledby="room-players-title">
+        <h2 id="room-players-title">{t("rooms.players")}</h2>
+        <ul className="rooms-seats">{room.snapshot.players.map(player => <li key={player.id} className="rooms-seat">
+          <strong>{player.name}{player.id === room.yourSeat ? ` · ${t("rooms.you")}` : ""}</strong>
+          <small>{player.human ? player.team : t("rooms.bot")}</small>
+        </li>)}</ul>
+        <p>{t("rooms.bots")}</p>
+        <label className="rooms-field" htmlFor="room-invite-link">{t("rooms.link")}</label>
+        <div className="rooms-invite">
+          <input id="room-invite-link" readOnly value={invitationUrl} onFocus={event => event.target.select()} />
+          {navigator.clipboard && <button type="button" onClick={() => {
+            void navigator.clipboard.writeText(invitationUrl).then(() => setCopied(true)).catch(() => {
+              setCopied(false);
+              const input = document.getElementById("room-invite-link") as HTMLInputElement | null;
+              input?.focus();
+              input?.select();
+            });
+          }}>{t(copied ? "rooms.copied" : "rooms.copy")}</button>}
         </div>
-        <section className="rooms-hand" aria-label={t("rooms.hand")}>{me?.hand.map((card, index) => <PlayingCard key={`${card.rank}-${card.suit}-${index}`}
-          card={card} disabled={locked || !card.playable} legalChoice={card.playable} onClick={() => {
-            if (pending?.belaEligibleCardIndices.includes(index)) setBelaIndex(index);
-            else void act({ action: "CARD", handIndex: index, callBela: false });
-          }} />)}</section>
-        {belaIndex !== null && <div className="rooms-confirm" role="alertdialog" aria-label={t("rooms.bela")}>
-          <p>{t("rooms.bela")}</p>
-          <button disabled={locked} onClick={() => void act({ action: "CARD", handIndex: belaIndex, callBela: true })}>{t("rooms.withBela")}</button>
-          <button disabled={locked} onClick={() => void act({ action: "CARD", handIndex: belaIndex, callBela: false })}>{t("rooms.withoutBela")}</button>
-          <button disabled={locked} onClick={() => setBelaIndex(null)}>{t("rooms.cancel")}</button></div>}
+        {room.host && <details className="rooms-settings"><summary>{t("rooms.settings")}</summary>
+          <form className="rooms-settings-fields" onSubmit={event => {
+            event.preventDefault();
+            void act({ action: "SETTINGS", ...rules });
+          }}>
+            <fieldset className="rooms-rules-fields" aria-label={t("rooms.settings")} disabled={locked}>
+              <SetupOptions rules={ruleControls} />
+            </fieldset>
+            <button type="submit" disabled={locked}>{t("rooms.apply")}</button>
+          </form>
+        </details>}
+        <div className="rooms-lobby-action">
+          {pending?.type === "START_MATCH" ? <button className="rooms-primary" type="button" disabled={locked}
+            onClick={() => void act({ action: "START" })}>{t("rooms.start")}</button>
+            : <p role="status">{t("rooms.waitForHost")}</p>}
+        </div>
       </section>
-      {!lobby && !room.snapshot.matchComplete && <div className="rooms-panel">
-        {confirmForfeit ? <div role="alertdialog" aria-label={t("rooms.confirm")}><p>{t("rooms.confirm")}</p>
-          <button disabled={locked} onClick={() => void act({ action: "FORFEIT" })}>{t("rooms.forfeit")}</button>
-          <button disabled={locked} onClick={() => setConfirmForfeit(false)}>{t("rooms.cancel")}</button></div>
-          : <button disabled={locked} onClick={() => setConfirmForfeit(true)}>{t("rooms.forfeit")}</button>}
-      </div>}
-      <details className="rooms-history"><summary>{t("rooms.history")}</summary><ol className="rooms-log">{room.events.slice(-12).map(event =>
-        <li key={event.sequence}>{eventDescription(event)}</li>)}</ol></details>
+      {room.events.length > 0 && <details className="rooms-history"><summary>{t("rooms.history")}</summary>
+        <ol className="rooms-log">{room.events.slice(-12).map(event => <li key={event.sequence}>{eventDescription(event)}</li>)}</ol>
+      </details>}
     </>}
-  </main></CardStyleProvider>;
+  </main></DisplaySettingsProvider>;
 }
 
 function requestId() {

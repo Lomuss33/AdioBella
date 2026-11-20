@@ -5,17 +5,17 @@ let restore: (() => void) | undefined;
 export function lockPageScroll() {
   if (locks === 0) {
     const root = document.documentElement, body = document.body;
-    const properties = [[root, "overflow"], [root, "scrollbar-gutter"],
-      [body, "overflow"], [body, "padding-inline-end"]] as const;
+    const properties = [[root, "overflow"], [root, "scrollbar-gutter"], [body, "overflow"]] as const;
     const saved = properties.map(([element, property]) => ({ element, property,
       value: element.style.getPropertyValue(property), priority: element.style.getPropertyPriority(property) }));
-    const gutter = Math.max(0, window.innerWidth - root.getBoundingClientRect().width);
-    const padding = parseFloat(getComputedStyle(body).paddingInlineEnd) || 0;
-    body.style.paddingInlineEnd = `${padding + gutter}px`;
+    // Keep the original viewport gutter when hiding a classic scrollbar.
+    // Body padding would change the available width of the table and dialogs.
+    if (root.clientWidth > 0 && root.clientWidth < window.innerWidth &&
+        !getComputedStyle(root).scrollbarGutter.includes("stable")) {
+      root.style.scrollbarGutter = "stable";
+    }
     body.style.overflow = "hidden";
     root.style.overflow = "hidden";
-    // Fixed overlays use the full viewport; reserve the page's original width.
-    root.style.scrollbarGutter = "auto";
     restore = () => saved.forEach(({ element, property, value, priority }) => {
       if (value) element.style.setProperty(property, value, priority);
       else element.style.removeProperty(property);

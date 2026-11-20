@@ -1,6 +1,6 @@
 /* Three compact pairs keep playback tools beside the existing table controls. */
 .table-arena .table-console > .arena-controls { grid-template-columns: repeat(3, max-content); }
-.table-arena .table-console .table-playback-controls {
+.table-arena .table-console :is(.table-playback-controls, .table-navigation-controls) {
   display: grid;
   grid-template-columns: 26px;
   grid-template-rows: repeat(2, 26px);

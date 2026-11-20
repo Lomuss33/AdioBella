@@ -94,6 +94,24 @@ test("optional history failure does not discard a successfully restored session"
   expect(fetchMock.mock.calls.some(([input]) => String(input) === "/api/sessions")).toBe(false);
 });
 
+test("the shared settings dialog changes and saves the solo table appearance", async () => {
+  const { before } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true,
+    json: async () => String(input).includes("/events") ? [] : before
+  })));
+  render(<App />);
+  await screen.findByRole("button", { name: "ace of hearts" });
+  fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+  const settings = await screen.findByRole("dialog", { name: "Settings" });
+  fireEvent.click(within(settings).getByRole("button", { name: "cherry red" }));
+  expect(document.documentElement.dataset.tableTheme).toBe("CHERRY_RED");
+  expect(JSON.parse(localStorage.getItem("belot-preferences-v1") ?? "{}").game.tableTheme).toBe("CHERRY_RED");
+  expect(settings).toBeInTheDocument();
+  fireEvent.click(settings);
+  expect(screen.queryByRole("dialog", { name: "Settings" })).not.toBeInTheDocument();
+});
+
 test("trump commands disable conflicting controls and submit only once while awaiting the server", async () => {
   window.localStorage.setItem("belot-session-id", "session-1");
   const choosing: SessionResponse = { ...baseSession, snapshot: { ...baseSession.snapshot,
@@ -641,7 +659,7 @@ test("renders a match-complete popup with rematch and settings actions", async (
   expect(within(scoreboard).getByRole("group", { name: "Us" })).toHaveTextContent("Runner-upUs1Games won");
   expect(within(dialog).getByText("1,001–854")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Rematch" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: "Settings" })).toBeEnabled();
+  expect(within(dialog).getByRole("button", { name: "Match settings" })).toBeEnabled();
 });
 
 function deferred<T>() {
@@ -748,6 +766,26 @@ test("starting during a deck change waits for that deck while the previous artwo
   expect(card).toHaveAttribute("data-card-style", "italian");
   expect(card.querySelector(".playing-card-center,.playing-card-corner")).not.toBeInTheDocument();
   expect(document.documentElement).toHaveAttribute("data-card-style", "italian");
+});
+
+test("puts solo navigation in the toolbar and keeps playback in Settings", async () => {
+  const { before } = cardPlayFixture();
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+    ok: true, json: async () => String(input).includes("/events") ? [] : before
+  })));
+  const onHome = vi.fn();
+  const onOpenRooms = vi.fn();
+  const { container } = render(<App onHome={onHome} onOpenRooms={onOpenRooms} />);
+  await screen.findByRole("button", { name: "ace of hearts" });
+  const toolbar = within(screen.getByRole("navigation", { name: "Main navigation" }));
+  fireEvent.click(toolbar.getByRole("button", { name: "Home" }));
+  fireEvent.click(toolbar.getByRole("button", { name: "Play with friends" }));
+  expect(onHome).toHaveBeenCalledOnce();
+  expect(onOpenRooms).toHaveBeenCalledOnce();
+  expect(container.querySelector(".after-table > button")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Fast speed" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+  expect(within(screen.getByRole("dialog", { name: "Settings" })).getByRole("checkbox", { name: "Fast speed" })).toBeEnabled();
 });
 
 test("persists both playback controls and restores them after mounting again", async () => {

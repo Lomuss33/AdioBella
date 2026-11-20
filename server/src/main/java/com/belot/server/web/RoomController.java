@@ -17,7 +17,7 @@ public final class RoomController {
     @PostMapping
     public Access create(@RequestBody CreateRequest request) {
         if (request == null) throw new IllegalArgumentException("A name is required.");
-        return rooms.create(request.name());
+        return rooms.create(request.name(), request.displayDefaults(), request.rules());
     }
 
     @PostMapping("/{id}/join")
@@ -40,6 +40,6 @@ public final class RoomController {
     private String bearer(String authorization) {
         return authorization != null && authorization.startsWith("Bearer ") ? authorization.substring(7) : null;
     }
-    public record CreateRequest(String name) {}
+    public record CreateRequest(String name, DisplayDefaults displayDefaults, MatchRules rules) {}
     public record JoinRequest(String name, String seat) {}
 }

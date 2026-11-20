@@ -32,7 +32,11 @@ public final class RoomService {
         this.maxRooms = maxRooms;
     }
 
-    public synchronized Access create(String name) {
+    public Access create(String name) { return create(name, null, null); }
+
+    public synchronized Access create(String name, DisplayDefaults displayDefaults, MatchRules rules) {
+        if (rules != null) rules.validate();
+        if (displayDefaults != null) displayDefaults.validate();
         String token = token();
         Member host = new Member("south", name(name), hash(token));
         try {
@@ -42,7 +46,7 @@ public final class RoomService {
                     throw failure(HttpStatus.SERVICE_UNAVAILABLE, "Room capacity reached.");
                 }
             }
-            var data = new SavedRoom(1, UUID.randomUUID(), random.nextLong(), 0, List.of(host), List.of());
+            var data = new SavedRoom(1, UUID.randomUUID(), random.nextLong(), 0, List.of(host), List.of(), displayDefaults, rules);
             var room = new Room(data);
             write(data);
             rooms.put(data.id(), room);
@@ -67,7 +71,7 @@ public final class RoomService {
             Member member = new Member(seat, name(name), hash(token));
             List<Member> members = new ArrayList<>(room.data.members());
             members.add(member);
-            var updated = new SavedRoom(1, id, room.data.seed(), room.data.revision() + 1, List.copyOf(members), room.data.commands());
+            var updated = new SavedRoom(1, id, room.data.seed(), room.data.revision() + 1, List.copyOf(members), room.data.commands(), room.data.displayDefaults(), room.data.rules());
             // Build and write before making the new membership visible.
             BelotMatchFacade facade = replay(updated);
             save(updated);
@@ -119,7 +123,7 @@ public final class RoomService {
                 apply(room.facade, command);
                 List<Command> commands = new ArrayList<>(room.data.commands());
                 commands.add(command);
-                var updated = new SavedRoom(1, id, room.data.seed(), room.data.revision() + 1, room.data.members(), List.copyOf(commands));
+                var updated = new SavedRoom(1, id, room.data.seed(), room.data.revision() + 1, room.data.members(), List.copyOf(commands), room.data.displayDefaults(), room.data.rules());
                 save(updated);
                 room.data = updated;
             } catch (RuntimeException exception) {
@@ -149,13 +153,14 @@ public final class RoomService {
     }
 
     private BelotMatchFacade replay(SavedRoom data) {
-        var facade = new BelotMatchFacade(new Random(data.seed()), Difficulty.NORMAL);
+        var rules = data.rules() == null ? new MatchRules(Difficulty.NORMAL, GameLength.SHORT, 1) : data.rules();
+        var facade = new BelotMatchFacade(new Random(data.seed()), rules.difficulty());
         Set<String> humans = new HashSet<>();
         Map<String, String> names = new HashMap<>();
         data.members().forEach(member -> { humans.add(member.seat()); names.put(member.seat().toUpperCase(Locale.ROOT), member.name()); });
         facade.configureHumanPlayers(humans);
         facade.updatePlayerNames(names);
-        facade.updateLobbySettings(Difficulty.NORMAL, Map.of(), "Team A", "Team B", 1, GameLength.SHORT);
+        facade.updateLobbySettings(rules.difficulty(), Map.of(), "Team A", "Team B", rules.matchTargetWins(), rules.gameLength());
         for (Command command : data.commands()) apply(facade, command);
         return facade;
     }
@@ -240,7 +245,7 @@ public final class RoomService {
                     data.members().stream().anyMatch(member -> member.seat().equals(seat)))).toList();
             // Only public events are included; opponent hands and undeclared melds never leave the engine.
             var events = facade.getEventsAfter(Math.max(0, snapshot.lastEventSequence() - 40));
-            return new RoomView(data.id(), data.revision(), viewer.seat(), viewer.seat().equals("south"), seats, snapshot, events);
+            return new RoomView(data.id(), data.revision(), viewer.seat(), viewer.seat().equals("south"), seats, snapshot, events, data.displayDefaults());
         }
     }
 
@@ -248,9 +253,26 @@ public final class RoomService {
             Boolean declare, Boolean callBela, Difficulty difficulty, GameLength gameLength, Integer matchTargetWins) {}
     public record Access(String token, RoomView room) {}
     public record SeatView(String seat, String name, boolean human) {}
-    public record RoomView(UUID roomId, long revision, String yourSeat, boolean host, List<SeatView> seats, GameSnapshot snapshot, List<GameEvent> events) {}
+    public record RoomView(UUID roomId, long revision, String yourSeat, boolean host, List<SeatView> seats, GameSnapshot snapshot, List<GameEvent> events, DisplayDefaults displayDefaults) {}
     public record Member(String seat, String name, String tokenHash) {}
     public record Command(UUID requestId, String seat, String action, TrumpChoice choice, Integer handIndex,
             Boolean declare, Boolean callBela, Difficulty difficulty, GameLength gameLength, Integer matchTargetWins) {}
-    public record SavedRoom(int version, UUID id, long seed, long revision, List<Member> members, List<Command> commands) {}
+    public record SavedRoom(int version, UUID id, long seed, long revision, List<Member> members, List<Command> commands, DisplayDefaults displayDefaults, MatchRules rules) {}
+    public record MatchRules(Difficulty difficulty, GameLength gameLength, Integer matchTargetWins) {
+        void validate() {
+            if (difficulty == null || gameLength == null || matchTargetWins == null || !Set.of(1, 3, 5).contains(matchTargetWins)) {
+                throw new IllegalArgumentException("Invalid room match rules.");
+            }
+        }
+    }
+    public record DisplayDefaults(String tableTheme, String accent, String cardStyle, Boolean skipAnimations, String speed) {
+        void validate() {
+            if (tableTheme == null || !Set.of("GREEN", "TEAL", "DARK_BLUE", "PLUM", "CHERRY_RED", "WOODY_BROWN", "LIGHT_BROWN", "FINE_BLACK").contains(tableTheme)
+                    || accent == null || !Set.of("oxblood", "bottle-green", "midnight", "antique-brass", "ivory", "saddle", "aubergine", "graphite").contains(accent)
+                    || cardStyle == null || !Set.of("original", "french", "italian", "german", "modern", "heritage", "four-color").contains(cardStyle)
+                    || skipAnimations == null || !("normal".equals(speed) || "fast".equals(speed))) {
+                throw new IllegalArgumentException("Invalid room display defaults.");
+            }
+        }
+    }
 }

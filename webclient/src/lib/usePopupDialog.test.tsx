@@ -12,8 +12,6 @@ beforeEach(() => {
   document.body.style.paddingInlineEnd = "12px";
   document.documentElement.style.scrollbarGutter = "stable";
   document.documentElement.style.overflow = "visible";
-  vi.spyOn(document.documentElement, "getBoundingClientRect").mockImplementation(() =>
-    new DOMRect(0, 0, window.innerWidth - (document.documentElement.style.scrollbarGutter === "auto" ? 0 : 20), 800));
 });
 
 afterEach(() => {
@@ -25,12 +23,12 @@ afterEach(() => {
   document.documentElement.style.overflow = "";
 });
 
-test("releases the root gutter without shifting the page and restores the original styles", () => {
+test("preserves the root gutter and body padding until the popup closes", () => {
   const { unmount } = render(<StrictMode><Popup /></StrictMode>);
-  expect(document.documentElement.style.scrollbarGutter).toBe("auto");
+  expect(document.documentElement.style.scrollbarGutter).toBe("stable");
   expect(document.body.style.overflow).toBe("hidden");
   expect(document.documentElement.style.overflow).toBe("hidden");
-  expect(document.body.style.paddingInlineEnd).toBe("32px");
+  expect(document.body.style.paddingInlineEnd).toBe("12px");
   unmount();
   expect(document.documentElement.style.scrollbarGutter).toBe("stable");
   expect(document.body.style.overflow).toBe("auto");
@@ -43,7 +41,7 @@ test("keeps a nested popup locked if its parent closes first and restores only a
   rerender(<><Popup key="upper" id="upper" /></>);
   expect(document.body.style.overflow).toBe("hidden");
   expect(document.documentElement.style.overflow).toBe("hidden");
-  expect(document.body.style.paddingInlineEnd).toBe("32px");
+  expect(document.body.style.paddingInlineEnd).toBe("12px");
   unmount();
   expect(document.body.style.overflow).toBe("auto");
   expect(document.documentElement.style.overflow).toBe("visible");
@@ -141,12 +139,31 @@ test("keeps the table's scrollbar and padding intact for inline choices", () => 
 test("does not add the gutter twice when another popup opens and closes above it", () => {
   const { rerender, unmount } = render(<><Popup key="base" /></>);
   rerender(<><Popup key="base" /><Popup key="nested" /></>);
-  expect(document.body.style.paddingInlineEnd).toBe("32px");
+  expect(document.body.style.paddingInlineEnd).toBe("12px");
   rerender(<><Popup key="base" /></>);
-  expect(document.body.style.paddingInlineEnd).toBe("32px");
+  expect(document.body.style.paddingInlineEnd).toBe("12px");
   expect(document.body.style.overflow).toBe("hidden");
-  expect(document.documentElement.style.scrollbarGutter).toBe("auto");
+  expect(document.documentElement.style.scrollbarGutter).toBe("stable");
   unmount();
   expect(document.body.style.paddingInlineEnd).toBe("12px");
   expect(document.documentElement.style.scrollbarGutter).toBe("stable");
+});
+
+test("reserves an existing classic scrollbar without changing body padding", () => {
+  const root = document.documentElement;
+  root.style.scrollbarGutter = "auto";
+  vi.spyOn(root, "clientWidth", "get").mockReturnValue(window.innerWidth - 20);
+  const { unmount } = render(<Popup />);
+  expect(root.style.scrollbarGutter).toBe("stable");
+  expect(document.body.style.paddingInlineEnd).toBe("12px");
+  unmount();
+  expect(root.style.scrollbarGutter).toBe("auto");
+});
+
+test("does not create a gutter on a page without a classic scrollbar", () => {
+  const root = document.documentElement;
+  root.style.scrollbarGutter = "auto";
+  vi.spyOn(root, "clientWidth", "get").mockReturnValue(window.innerWidth);
+  render(<Popup />);
+  expect(root.style.scrollbarGutter).toBe("auto");
 });

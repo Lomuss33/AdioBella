@@ -1,43 +1,93 @@
-.profile-page { box-sizing: border-box; display: grid; width: 100%; height: 100dvh; min-height: 0; grid-template-rows: 54px minmax(0, 1fr) 34px; overflow: hidden; padding: 0 clamp(18px, 5vw, 72px); background-color: var(--felt-edge); background-image: var(--table-felt-background); color: var(--ui-text); font: 400 14px/1.5 "Segoe UI", system-ui, sans-serif; }
-.profile-page *, .profile-page *::before, .profile-page *::after { box-sizing: border-box; }
-.profile-topbar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ui-line); }
-.profile-page button, .profile-page input { color: inherit; font: inherit; }
-.profile-page button { min-height: 40px; padding: 8px 13px; border: 1px solid var(--ui-line); border-radius: 7px; background: var(--ui-control); cursor: pointer; }
-.profile-page button:focus-visible, .profile-page input:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
-.profile-topbar > button { padding-inline: 0; border-color: transparent; background: transparent; color: var(--ui-muted); }
-.profile-content { min-height: 0; align-self: center; justify-self: center; width: min(100%, 620px); padding: 16px 0; }
-.profile-content > .home-kicker { text-align: center; }
-.profile-content h1 { margin: 11px 0 8px; text-align: center; font: 500 clamp(36px, 6vw, 52px)/1 Georgia, serif; letter-spacing: -.04em; }
-.profile-lede { margin: 0 auto 22px; color: var(--ui-muted); text-align: center; font-size: 12px; }
-.profile-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 16px; padding: 18px 20px; border: 1px solid var(--ui-line); border-radius: 10px; background: color-mix(in srgb, var(--ui-solid) 90%, transparent); box-shadow: var(--ui-shadow); }
-.profile-preview { display: grid; width: 50px; height: 50px; grid-column: 1; grid-row: 1; place-items: center; justify-self: start; border: 1px solid var(--ui-line); border-radius: 50%; background: var(--ui-control); color: var(--ui-accent-text); font: 27px Georgia, serif; }
-.profile-card label { display: grid; grid-column: 2; grid-row: 1; gap: 7px; align-self: center; color: var(--ui-muted); font-size: 11px; }
-.profile-card input { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--ui-line); border-radius: 6px; background: var(--ui-dialog); }
-.profile-marks { display: flex; grid-column: 1; grid-row: 2; justify-content: flex-start; gap: 9px; margin: 0; padding: 0; border: 0; }
-.profile-marks legend { width: 100%; margin-bottom: 7px; color: var(--ui-muted); font-size: 11px; }
-.profile-page .profile-marks button { width: 43px; height: 43px; padding: 0; color: var(--ui-accent-text); font: 20px Georgia, serif; }
-.profile-page .profile-marks .profile-mark-selected { border-color: var(--ui-accent); background: var(--ui-selected); }
-.profile-page .profile-save { width: min(100%, 190px); grid-column: 2; grid-row: 2; justify-self: end; border-color: var(--ui-accent-strong); background: var(--ui-accent-fill); color: var(--ui-accent-fill-text); font-weight: 700; }
-.profile-local-note { margin: 14px 0 0; color: var(--ui-muted); font-size: 10px; text-align: center; }
-.profile-page .home-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--ui-line); color: var(--ui-muted); font-size: 9px; }
-.profile-page .home-footer > span:last-child { color: var(--ui-text); font-size: 10px; font-weight: 750; letter-spacing: .13em; }
-.profile-page .home-brand-dot { color: var(--ui-accent-text); }
-@media (max-width: 620px) {
-  .profile-page { grid-template-rows: 48px minmax(0, 1fr) 28px; padding-inline: 16px; }
-  .profile-card { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px; }
-  .profile-preview, .profile-card label, .profile-marks, .profile-page .profile-save { grid-column: 1; grid-row: auto; }
-  .profile-preview { justify-self: center; }
-  .profile-card label { align-self: auto; }
-  .profile-marks { justify-content: center; }
-  .profile-page .profile-save { width: 100%; justify-self: stretch; }
+.profile-page {
+  --profile-line: color-mix(in srgb, var(--ui-accent) 48%, transparent);
+  --profile-panel: color-mix(in srgb, var(--felt-edge) 82%, var(--ui-solid));
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow: auto;
+  padding: 0 clamp(12px, 4vw, 36px) 24px;
+  background: radial-gradient(ellipse at 50% 15%, var(--felt-center), var(--page-bottom) 72%);
+  color: var(--ui-text);
+  font: 400 14px/1.45 "Segoe UI", system-ui, sans-serif;
 }
-@media (max-height: 560px) {
-  .profile-page { grid-template-rows: 44px minmax(0, 1fr) 26px; }
-  .profile-content { padding-block: 8px; }
-  .profile-content h1 { margin-block: 5px; font-size: 34px; }
-  .profile-lede { margin-bottom: 10px; }
-  .profile-card { gap: 9px; padding: 12px 18px; }
-  .profile-preview { width: 42px; height: 42px; font-size: 22px; }
-  .profile-page .profile-marks button { width: 34px; height: 34px; }
-  .profile-local-note { margin-top: 7px; }
+
+.profile-page *, .profile-page *::before, .profile-page *::after { box-sizing: border-box; }
+.profile-topbar, .profile-content { width: min(100%, 680px); margin-inline: auto; }
+.profile-topbar { display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--profile-line); }
+.profile-page button, .profile-page input { color: inherit; font: inherit; }
+.profile-page :is(button, input):focus-visible,
+.profile-mark-options input:focus-visible + span { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.profile-content h1 { margin: 14px 0 10px; font: 600 clamp(24px, 5vw, 36px)/1.1 Georgia, serif; }
+.profile-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 10px; }
+.profile-preview, .profile-card {
+  min-width: 0;
+  border: 1px solid var(--profile-line);
+  border-radius: 14px;
+  background: var(--profile-panel);
+}
+.profile-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: radial-gradient(ellipse at top, var(--felt-center), var(--profile-panel) 82%);
+  text-align: center;
+}
+.profile-preview strong { max-width: 100%; overflow-wrap: anywhere; font: 600 clamp(17px, 3vw, 24px)/1.2 Georgia, serif; }
+.profile-emblem {
+  display: grid;
+  width: 68px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--ui-accent);
+  border-radius: 50%;
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+  font: 36px/1 Georgia, serif;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 26%);
+}
+.profile-card { display: grid; gap: 12px; padding: clamp(12px, 3vw, 20px); }
+.profile-field { display: grid; gap: 5px; font-weight: 650; }
+.profile-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--profile-line);
+  border-radius: 8px;
+  background: var(--page-bottom);
+  font-size: 16px;
+}
+.profile-marks { min-width: 0; margin: 0; padding: 0; border: 0; }
+.profile-marks legend { margin-bottom: 5px; padding: 0; font-weight: 650; }
+.profile-mark-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.profile-mark-options label { position: relative; cursor: pointer; }
+.profile-mark-options input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.profile-mark-options span, .profile-actions button {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  border: 1px solid var(--profile-line);
+  border-radius: 8px;
+  background: var(--felt-center);
+}
+.profile-mark-options span { font: 24px/1 Georgia, serif; }
+.profile-mark-options label:hover span { border-color: var(--ui-accent); }
+.profile-mark-options input:checked + span, .profile-actions .profile-save {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+}
+.profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.profile-actions button { padding: 6px 12px; cursor: pointer; }
+.profile-actions .profile-save { font-weight: 700; }
+.profile-actions button:disabled { opacity: .55; cursor: default; }
+.profile-feedback, .profile-local-note { margin: 0; }
+.profile-feedback { font-weight: 650; }
+.profile-local-note { opacity: .78; font-size: 12px; }
+
+@media (max-width: 500px) {
+  .profile-layout { grid-template-columns: minmax(0, 1fr); }
+  .profile-preview { flex-direction: row; justify-content: flex-start; text-align: start; padding: 10px 12px; }
+  .profile-emblem { flex: 0 0 46px; width: 46px; font-size: 26px; }
 }

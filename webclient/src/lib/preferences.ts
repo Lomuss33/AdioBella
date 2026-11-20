@@ -60,3 +60,26 @@ export function savePreferences(preferences: Preferences) {
     teams: legacyDefaults ? { yourTeam: "", enemyTeam: "" } : preferences.teams
   }));
 }
+export type DisplayPreferences = VisualSettings & PlaybackSettings & Pick<GameSettingsDrafts, "tableTheme">;
+
+export function displayPreferences({ game, visual, playback }: Preferences): DisplayPreferences {
+  return { ...visual, ...playback, tableTheme: game.tableTheme };
+}
+
+export function applyDisplayPreferences(preferences: Preferences, patch: Partial<DisplayPreferences>): Preferences {
+  const current = { ...displayPreferences(preferences), ...patch };
+  return {
+    ...preferences,
+    game: { ...preferences.game, tableTheme: current.tableTheme },
+    visual: { accent: current.accent, cardStyle: current.cardStyle },
+    playback: { speed: current.speed, skipAnimations: current.skipAnimations }
+  };
+}
+
+export const displayPreferencesChanged = "belot-display-preferences-changed";
+
+export function updateDisplayPreferences(patch: Partial<DisplayPreferences>) {
+  const preferences = applyDisplayPreferences(loadPreferences(), patch);
+  savePreferences(preferences);
+  window.dispatchEvent(new CustomEvent(displayPreferencesChanged, { detail: preferences }));
+}

@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { countText, getLocale, resolveLocale, setLanguage, t } from ".";
 import { messages } from "./catalog";
 import { cardDescription, errorCode, errorDescription, eventDescription } from "./presentation";
-import LanguageSelect from "../components/LanguageSelect";
+import LanguageSelect, { LanguageField } from "../components/LanguageSelect";
 import { BelotMatchFacade } from "../lib/local-game/belotMatchFacade";
 import { SeededRandom } from "../lib/local-game/random";
 
@@ -39,6 +39,16 @@ describe("localization", () => {
     expect(screen.getByRole("group", { name: "Language" })).toBeInTheDocument();
     fireEvent.pointerDown(screen.getByRole("button", { name: "outside" }));
     expect(screen.queryByRole("group", { name: "Language" })).not.toBeInTheDocument();
+  });
+
+  test("settings shows the detected language selected and offers flags for the three languages", () => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["de-AT"]);
+    setLanguage("auto");
+    render(<LanguageField />);
+    fireEvent.click(screen.getByRole("button", { name: "Sprache: Deutsch" }));
+    expect(screen.getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("group", { name: "Sprache" }).querySelectorAll(".language-flag-icon")).toHaveLength(3);
+    expect(screen.queryByRole("button", { name: /automatisch/i })).not.toBeInTheDocument();
   });
 
   test("automatic mode follows browser changes, but explicit selection does not", () => {

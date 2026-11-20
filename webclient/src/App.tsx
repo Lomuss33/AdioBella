@@ -1,5 +1,7 @@
 import { accentVariables, tableVariables, tablePalettes, TABLE_THEMES } from "./lib/appearanceTheme";
+import { DisplaySettingsProvider } from "./components/SettingsButton";
 import GuideBook from "./components/GuideBook";
+import { TableNavigation } from "./components/TableUtilities";
 import { loadPreferences, savePreferences, readStorage, writeStorage, removeStorage, type VisualSettings } from "./lib/preferences";
 import { errorCode } from "./i18n/presentation";
 import { t, useLanguage } from "./i18n";
@@ -14,6 +16,7 @@ import { preloadDeckArtwork, usePreparedCardStyle } from "./lib/cardArtwork";
 import TerminalLog from "./components/TerminalLog";
 import CurrentMove from "./components/CurrentMove";
 import { getGameGateway, getGameRuntime, shouldPersistSession } from "./lib/gameGateway";
+import { browserGateway, isSoloSaveCurrent } from "./lib/browserGateway";
 import { HttpError } from "./lib/serverGateway";
 import { buildAnimatedTrickTimeline } from "./lib/trickAnimation";
 import { CARD_TIMING } from "./lib/cardAnimationConfig";
@@ -40,7 +43,14 @@ import type {
 const THEME_KEY = "belot-table-theme";
 const SNAPSHOT_REFRESH_DEBOUNCE_MS = 150;
 
-function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () => void } = {}) {
+function App({ onOpenRooms, onHome, soloGame, legacySolo = false }: {
+  onOpenRooms?: () => void;
+  onHome?: () => void;
+  soloGame?: { id: string | null; onSession: (id: string, previous: string | null | undefined) => void };
+  legacySolo?: boolean;
+} = {}) {
+  const soloId = useRef(soloGame?.id);
+  const [soloSaveFailed, setSoloSaveFailed] = useState(false);
   const SESSION_KEY = getGameRuntime() === "browser" ? "belot-browser-session-id" : "belot-session-id";
   const { locale } = useLanguage();
   const [initialPreferences] = useState(loadPreferences);
@@ -53,8 +63,8 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
   const [selectionClock] = useState(() => new PlaybackClock(playbackRate(initialPreferences.playback.speed)));
   const finishSelectionRef = useRef<(() => void) | null>(null);
   const [confirmExit, setConfirmExit] = useState<"game" | "match" | null>(null);
-  const gateway = getGameGateway();
-  const persistSession = shouldPersistSession();
+  const gateway = soloGame ? browserGateway : getGameGateway();
+  const persistSession = !soloGame && shouldPersistSession();
   const bootstrapStartedRef = useRef(false);
   const bootstrapPendingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
@@ -106,6 +116,10 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
   useEffect(() => {
     savePreferences({ version: 1, namesVersion: initialPreferences.namesVersion, game: gameSettings, players: playerNameDrafts, teams: teamNameDrafts, visual, playback });
   }, [gameSettings, playerNameDrafts, teamNameDrafts, visual, playback]);
+  useEffect(() => {
+    if (!soloGame || connecting || commandPending || !sessionId || snapshot?.pendingAction.type !== "START_MATCH") return;
+    void persistLobbySettingsIfNeeded(sessionId).catch(error => setErrorMessage(errorCode(error)));
+  }, [connecting, commandPending, sessionId, snapshot?.pendingAction.type, gameSettings, playerNameDrafts, teamNameDrafts]);
   useLayoutEffect(() => {
     document.documentElement.dataset.skipAnimations = String(playback.skipAnimations);
     document.documentElement.dataset.playbackSpeed = playback.speed;
@@ -177,6 +191,21 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
       // Fetch the session concurrently, but never paint a saved non-original
       // deck's first hand before its complete artwork is ready.
       const artworkReady = preloadDeckArtwork(initialPreferences.visual.cardStyle);
+      if (soloId.current) {
+        const restored = await loadSession(soloId.current, true, artworkReady);
+        const { score } = restored.snapshot;
+        setGameSettings(current => ({ ...current, difficulty: score.difficulty,
+          matchTargetWins: toMatchTargetWins(score.matchTargetWins), gameLength: score.gameTargetPoints === 501 ? "SHORT" : "LONG" }));
+        if (restored.snapshot.pendingAction.type === "START_MATCH") {
+          const names = restored.snapshot.players.reduce((draft, player) => {
+            draft[player.seat] = player.name;
+            return draft;
+          }, { SOUTH: "", WEST: "", NORTH: "", EAST: "" });
+          setPlayerNames(names);
+          setTeamNames({ yourTeam: score.teamOneName, enemyTeam: score.teamTwoName });
+        }
+        return;
+      }
       if (persistSession) {
         const existingSessionId = readStorage(SESSION_KEY);
         if (existingSessionId) {
@@ -186,12 +215,13 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
             return;
           } catch (error) {
             // A transient failure must never replace a recoverable match.
-            if (!isMissingSessionError(error)) throw error;
+            if (legacySolo || !isMissingSessionError(error)) throw error;
             removeStorage(SESSION_KEY);
           }
         }
       }
 
+      if (legacySolo) throw Object.assign(new Error("Session not found."), { code: "error.session" });
       const response = await createConfiguredSession();
       await artworkReady;
       applyFreshSession(response);
@@ -725,7 +755,13 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
     const shouldDeferSnapshot = !options?.forceCommit && (options?.deferSnapshot || pendingPlayRef.current || animatedTrickRef.current !== null);
 
     setSessionId((current) => (current === response.sessionId ? current : response.sessionId));
-    if (persistSession) {
+    if (soloGame) {
+      if (soloId.current !== response.sessionId) {
+        soloGame.onSession(response.sessionId, soloId.current);
+        soloId.current = response.sessionId;
+      }
+      setSoloSaveFailed(!isSoloSaveCurrent(response.sessionId));
+    } else if (persistSession) {
       writeStorage(SESSION_KEY, response.sessionId);
     }
     lastSequenceRef.current = Math.max(lastSequenceRef.current, response.snapshot.lastEventSequence);
@@ -795,6 +831,7 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
   }
 
   async function recoverMissingSession(error: unknown) {
+    if (soloGame || legacySolo) return false;
     if (!isMissingSessionError(error)) {
       return false;
     }
@@ -932,13 +969,23 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
       onPlayWithBela={handlePlayWithBela}
       onPlayWithoutBela={handlePlayWithoutBela}
       onOpenBook={() => setShowBook("welcome")}
-      onOpenRooms={onOpenRooms}
+      onHome={onHome}
+      homeIsSoloLobby={Boolean(soloGame) || legacySolo}
       visual={visual}
       onVisualChange={patch => setVisual(current => ({ ...current, ...patch }))}
     />
   );
 
   return (
+    <DisplaySettingsProvider value={{ value: { ...visual, ...playback, tableTheme: gameSettings.tableTheme }, onChange: ({ accent, cardStyle, tableTheme, skipAnimations, speed }) => {
+      if (accent !== undefined || cardStyle !== undefined) {
+        setVisual(current => ({ accent: accent ?? current.accent, cardStyle: cardStyle ?? current.cardStyle }));
+      }
+      if (tableTheme !== undefined) setGameSettings(current => ({ ...current, tableTheme }));
+      if (skipAnimations !== undefined || speed !== undefined) {
+        handlePlaybackChange({ skipAnimations: skipAnimations ?? playback.skipAnimations, speed: speed ?? playback.speed });
+      }
+    } }}>
     <PlaybackProvider value={{ settings: playback, onChange: handlePlaybackChange }}>
     <CardStyleProvider value={paintedCardStyle}>
     <main className="app-shell game-layout">
@@ -960,14 +1007,14 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
           onForfeitGame={() => setConfirmExit("game")}
           onQuitMatch={() => setConfirmExit("match")}
           onOpenBook={() => setShowBook("welcome")}
+          shortcuts={onHome || onOpenRooms ? <TableNavigation homeIsSoloLobby={Boolean(soloGame) || legacySolo} onHome={onHome} onOpenRooms={onOpenRooms} /> : undefined}
         />
         {!isTableAction ? actionPanel : null}
         {!snapshot && !sessionResetting ? <SessionStatus pending={connecting} error={errorMessage}
-          onRetry={() => void bootstrapSession()} /> : null}
+          onRetry={() => void bootstrapSession()} onBack={soloGame || legacySolo ? onHome : undefined} /> : null}
       </div>
       <section className="after-table">
-        {onOpenRooms && snapshot?.pendingAction.type !== "START_MATCH" && <button type="button" className="action-button" onClick={onOpenRooms}>{t("rooms.title")}</button>}
-        {onHome && <button type="button" className="action-button" onClick={onHome}>{t("home.back")}</button>}
+        {soloSaveFailed && <p className="error-line" role="status">{t("solo.saveFailed")}</p>}
         <TerminalLog events={events} matchComplete={snapshot?.matchComplete} yourTeamName={playersBySeat.SOUTH?.team}
           currentMove={<CurrentMove snapshot={snapshot} animatedTrick={animatedTrick} />} />
       </section>
@@ -980,6 +1027,7 @@ function App({ onOpenRooms, onHome }: { onOpenRooms?: () => void; onHome?: () =>
     </main>
     </CardStyleProvider>
     </PlaybackProvider>
+    </DisplaySettingsProvider>
   );
 }
 

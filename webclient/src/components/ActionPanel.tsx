@@ -1,10 +1,9 @@
 import { defaultNames } from "../i18n/defaultNames";
-import { InfoButton } from "./TableUtilities";
-import { AccentColorPicker, CardStylePicker, TableColorPicker } from "./AppearanceSettings";
+import { HomeButton, InfoButton } from "./TableUtilities";
+import SetupOptions from "./SetupOptions";
 import type { VisualSettings } from "../lib/preferences";
 import { meldDescription, errorDescription } from "../i18n/presentation";
-import { t, tr, countText, getLocale, number } from "../i18n";
-import LanguageSelect from "./LanguageSelect";
+import { t, countText, getLocale, number } from "../i18n";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import type {
   CardView,
@@ -53,7 +52,8 @@ interface ActionPanelProps {
   onPlayWithBela: () => void;
   onPlayWithoutBela: () => void;
   onOpenBook?: () => void;
-  onOpenRooms?: () => void;
+  onHome?: () => void;
+  homeIsSoloLobby?: boolean;
   matchCompleteActions?: ReactNode;
   visual?: VisualSettings;
   onVisualChange?: (patch: Partial<VisualSettings>) => void;
@@ -90,7 +90,7 @@ function ActionPanel({
   pendingBelaChoiceCard,
   onPlayWithBela,
   onPlayWithoutBela,
-  onOpenBook, onOpenRooms, matchCompleteActions, visual, onVisualChange
+  onOpenBook, onHome, homeIsSoloLobby, matchCompleteActions, visual, onVisualChange
 }: ActionPanelProps) {
   const isStart = pendingAction?.type === "START_MATCH";
   const isNextGame = pendingAction?.type === "START_NEXT_GAME";
@@ -169,7 +169,7 @@ function ActionPanel({
                     <h2 className="action-popup-title">{title}</h2>
                     {subtitle ? <p className="action-popup-subtitle">{subtitle}</p> : null}
                   </div>
-                  {isStart && <div className="setup-toolbar"><LanguageSelect />{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>}
+                  {isStart && <div className="setup-toolbar">{onHome && <HomeButton labeled soloLobby={homeIsSoloLobby} onClick={onHome} />}{onOpenBook && <InfoButton onClick={onOpenBook} />}</div>}
                 </div>
                 {errorMessage ? <p className="error-line" role="alert">{errorDescription(errorMessage)}</p> : null}
               </div>
@@ -210,28 +210,14 @@ function ActionPanel({
                     <span className="team-settings-versus" aria-hidden="true">VS</span>
                   </div>
 
-                  <div className="setup-options-grid">
-                    <div className="setup-options-row">
-                      <SettingGroup label="game length" boxed>
-                        <CompactChoices numeric ariaLabel={t("game length")} values={["SHORT", "LONG"] as const} value={gameSettings.gameLength} label={value => value === "SHORT" ? "501" : "1001"} describe={value => tr(value === "SHORT" ? "short 501" : "long 1001")} onChange={value => onGameSettingsChange({ gameLength: value })} />
-                      </SettingGroup>
-                      <SettingGroup label="match length" boxed>
-                        <div className="match-length-choices" role="group" aria-label={t("match length")}>
-                          {([1, 3, 5] as const).map(value => <button key={value} type="button" data-choice={value} aria-label={t("firstTo", { count: value })} aria-pressed={gameSettings.matchTargetWins === value} onClick={() => onGameSettingsChange({ matchTargetWins: value })}>{value}</button>)}
-                        </div>
-                      </SettingGroup>
-                    </div>
-                    <div className="setup-options-row">
-                      <SettingGroup label="mode">
-                        <CompactChoices ariaLabel={t("mode")} values={["EASY", "NORMAL", "HARD"] as const} value={gameSettings.difficulty} label={value => tr(value.toLowerCase())} onChange={value => onGameSettingsChange({ difficulty: value })} />
-                      </SettingGroup>
-                      {visual && onVisualChange ? <CardStylePicker value={visual.cardStyle} onChange={cardStyle => onVisualChange({ cardStyle })} /> : null}
-                    </div>
-                    {visual && onVisualChange ? <div className="setup-options-row setup-colors-row">
-                      <AccentColorPicker value={visual.accent} onChange={accent => onVisualChange({ accent })} />
-                      <TableColorPicker value={gameSettings.tableTheme} onChange={tableTheme => onGameSettingsChange({ tableTheme })} />
-                    </div> : null}
-                  </div>
+                  <SetupOptions rules={{ value: gameSettings, onChange: onGameSettingsChange }}
+                    display={visual && onVisualChange ? {
+                      value: { ...visual, tableTheme: gameSettings.tableTheme },
+                      onChange: ({ tableTheme, ...patch }) => {
+                        if (tableTheme) onGameSettingsChange({ tableTheme });
+                        else onVisualChange(patch);
+                      }
+                    } : undefined} />
                 </div>
               ) : null}
               {isReportMelds ? (
@@ -261,7 +247,6 @@ function ActionPanel({
             <PopupActions aria-busy={busy} className={isTrumpChoice ? "trump-controls" : ""}>
               {isStart ? (
                 <>
-                {onOpenRooms && <button disabled={busy} type="button" className="action-button setup-multiplayer-button" onClick={onOpenRooms}>{t("rooms.title")}</button>}
                 {onStartWithGuide ? <button disabled={busy} type="button" className="action-button setup-guide-button" onClick={onStartWithGuide}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Z" /></svg>
                   {t("How to play")}
@@ -272,7 +257,7 @@ function ActionPanel({
               ) : null}
               {isMatchComplete ? (
                 matchCompleteActions ?? <>
-                  <button disabled={busy} type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("Settings")}</button>
+                  <button disabled={busy} type="button" className="action-button" onClick={onOpenSettingsMenu}>{t("rooms.settings")}</button>
                   <button disabled={busy} type="button" className="action-button action-button-primary" onClick={onStartRematch}>{t("Rematch")}</button>
                 </>
               ) : null}
@@ -541,63 +526,6 @@ function updateNameInput(input: HTMLInputElement, onChange: (value: string) => v
     input.setSelectionRange(Math.min(start, value.length), Math.min(end, value.length), direction ?? undefined);
   }
   onChange(value);
-}
-
-function SettingGroup({
-  label,
-  children,
-  boxed = false,
-  className = ""
-}: {
-  label: string;
-  children: ReactNode;
-  boxed?: boolean;
-  className?: string;
-}) {
-  return (
-    <section data-setting={label} className={`setting-group ${boxed ? "setting-group-boxed" : ""} ${className}`.trim()}>
-      <span className="panel-caption">{tr(label)}</span>
-      <div className="setting-pill-row">{children}</div>
-    </section>
-  );
-}
-
-function ChoiceStepper<T extends string | number>({
-  ariaLabel,
-  values,
-  value,
-  label,
-  onChange
-}: {
-  ariaLabel: string;
-  numeric?: boolean;
-  values: readonly T[];
-  value: T;
-  label: (value: T) => string;
-  onChange: (value: T) => void;
-}) {
-  const index = values.indexOf(value);
-  const previous = values[(index - 1 + values.length) % values.length];
-  const next = values[(index + 1) % values.length];
-  return <div className="choice-stepper" role="group" aria-label={ariaLabel}>
-    <button type="button" aria-label={`${ariaLabel} previous`} onClick={() => onChange(previous)}><span aria-hidden="true">‹</span></button>
-    <output aria-live="polite">{label(value)}</output>
-    <button type="button" aria-label={`${ariaLabel} next`} onClick={() => onChange(next)}><span aria-hidden="true">›</span></button>
-  </div>;
-}
-
-function CompactChoices<T extends string>({ ariaLabel, values, value, label, describe, onChange, numeric = false }: {
-  ariaLabel: string;
-  numeric?: boolean;
-  values: readonly T[];
-  value: T;
-  label: (value: T) => string;
-  describe?: (value: T) => string;
-  onChange: (value: T) => void;
-}) {
-  return <div className={`setup-segment-control${numeric ? " setup-segment-numeric" : ""}`} role="group" aria-label={ariaLabel}>
-    {values.map(option => <button key={option} type="button" data-choice={option} title={describe?.(option) ?? label(option)} aria-label={describe?.(option) ?? label(option)} aria-pressed={value === option} onClick={() => onChange(option)}>{label(option)}</button>)}
-  </div>;
 }
 
 export default ActionPanel;

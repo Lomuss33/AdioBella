@@ -1,7 +1,10 @@
 export const roomMessages = {
+  "rooms.creationSettings": ["Room settings", "Raumeinstellungen", "Postavke sobe"],
   "rooms.title": ["Play with friends", "Mit Freunden spielen", "Igraj s prijateljima"],
+  "rooms.shareWithFriends": ["Invite friends to your table", "Lade Freunde an deinen Tisch ein", "Pozovi prijatelje za svoj stol"],
+  "rooms.players": ["Players", "Spieler", "Igrači"],
+  "rooms.waitForHost": ["Waiting for the host to start", "Warte darauf, dass der Gastgeber startet", "Čeka se da domaćin pokrene igru"],
   "rooms.solo": ["Back to solo", "Zurück zum Solo-Spiel", "Natrag na solo"],
-  "rooms.intro": ["Private tables. Your turn, at your pace.", "Private Tische. Dein Zug, in deinem Tempo.", "Privatni stolovi. Tvoj potez, tvoj tempo."],
   "rooms.name": ["Your name", "Dein Name", "Tvoje ime"],
   "rooms.create": ["Create a room", "Raum erstellen", "Napravi sobu"],
   "rooms.join": ["Join a room", "Raum beitreten", "Pridruži se sobi"],

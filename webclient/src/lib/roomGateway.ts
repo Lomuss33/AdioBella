@@ -1,9 +1,10 @@
-import type { Difficulty, GameEvent, GameLength, GameSnapshot, MatchTargetWins, TrumpChoice } from "../types";
-import { readStorage, writeStorage } from "./preferences";
+import type { Difficulty, GameEvent, GameLength, GameSnapshot, MatchTargetWins, MatchRules, TrumpChoice } from "../types";
+import { readStorage, writeStorage, type DisplayPreferences } from "./preferences";
 
 export interface RoomView {
   roomId: string;
   revision: number;
+  displayDefaults?: DisplayPreferences | null;
   yourSeat: string;
   host: boolean;
   seats: { seat: string; name: string; human: boolean }[];
@@ -76,7 +77,7 @@ async function request<T>(path: string, token?: string, body?: unknown, signal?:
 }
 
 export const roomGateway = {
-  create: (name: string) => request<RoomAccess>("", undefined, { name }),
+  create: (name: string, displayDefaults?: DisplayPreferences, rules?: MatchRules) => request<RoomAccess>("", undefined, { name, displayDefaults, rules }),
   join: (id: string, name: string, seat: string) => request<RoomAccess>(`/${id}/join`, undefined, { name, seat }),
   read: (access: SavedRoomAccess, signal?: AbortSignal) => request<RoomView>(`/${access.roomId}`, access.token, undefined, signal),
   act: (access: SavedRoomAccess, command: RoomCommand) => request<RoomView>(`/${access.roomId}/actions`, access.token, command)

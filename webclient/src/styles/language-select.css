@@ -49,11 +49,6 @@
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 .language-flag-options button > span:nth-child(2) { white-space: nowrap; }
-.language-flag-options button:first-of-type {
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--ui-line);
-  border-radius: 7px 7px 0 0;
-}
 .language-flag-options button:hover:not([aria-pressed="true"]) {
   border-color: color-mix(in srgb, var(--ui-accent) 22%, transparent);
   background: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-solid));
@@ -64,7 +59,6 @@
 }
 .language-option-flag { display: grid; place-items: center; font-size: 15px; }
 .language-flag-options .language-flag-icon { border: 0; box-shadow: none; }
-.language-auto-icon { display: grid; place-items: center; width: 20px; height: 14px; color: var(--ui-gold-light); font: 15px/1 system-ui; }
 .language-option-check {
   display: grid;
   place-items: center;

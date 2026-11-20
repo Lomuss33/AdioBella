@@ -24,15 +24,16 @@ test("a new browser runtime restores the last committed action and replays histo
   subscription.close();
 });
 
-test("a rematch replaces the single save without overwriting other browser data", async () => {
+test("multiple games restore independently without overwriting other browser data", async () => {
   localStorage.setItem("unrelated", "keep");
   const { browserGateway: first } = await import("./browserGateway");
   const old = await first.createSession();
+  const started = await first.startMatch(old.sessionId);
   const fresh = await first.createSession();
   expect(fresh.sessionId).not.toBe(old.sessionId);
   vi.resetModules();
   const { browserGateway: reopened } = await import("./browserGateway");
-  await expect(reopened.getSession(old.sessionId)).rejects.toMatchObject({ code: "error.session" });
+  expect(await reopened.getSession(old.sessionId)).toEqual(started);
   expect(await reopened.getSession(fresh.sessionId)).toEqual(fresh);
   expect(localStorage.getItem("unrelated")).toBe("keep");
 });
@@ -51,4 +52,29 @@ test("blocked storage does not prevent playing in the current tab", async () => 
   const { browserGateway } = await import("./browserGateway");
   const created = await browserGateway.createSession();
   expect((await browserGateway.startMatch(created.sessionId)).snapshot.pendingAction.type).toBe("CHOOSE_TRUMP");
+});
+
+test("imports an old browser save once without discarding its progress", async () => {
+  const { browserGateway, BROWSER_SAVE_KEY } = await import("./browserGateway");
+  const { GameSession } = await import("./local-game/gameSession");
+  const { listSoloGames, migrateSoloGame } = await import("./soloGames");
+  const legacy = new GameSession("legacy-solo");
+  legacy.startMatch();
+  localStorage.setItem(BROWSER_SAVE_KEY, JSON.stringify({ sessionId: legacy.id(), game: legacy.saveGame() }));
+  migrateSoloGame();
+  migrateSoloGame();
+  expect(listSoloGames().map(game => game.id)).toEqual([legacy.id()]);
+  expect((await browserGateway.getSession(legacy.id())).snapshot).toEqual(legacy.snapshot());
+  expect(localStorage.getItem(BROWSER_SAVE_KEY)).toBeNull();
+});
+
+test("a stale tab cannot apply a move after another tab advances the game", async () => {
+  const { browserGateway: original } = await import("./browserGateway");
+  const { sessionId } = await original.createSession();
+  await original.startMatch(sessionId);
+  vi.resetModules();
+  const { browserGateway: other } = await import("./browserGateway");
+  const advanced = await other.chooseTrump(sessionId, "HEARTS");
+  await expect(original.chooseTrump(sessionId, "SPADES")).rejects.toMatchObject({ code: "solo.saveConflict" });
+  expect(await original.getSession(sessionId)).toEqual(advanced);
 });

@@ -2,12 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { t } from "../i18n";
 import type { AnimatedTrickState, GameCompleteSummary, GameSnapshot, GameSettingsDrafts, MatchCompleteSummary, MatchTargetWins, PlayerView, Seat } from "../types";
 import type { RoomCommand, RoomView } from "../lib/roomGateway";
-import { savePreferences, type Preferences } from "../lib/preferences";
+import type { DisplayPreferences, Preferences } from "../lib/preferences";
 import { PlaybackProvider } from "./PlaybackContext";
 import TableLayout from "./TableLayout";
 import ActionPanel from "./ActionPanel";
 import ConfirmPopup from "./ConfirmPopup";
 import GuideBook from "./GuideBook";
+import { TableNavigation } from "./TableUtilities";
 import TerminalLog from "./TerminalLog";
 import CurrentMove from "./CurrentMove";
 import { useLanguage } from "../i18n";
@@ -19,9 +20,10 @@ import { CARD_TIMING } from "../lib/cardAnimationConfig";
 const SEAT_RING: Seat[] = ["SOUTH", "WEST", "NORTH", "EAST"];
 const nothing = () => {};
 
-export default function RoomGameTable({ room, preferences, busy, locked, errorMessage, onAct, onRoomList, onRefresh, retry, onRetry }: {
+export default function RoomGameTable({ room, preferences, onDisplayChange, busy, locked, errorMessage, onAct, onRoomList, onRefresh, retry, onRetry }: {
   room: RoomView;
   preferences: Preferences;
+  onDisplayChange: (patch: Partial<DisplayPreferences>) => void;
   busy: boolean;
   locked: boolean;
   errorMessage: string | null;
@@ -32,7 +34,7 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
   onRetry: () => void;
 }) {
   useLanguage();
-  const [playback, setPlayback] = useState(preferences.playback);
+  const { playback } = preferences;
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
   const [hiddenHandIndex, setHiddenHandIndex] = useState<number | null>(null);
   const [displaySnapshot, setDisplaySnapshot] = useState<GameSnapshot>(() => orientSnapshot(room.snapshot, room.yourSeat));
@@ -75,7 +77,7 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
   const matchCompleteSummary = buildMatchSummary(snapshot, room.events);
   const handLocked = locked || isAnimating || selectedHandIndex !== null || belaIndex !== null;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const clock = new PlaybackClock(playbackRate(playback.speed));
     animationClockRef.current = clock;
     return () => {
@@ -84,7 +86,7 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     animationClockRef.current?.setRate(playbackRate(playback.speed));
     if (playback.skipAnimations) finishSelectionRef.current?.();
     if (!playback.skipAnimations || !animationActiveRef.current) return;
@@ -116,7 +118,7 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
       delete document.documentElement.dataset.skipAnimations;
       delete document.documentElement.dataset.playbackSpeed;
     };
-  }, [playback]);
+  }, [playback.skipAnimations, playback.speed]);
 
   useLayoutEffect(() => {
     latestRoomSnapshotRef.current = room.snapshot;
@@ -269,11 +271,7 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
     onOpenBook={() => setShowGuide(true)}
   />;
 
-  return <PlaybackProvider value={{ settings: playback, onChange: patch => {
-    const next = { ...playback, ...patch };
-    setPlayback(next);
-    savePreferences({ ...preferences, playback: next });
-  } }}>
+  return <PlaybackProvider value={{ settings: playback, onChange: onDisplayChange }}>
     <main className="app-shell game-layout">
       <div className="table-stage">
         <TableLayout
@@ -301,14 +299,13 @@ export default function RoomGameTable({ room, preferences, busy, locked, errorMe
           onForfeitGame={() => setConfirmExit("game")}
           onQuitMatch={() => setConfirmExit("match")}
           onOpenBook={() => setShowGuide(true)}
+          shortcuts={<TableNavigation onOpenRooms={onRoomList} refresh={{ onClick: onRefresh, disabled: busy }} />}
           tableActionPanel={isTableAction ? actionPanel : undefined}
         />
         {!isTableAction ? actionPanel : null}
       </div>
       <section className="after-table">
         {errorMessage && <small className="error-line" role="alert">{errorMessage}</small>}
-        <button type="button" className="action-button" onClick={onRoomList}>{t("rooms.list")}</button>
-        <button type="button" className="action-button" onClick={onRefresh} disabled={busy}>{t("rooms.refresh")}</button>
         {retry && <button type="button" className="action-button" onClick={onRetry} disabled={busy}>{t("rooms.retry")}</button>}
         <TerminalLog events={room.events} matchComplete={snapshot.matchComplete} yourTeamName={south?.team}
           currentMove={<CurrentMove snapshot={snapshot} />} />

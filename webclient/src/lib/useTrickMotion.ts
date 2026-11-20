@@ -95,7 +95,7 @@ export function useTrickMotion(animation: AnimatedTrickState | null | undefined,
       running.current.forEach(motion => motion.cancel());
       running.current.clear();
     } else running.current.forEach(motion => {
-      if (motion.playState === "running" || motion.playState === "paused") motion.playbackRate = rate;
+      if (motion.playState === "running" || motion.playState === "paused") motion.updatePlaybackRate(rate);
     });
   }, [settings.skipAnimations, rate]);
 

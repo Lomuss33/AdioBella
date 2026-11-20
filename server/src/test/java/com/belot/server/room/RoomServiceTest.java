@@ -23,6 +23,24 @@ class RoomServiceTest {
     }
     private int status(Runnable action) { return assertThrows(ResponseStatusException.class, action::run).getStatusCode().value(); }
 
+    @Test void roomDisplayDefaultsSurviveGuestJoinsMovesAndRestarts() {
+        var rooms = service();
+        var defaults = new DisplayDefaults("TEAL", "ivory", "french", true, "fast");
+        var rules = new MatchRules(Difficulty.HARD, GameLength.LONG, 5);
+        var host = rooms.create("Host", defaults, rules);
+        var id = host.room().roomId();
+        var friend = rooms.join(id, "Friend", "north");
+        assertEquals(defaults, friend.room().displayDefaults());
+
+        var hostView = rooms.read(id, host.token());
+        rooms.act(id, host.token(), command(hostView, "START"));
+        var restored = service().read(id, friend.token());
+        assertEquals(defaults, restored.displayDefaults());
+        assertEquals("HARD", restored.snapshot().score().difficulty());
+        assertEquals(1001, restored.snapshot().score().gameTargetPoints());
+        assertEquals(5, restored.snapshot().score().matchTargetWins());
+    }
+
     @Test void privateSeatsTokensAndHostPermissionsAreEnforced() throws Exception {
         var rooms = service();
         var host = rooms.create("Host");

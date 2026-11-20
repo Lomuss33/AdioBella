@@ -49,7 +49,7 @@ function PlayerHand({
   useLayoutEffect(() => {
     // Keep the same CSS animation and its elapsed time when speed changes.
     rowRef.current?.getAnimations?.({ subtree: true }).forEach(motion => {
-      if ("animationName" in motion && String(motion.animationName).startsWith("hand-dealt-")) motion.playbackRate = rate;
+      if ("animationName" in motion && String(motion.animationName).startsWith("hand-dealt-")) motion.updatePlaybackRate(rate);
     });
   }, [newlyDealt, rate, rowRef]);
 

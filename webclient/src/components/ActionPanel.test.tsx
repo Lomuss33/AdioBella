@@ -200,7 +200,7 @@ test("settings and rematch invoke their separate actions", async () => {
   const props = resultProps();
   const user = userEvent.setup();
   render(<ActionPanel {...props} />);
-  await user.click(screen.getByRole("button", { name: "Settings" }));
+  await user.click(screen.getByRole("button", { name: "Match settings" }));
   expect(props.onOpenSettingsMenu).toHaveBeenCalledOnce();
   expect(props.onStartRematch).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Rematch" }));

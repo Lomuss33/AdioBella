@@ -1,0 +1,146 @@
+.toolbar-text-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-control); cursor: pointer; }
+.belot-dialog.settings-dialog .popup-card { width: min(100%, 540px); }
+.settings-dialog .popup-content { min-height: 0; overflow: auto; padding: clamp(10px, 3vw, 16px); }
+.settings-language { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; }
+.display-settings-fields { display: grid; gap: 10px; }
+.toolbar-text-button svg { width: 20px; height: 20px; flex: 0 0 20px; }
+.setup-toolbar > .toolbar-text-button {
+  width: fit-content;
+  padding-inline: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.setup-toolbar > .toolbar-text-button:hover { text-decoration: underline; }
+.setup-toolbar > .toolbar-text-button:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.display-settings-fields .setup-options-grid, .rooms-rules-fields .setup-options-grid { display: grid; gap: 10px; }
+:is(.display-settings-fields, .rooms-rules-fields) .setup-options-row,
+.settings-playback {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr));
+  gap: 10px;
+}
+:is(.display-settings-fields, .rooms-rules-fields) .setup-options-row > * {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+}
+:is(.display-settings-fields, .rooms-rules-fields) :is(.setup-segment-control, .match-length-choices) { display: flex; gap: 4px; }
+:is(.display-settings-fields, .rooms-rules-fields) :is(.setup-segment-control, .match-length-choices) button {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-control);
+  color: var(--ui-text);
+  font: inherit;
+}
+:is(.display-settings-fields, .rooms-rules-fields) button[data-choice][aria-pressed="true"] {
+  background: var(--ui-accent-fill);
+  color: var(--ui-accent-fill-text);
+}
+.rooms-rules-fields { width: 100%; padding: 0; border: 0; margin: 0; min-width: 0; }
+.belot-dialog.settings-dialog[data-popup-layout="page"] {
+  width: auto;
+  box-sizing: border-box;
+  padding: clamp(8px, 3vw, 24px);
+  background: rgb(4 10 8 / 28%);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.belot-dialog.settings-dialog > .popup-card {
+  max-height: 100%;
+  border: 1px solid var(--ui-line);
+  border-radius: 18px;
+  background: var(--ui-dialog);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 50%);
+  overflow: hidden;
+}
+.settings-dialog .guide-heading { padding: 12px 16px; border-bottom: 1px solid var(--ui-line); }
+.settings-language .language-flag-trigger {
+  width: auto;
+  min-height: 36px;
+  padding-inline: 10px;
+  gap: 8px;
+  font: inherit;
+}
+.settings-language .language-flag-trigger :is(.language-flag-icon, .language-flag-chevron) { flex-shrink: 0; }
+.settings-language .language-flag-trigger .language-flag-chevron { width: 12px; }
+.settings-language .language-flag-options { left: auto; right: 0; }
+
+.display-settings-fields .appearance-setting,
+.settings-playback > label { background: var(--ui-control); }
+.display-settings-fields .setup-options-row > .appearance-setting { padding: 10px; }
+.display-settings-fields .appearance-setting > span,
+.display-settings-fields .card-style-name { display: block; margin: 0 0 8px; font-size: 13px; font-weight: 650; }
+.display-settings-fields .appearance-table-colors > span::first-letter { text-transform: uppercase; }
+.display-settings-fields .card-style-preview-gallery { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.display-settings-fields .appearance-preview { flex: 1; min-width: 0; gap: clamp(2px, 0.7vw, 5px); }
+.display-settings-fields .card-style-preview-gallery .appearance-preview .playing-card-shell {
+  flex: 0 1 40px;
+  width: 40px;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 0.71;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  opacity: 1;
+}
+.display-settings-fields .appearance-preview .playing-card-face { width: 100%; height: 100%; }
+.display-settings-fields .card-style-next {
+  display: grid;
+  flex: 0 0 42px;
+  height: 42px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  background: var(--ui-solid);
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.display-settings-fields .card-style-next svg { width: 22px; height: 22px; }
+.display-settings-fields .card-style-next:hover { border-color: var(--ui-accent); }
+.display-settings-fields :is(.accent-color-choices, .setup-theme-buttons) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.display-settings-fields :is(.accent-color-choice, .setup-theme-choice) {
+  min-width: 0;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 6px;
+  background: var(--accent-swatch, var(--swatch));
+  cursor: pointer;
+}
+.display-settings-fields :is(.accent-color-choice, .setup-theme-choice)[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px #15201b, inset 0 0 0 4px #fff2c8;
+}
+.display-settings-fields button:focus-visible,
+.settings-playback input:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.settings-playback > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  min-width: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.settings-playback > label:hover { border-color: var(--ui-accent); }
+.settings-playback input { flex: 0 0 16px; width: 16px; height: 16px; margin: 0; accent-color: var(--ui-accent); cursor: pointer; }
+.display-settings-fields .setup-colors-row > .appearance-setting { container-type: inline-size; }
+@container (min-width: 230px) {
+  .display-settings-fields :is(.accent-color-choices, .setup-theme-buttons) { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}

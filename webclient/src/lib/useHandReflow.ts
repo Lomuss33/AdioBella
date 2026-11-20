@@ -185,7 +185,7 @@ export function useHandReflow(playerId: string | undefined, cardKeys: readonly s
       animationsRef.current.forEach(animation => animation.cancel());
       animationsRef.current.clear();
     } else animationsRef.current.forEach(animation => {
-      if (animation.playState === "running" || animation.playState === "paused") animation.playbackRate = rate;
+      if (animation.playState === "running" || animation.playState === "paused") animation.updatePlaybackRate(rate);
     });
   }, [settings.skipAnimations, rate]);
 

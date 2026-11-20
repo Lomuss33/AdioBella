@@ -6,24 +6,29 @@ export function useMenuPosition(open: boolean, above: boolean, anchorRef: RefObj
     const anchor = anchorRef.current, menu = menuRef.current;
     if (!open || !anchor || !menu || !menu.offsetParent) return;
     const viewport = window.visualViewport;
+    const scrollPanel = anchor.closest(".popup-content");
     let frame = 0;
     const fit = () => {
       // Let native pinch zoom enlarge and pan the interface without refitting it.
       if (viewport && viewport.scale !== 1) return;
       const edge = 8, gap = 6;
-      const top = viewport?.offsetTop ?? 0, left = viewport?.offsetLeft ?? 0;
-      const width = viewport?.width ?? window.innerWidth, height = viewport?.height ?? window.innerHeight;
+      const viewportTop = viewport?.offsetTop ?? 0, viewportLeft = viewport?.offsetLeft ?? 0;
+      const panel = scrollPanel?.getBoundingClientRect();
+      const top = Math.max(viewportTop, panel?.top ?? viewportTop);
+      const left = Math.max(viewportLeft, panel?.left ?? viewportLeft);
+      const right = Math.min(viewportLeft + (viewport?.width ?? document.documentElement.clientWidth), panel?.right ?? Infinity);
+      const bottom = Math.min(viewportTop + (viewport?.height ?? document.documentElement.clientHeight), panel?.bottom ?? Infinity);
       const bounds = anchor.getBoundingClientRect();
       const parent = menu.offsetParent!.getBoundingClientRect();
-      menu.style.maxWidth = `${Math.max(0, width - edge * 2)}px`;
+      menu.style.maxWidth = `${Math.max(0, right - left - edge * 2)}px`;
       const naturalHeight = menu.scrollHeight + menu.offsetHeight - menu.clientHeight;
       const before = Math.max(0, bounds.top - top - edge - gap);
-      const after = Math.max(0, top + height - bounds.bottom - edge - gap);
+      const after = Math.max(0, bottom - bounds.bottom - edge - gap);
       const placeAbove = above ? before >= Math.min(naturalHeight, after) : after < Math.min(naturalHeight, before);
       const available = placeAbove ? before : after;
       const menuHeight = Math.min(naturalHeight, available);
       const preferredLeft = above ? bounds.right - menu.offsetWidth : bounds.left;
-      const x = Math.max(left + edge, Math.min(preferredLeft, left + width - edge - menu.offsetWidth));
+      const x = Math.max(left + edge, Math.min(preferredLeft, right - edge - menu.offsetWidth));
       const y = placeAbove ? bounds.top - gap - menuHeight : bounds.bottom + gap;
       menu.style.maxHeight = `${available}px`;
       menu.style.left = `${x - parent.left}px`;
@@ -38,6 +43,7 @@ export function useMenuPosition(open: boolean, above: boolean, anchorRef: RefObj
     const observer = new ResizeObserver(schedule);
     observer.observe(anchor);
     observer.observe(menu);
+    if (scrollPanel) observer.observe(scrollPanel);
     window.addEventListener("resize", schedule);
     window.addEventListener("scroll", schedule, true);
     viewport?.addEventListener("resize", schedule);

@@ -1,26 +1,32 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { t, useLanguage, isPreference } from "../i18n";
+import { t, useLanguage } from "../i18n";
 import type { Locale } from "../i18n";
 import { useMenuPosition } from "../lib/useMenuPosition";
 
-type Flag = Locale | "auto";
+const languageOptions: { value: Locale; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "de", label: "Deutsch" },
+  { value: "hr", label: "Hrvatski" }
+];
 
-export default function LanguageSelect({ variant = "flag" }: { variant?: "flag" | "table" }) {
-  const { preference, locale, setLanguage } = useLanguage();
+export function LanguageField() {
+  useLanguage();
+  return <div className="settings-language">
+    <span>{t("Language")}</span>
+    <LanguageSelect variant="labeled" />
+  </div>;
+}
+
+export default function LanguageSelect({ variant = "flag" }: { variant?: "flag" | "table" | "labeled" }) {
+  const { locale, setLanguage } = useLanguage();
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const active = preference === "auto" ? locale : preference;
+  const label = languageOptions.find(option => option.value === locale)?.label;
   const table = variant === "table";
   useMenuPosition(open, table, triggerRef, menuRef);
-  const options: { value: Flag; label: string }[] = [
-    { value: "auto", label: t("Automatic") },
-    { value: "en", label: "English" },
-    { value: "de", label: "Deutsch" },
-    { value: "hr", label: "Hrvatski" }
-  ];
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +37,7 @@ export default function LanguageSelect({ variant = "flag" }: { variant?: "flag" 
     return () => document.removeEventListener("pointerdown", closeOutside);
   }, [open]);
 
-  return <div className={`language-select language-flag-select${table ? " language-dropup" : ""}`} onKeyDown={event => {
+  return <div className={`language-select language-flag-select${table ? " language-dropup" : variant === "labeled" ? " language-labeled" : ""}`} onKeyDown={event => {
     if (event.key === "Escape" && open) {
       event.preventDefault();
       event.stopPropagation();
@@ -41,21 +47,21 @@ export default function LanguageSelect({ variant = "flag" }: { variant?: "flag" 
   }} onBlur={event => {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
   }} ref={ref}>
-    <button ref={triggerRef} type="button" className={table ? "table-square-button language-trigger" : "language-flag-trigger"} aria-label={table ? t("Language") : `${t("Language")}: ${options.find(option => option.value === preference)?.label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={event => { event.currentTarget.focus({ preventScroll: true }); setOpen(value => !value); }}>
+    <button ref={triggerRef} type="button" className={table ? "table-square-button language-trigger" : "language-flag-trigger"} aria-label={table ? t("Language") : `${t("Language")}: ${label}`} title={t("Language")} aria-expanded={open} aria-controls={id} onClick={event => { event.currentTarget.focus({ preventScroll: true }); setOpen(value => !value); }}>
       {table ? <>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></svg>
         <small aria-hidden="true">{locale.toUpperCase()}</small>
       </> : <>
-        <FlagIcon language={active} /><span className="language-code" aria-hidden="true">{active.toUpperCase()}</span><svg className="language-flag-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <FlagIcon language={locale} /><span className="language-code" aria-hidden="true">{variant === "labeled" ? label : locale.toUpperCase()}</span><svg className="language-flag-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </>}
     </button>
     {open && <div ref={menuRef} id={id} className="language-flag-options" role="group" aria-label={t("Language")}>
       <div className="language-menu-heading" aria-hidden="true">{t("Language")}</div>
-      {options.map(option => <button key={option.value} type="button" lang={option.value === "auto" ? undefined : option.value} aria-pressed={preference === option.value} onClick={() => {
-        if (isPreference(option.value)) setLanguage(option.value);
+      {languageOptions.map(option => <button key={option.value} type="button" lang={option.value} aria-pressed={locale === option.value} onClick={() => {
+        setLanguage(option.value);
         setOpen(false);
         triggerRef.current?.focus({ preventScroll: true });
-      }}><span className="language-option-flag" aria-hidden="true">{option.value === "auto" ? <span className="language-auto-icon">◉</span> : <FlagIcon language={option.value} />}</span><span>{option.label}</span><span className={`language-option-check ${preference === option.value ? "is-selected" : ""}`} aria-hidden="true"></span></button>)}
+      }}><span className="language-option-flag" aria-hidden="true"><FlagIcon language={option.value} /></span><span>{option.label}</span><span className={`language-option-check ${locale === option.value ? "is-selected" : ""}`} aria-hidden="true"></span></button>)}
     </div>}
   </div>;
 }

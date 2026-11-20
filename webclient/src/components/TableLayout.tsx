@@ -28,12 +28,13 @@ interface TableLayoutProps {
   onForfeitGame: () => void;
   onQuitMatch: () => void;
   onOpenBook: () => void;
+  shortcuts?: ReactNode;
   tableActionPanel?: ReactNode;
 }
 
 function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
   selectedHandIndex, hiddenHandIndex, animatedTrick, highlightedSeat, handLocked,
-  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, tableActionPanel }: TableLayoutProps) {
+  canForfeitGame, canQuitMatch, onForfeitGame, onQuitMatch, onOpenBook, shortcuts, tableActionPanel }: TableLayoutProps) {
   const arenaRef = useRef<HTMLElement>(null);
   const syncLayoutRef = useRef<() => void>(() => {});
   const trumpPickerVisible = Boolean(tableActionPanel) && snapshot?.pendingAction.type === "CHOOSE_TRUMP";
@@ -211,7 +212,7 @@ function TableLayout({ snapshot, playersBySeat, onPlayCard, errorMessage,
             controls={
               <div className="arena-controls">
                 <TableUtilities onOpenBook={onOpenBook} />
-                <PlaybackControls />
+                {shortcuts ?? <PlaybackControls />}
                 <MatchCornerControls canForfeitGame={canForfeitGame} canQuitMatch={canQuitMatch}
                   onForfeitGame={onForfeitGame} onQuitMatch={onQuitMatch} />
               </div>

@@ -1,27 +1,35 @@
 import type { Difficulty, GameEvent, GameLength, MatchTargetWins, PlayerNameDrafts, SessionResponse, TeamNameDrafts, TrumpChoice } from "../types";
 import type { GameGateway } from "./gameGateway";
 import { GameSession } from "./local-game/gameSession";
-import { readStorage, writeStorage, removeStorage } from "./preferences";
+import { LEGACY_SOLO_SAVE_KEY, migrateSoloGame, readSoloGame, saveSoloGame } from "./soloGames";
+import { readStorage } from "./preferences";
 
-const sessions = new Map<string, GameSession>();
-export const BROWSER_SAVE_KEY = "belot-browser-save-v1";
+const sessions = new Map<string, { session: GameSession; savedGame?: string }>();
+export const BROWSER_SAVE_KEY = LEGACY_SOLO_SAVE_KEY;
 
-function persist(session: GameSession) {
-  writeStorage(BROWSER_SAVE_KEY, JSON.stringify({ sessionId: session.id(), game: session.saveGame() }));
+export function isSoloSaveCurrent(id: string) {
+  const session = sessions.get(id)?.session;
+  return !!session && readSoloGame(id)?.game === session.saveGame();
 }
 
 function newSession(id: string) {
-  return new GameSession(id, "NORMAL", undefined, persist);
+  const session = new GameSession(id, "NORMAL", undefined, current => {
+    const active = sessions.get(id);
+    const saved = readSoloGame(id);
+    if (active?.savedGame !== undefined && saved?.game !== active.savedGame) {
+      current.restoreGame(saved?.game ?? active.savedGame);
+      throw saveConflict();
+    }
+    if (active && saveSoloGame(current)) active.savedGame = current.saveGame();
+  });
+  return session;
 }
 
 export const browserGateway: GameGateway = {
   async createSession() {
     const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const session = newSession(`browser-session-${id}`);
-    // The browser has one current save; rematches replace it.
-    persist(session);
-    sessions.clear();
-    sessions.set(session.id(), session);
+    sessions.set(session.id(), { session, savedGame: saveSoloGame(session) ? session.saveGame() : undefined });
     return toSessionResponse(session);
   },
 
@@ -34,7 +42,7 @@ export const browserGateway: GameGateway = {
   },
 
   async startMatch(sessionId: string) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.startMatch()
@@ -49,7 +57,7 @@ export const browserGateway: GameGateway = {
     matchTargetWins: MatchTargetWins,
     gameLength: GameLength
   ) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.updateLobbySettings(
@@ -64,7 +72,7 @@ export const browserGateway: GameGateway = {
   },
 
   async chooseTrump(sessionId: string, choice: TrumpChoice) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.chooseTrump(choice)
@@ -72,7 +80,7 @@ export const browserGateway: GameGateway = {
   },
 
   async reportMelds(sessionId: string, declare: boolean) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.reportMelds(declare)
@@ -80,7 +88,7 @@ export const browserGateway: GameGateway = {
   },
 
   async acknowledgeMelds(sessionId: string) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.acknowledgeMelds()
@@ -88,7 +96,7 @@ export const browserGateway: GameGateway = {
   },
 
   async playCard(sessionId: string, handIndex: number, callBela = false) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.playCard(handIndex, callBela)
@@ -96,7 +104,7 @@ export const browserGateway: GameGateway = {
   },
 
   async forfeitGame(sessionId: string) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.forfeitGame()
@@ -104,7 +112,7 @@ export const browserGateway: GameGateway = {
   },
 
   async forfeitMatch(sessionId: string) {
-    const session = requireSession(sessionId);
+    const session = requireSession(sessionId, true);
     return {
       sessionId,
       snapshot: session.forfeitMatch()
@@ -124,28 +132,34 @@ export const browserGateway: GameGateway = {
   }
 };
 
-function requireSession(sessionId: string) {
-  let session = sessions.get(sessionId);
-  if (!session) {
-    const saved = readStorage(BROWSER_SAVE_KEY);
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.sessionId === sessionId && typeof data.game === "string") {
-          const restored = newSession(sessionId);
-          restored.restoreGame(data.game);
-          sessions.set(sessionId, restored);
-          session = restored;
-        }
-      } catch {
-        removeStorage(BROWSER_SAVE_KEY);
-      }
+function requireSession(sessionId: string, forMove = false) {
+  const cached = sessions.get(sessionId);
+  let saved = readSoloGame(sessionId);
+  if (!saved && readStorage(LEGACY_SOLO_SAVE_KEY)) {
+    migrateSoloGame();
+    saved = readSoloGame(sessionId);
+  }
+  if (cached && (!saved ? cached.savedGame === undefined : cached.savedGame === saved.game)) return cached.session;
+  if (forMove && cached && saved) throw saveConflict();
+  let session: GameSession | undefined;
+  if (saved) {
+    try {
+      session = cached?.session ?? newSession(sessionId);
+      session.restoreGame(saved.game);
+      sessions.set(sessionId, { session, savedGame: saved.game });
+    } catch {
+      session = undefined;
     }
   }
   if (!session) {
+    sessions.delete(sessionId);
     throw Object.assign(new Error("Session not found."), { code: "error.session" });
   }
   return session;
+}
+
+function saveConflict() {
+  return Object.assign(new Error("Saved game changed in another tab."), { code: "solo.saveConflict" });
 }
 
 function toSessionResponse(session: GameSession): SessionResponse {

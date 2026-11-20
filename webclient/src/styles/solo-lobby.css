@@ -1,0 +1,175 @@
+.rooms-page.solo-lobby {
+  --rooms-width: 860px;
+  --rooms-line: color-mix(in srgb, var(--ui-accent) 34%, transparent);
+  --solo-surface: color-mix(in srgb, var(--felt-edge) 86%, var(--felt-center));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  scrollbar-width: none;
+  background:
+    radial-gradient(ellipse at 50% 8%, color-mix(in srgb, var(--felt-center) 68%, transparent), transparent 72%),
+    var(--page-bottom);
+}
+
+.solo-lobby .rooms-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  min-height: 56px;
+  margin-bottom: 0;
+}
+
+.solo-lobby .rooms-header h1 { font-size: clamp(19px, 4vw, 30px); }
+.solo-lobby .rooms-header > button:first-child { justify-self: start; }
+.solo-lobby .rooms-header > button:last-child { justify-self: end; }
+
+.solo-lobby-content {
+  display: grid;
+  grid-template-rows: auto minmax(44px, 1fr) auto;
+  gap: clamp(8px, 1.5dvh, 14px);
+  width: min(100%, var(--rooms-width));
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.solo-lobby-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  margin: 0;
+  padding-block: 5px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--rooms-line);
+}
+
+.solo-lobby-games {
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.solo-lobby::-webkit-scrollbar, .solo-lobby-games::-webkit-scrollbar { display: none; }
+.solo-lobby-games:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; }
+
+.solo-lobby-stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+  padding: 3px 5px;
+}
+
+.solo-lobby-stats > div + div { border-inline-start: 1px solid var(--rooms-line); }
+.solo-lobby-stats dt { color: var(--rooms-muted); font-size: 12px; overflow-wrap: anywhere; }
+.solo-lobby-stats dd {
+  margin: 0;
+  color: color-mix(in srgb, var(--ui-accent) 28%, var(--ui-text));
+  font: 600 clamp(25px, 4vw, 35px)/1.1 Georgia, serif;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.solo-lobby-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  text-align: center;
+}
+
+.solo-lobby .solo-lobby-shortcuts > button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: clamp(74px, 13dvh, 108px);
+  padding: 8px clamp(3px, 1.1vw, 12px);
+  border: 0;
+  border-radius: 10px;
+  font-size: clamp(12px, 2.25vw, 18px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.solo-lobby .solo-shortcut-resume {
+  background: color-mix(in srgb, var(--felt-center) 58%, var(--solo-surface));
+}
+.solo-lobby .solo-shortcut-resume:disabled { opacity: .58; }
+.solo-lobby .solo-shortcut-new {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ui-accent-fill) 84%, var(--ui-accent)), var(--ui-accent-fill));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
+}
+.solo-shortcut-icon { font: 600 clamp(21px, 4vw, 34px)/1 Georgia, serif; }
+.solo-shortcut-resume .solo-shortcut-icon { color: var(--ui-accent); }
+.solo-shortcut-resume small { max-width: 100%; color: var(--rooms-muted); font-size: .76em; }
+.solo-lobby-empty { margin: 12px 0; color: var(--rooms-muted); text-align: center; }
+@media (max-height: 440px) {
+  .solo-lobby .rooms-header { min-height: 44px; }
+  .solo-lobby .solo-lobby-shortcuts > button { min-height: 54px; padding-block: 4px; }
+}
+
+.solo-lobby .rooms-saved-menu {
+  padding: 8px clamp(8px, 2vw, 18px);
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--solo-surface) 75%, transparent);
+}
+.solo-lobby .rooms-saved-menu + .rooms-saved-menu { margin-top: 8px; }
+.solo-lobby .rooms-saved-menu h2 {
+  margin: 0;
+  padding: 4px 4px 8px;
+  border-bottom: 1px solid var(--rooms-line);
+  font-size: 21px;
+  text-align: center;
+}
+.solo-lobby .rooms-saved-list > li { display: block; container-type: inline-size; padding-block: 5px; }
+.solo-game-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 9px 4px;
+}
+.solo-game-info { display: grid; min-width: 0; gap: 4px; overflow-wrap: anywhere; }
+.solo-game-heading, .solo-game-score, .solo-game-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  align-items: baseline;
+  gap: 4px 12px;
+}
+:is(.solo-game-heading, .solo-game-score, .solo-game-meta) > :last-child {
+  justify-self: end;
+  text-align: end;
+}
+.solo-game-meta { padding-top: 1px; }
+.solo-game-difficulty::first-letter { text-transform: uppercase; }
+.solo-game-info strong { font: 600 20px/1.15 Georgia, serif; }
+.solo-game-recent .solo-game-info strong { color: color-mix(in srgb, var(--ui-accent) 40%, var(--ui-text)); }
+.solo-game-info small { color: var(--rooms-muted); }
+.solo-game-score { font-variant-numeric: tabular-nums; }
+.solo-game-score b { color: var(--ui-text); }
+.solo-game-status {
+  color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-text));
+  font-size: 11px;
+}
+.solo-game-actions, .solo-game-edit { display: flex; align-items: end; flex-wrap: wrap; gap: 5px; }
+.solo-game-actions { justify-content: end; }
+.solo-lobby .solo-game-actions > button {
+  border: 0;
+  background: transparent;
+}
+.solo-lobby .solo-game-actions > .rooms-primary {
+  background: color-mix(in srgb, var(--ui-accent-fill) 22%, transparent);
+  color: var(--ui-text);
+}
+.solo-lobby .solo-game-actions > button:hover { text-decoration: underline; }
+.solo-game-actions > span { flex-basis: 100%; }
+.solo-game-edit label { flex: 1 1 200px; }
+@container (width < 520px) {
+  .solo-game-row { grid-template-columns: minmax(0, 1fr); }
+  .solo-game-actions > button { flex: 1 1 min(25%, 90px); overflow-wrap: anywhere; }
+}
+@container (width < 250px) {
+  .solo-game-heading, .solo-game-score, .solo-game-meta {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 6px;
+  }
+}
